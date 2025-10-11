@@ -1,5 +1,6 @@
 // src/components/Table/FormModal.jsx
 import { useState, useEffect } from 'react';
+import { buttonStyles } from '../../styles/colors';
 
 export default function FormModal({ item, isEdit, onClose, onSave, title, fields = [] }) {
   const [formData, setFormData] = useState({});
@@ -53,8 +54,8 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
               </div>
             ))}
             <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-              <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 rounded text-sm">Hủy</button>
-              <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Lưu</button>
+              <button type="button" onClick={onClose} className={`${buttonStyles.secondary} text-sm`}>Hủy</button>
+              <button type="submit" className={`${buttonStyles.primary} text-sm`}>Lưu</button>
             </div>
           </form>
         </div>

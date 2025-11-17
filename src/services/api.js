@@ -131,7 +131,17 @@ export const productsAPI = createCrudAPI(api, '/products', {
 // Categories API - Per ADMIN_QUICK_REFERENCE.md
 export const categoriesAPI = createCrudAPI(api, '/categories', {
   // Override create/update/delete to use /admin prefix
-  create: (data) => api.post('/categories/admin', data),
+  create: (data) => {
+    console.log('[Categories API] Creating category:', data);
+    return api.post('/categories/admin', data);
+  },
+  getAll: (params = {}) => {
+    console.log('[Categories API] Fetching all categories...');
+    return api.get('/categories', { params }).then(res => {
+      console.log('[Categories API] Categories response:', res.data);
+      return res;
+    });
+  },
   update: (id, data) => {
     console.log(`[Categories API] Updating category ${id} with data:`, data);
     console.log(`[Categories API] Image URL in update data:`, data.image_url);

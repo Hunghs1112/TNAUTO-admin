@@ -408,15 +408,18 @@ export default function ImageManagement({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <ImageIcon className="w-20 h-20 mb-4" />
-            <p className="text-lg font-medium mb-2">
-              {selectedEntityId ? label.noImagesText : label.selectToViewText}
-            </p>
-            <p className="text-sm">
-              {selectedEntityId && label.uploadPromptText}
-            </p>
-          </div>
+          // Chỉ hiển thị khung "chưa có ảnh" khi không đang mở uploader
+          !showUploader && (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <ImageIcon className="w-20 h-20 mb-4" />
+              <p className="text-lg font-medium mb-2">
+                {selectedEntityId ? label.noImagesText : label.selectToViewText}
+              </p>
+              <p className="text-sm">
+                {selectedEntityId && label.uploadPromptText}
+              </p>
+            </div>
+          )
         )}
       </div>
     </div>

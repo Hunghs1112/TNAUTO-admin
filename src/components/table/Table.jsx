@@ -366,8 +366,32 @@ export default function GenericTable({
         await api.create(dataToSave);
         showSuccess('Tạo mới thành công!');
       }
-      onEdit && onEdit();
+      
+      // Close modal and reset form first
       setShowModal(false);
+      setSelectedItem(null);
+      setIsEdit(false);
+      
+      // Refresh data - try multiple approaches to ensure data is updated
+      // First, try immediate refresh
+      if (onRefresh && typeof onRefresh === 'function') {
+        console.log('Refreshing data via onRefresh (immediate)...');
+        onRefresh();
+      } else if (onEdit && typeof onEdit === 'function') {
+        console.log('Refreshing data via onEdit (immediate)...');
+        onEdit();
+      }
+      
+      // Also try after a delay to ensure API has fully processed
+      setTimeout(() => {
+        if (onRefresh && typeof onRefresh === 'function') {
+          console.log('Refreshing data via onRefresh (delayed)...');
+          onRefresh();
+        } else if (onEdit && typeof onEdit === 'function') {
+          console.log('Refreshing data via onEdit (delayed)...');
+          onEdit();
+        }
+      }, 500); // Delay to ensure API has processed
     } catch (err) {
       console.error('Save error:', err);
       showError('Có lỗi xảy ra khi lưu. Vui lòng thử lại.');

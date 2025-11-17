@@ -56,6 +56,9 @@ export default function useEntityCrud(api, options = {}) {
     
     try {
       const res = await api.getAll();
+      console.log('[useEntityCrud] API response:', res);
+      console.log('[useEntityCrud] Response data:', res.data);
+      
       // Handle response format: { success: true, data: [...], count, total, page, limit }
       let fetchedData = [];
       if (res.data) {
@@ -67,16 +70,17 @@ export default function useEntityCrud(api, options = {}) {
           fetchedData = res.data.data;
         }
       }
+      
+      console.log('[useEntityCrud] Extracted data:', fetchedData);
+      console.log('[useEntityCrud] Data length:', fetchedData.length);
+      
       const transformed = transformDataRef.current(fetchedData);
-      // Khi refresh, chỉ cập nhật data nếu có dữ liệu mới
-      // Nếu fetch về rỗng nhưng đang refresh, giữ nguyên data cũ để tránh chớp trắng
-      if (isRefresh && hasExistingData && (!transformed || transformed.length === 0)) {
-        // Giữ nguyên data cũ nếu fetch về rỗng khi refresh
-        // Không setData để tránh re-render không cần thiết
-      } else {
-        // Set data mới (có thể là rỗng nếu là lần đầu load)
-        setData(transformed || []);
-      }
+      console.log('[useEntityCrud] Transformed data:', transformed);
+      console.log('[useEntityCrud] Transformed length:', transformed?.length);
+      
+      // Always update data when refreshing or fetching
+      // Remove the condition that prevents updating on refresh
+      setData(transformed || []);
     } catch (err) {
       console.error('Fetch error:', err);
       setError(err);

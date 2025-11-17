@@ -1,5 +1,5 @@
 // src/pages/Employees.jsx
-import GenericCrudPage from '../components/GenericCrudPage';
+import GenericCrudPage from '../components/features/GenericCrudPage';
 import { employeesAPI } from '../services/api';
 import { employeesConfig } from '../config/entityConfigs.jsx';
 

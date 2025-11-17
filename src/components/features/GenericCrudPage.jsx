@@ -1,10 +1,11 @@
-// src/components/GenericCrudPage.jsx
-import GenericTable from './Table';
-import useEntityCrud from '../hooks/useEntityCrud';
+// src/components/features/GenericCrudPage.jsx
+import GenericTable from '../table/Table';
+import useEntityCrud from '../../hooks/useEntityCrud';
 
 /**
  * Generic CRUD page component that handles standard entity management
  * Eliminates the need for duplicate page components
+ * Now uses global loading context for consistent loading states
  * 
  * @param {Object} props - Configuration for the page
  * @param {Object} props.api - API object with CRUD methods
@@ -24,38 +25,54 @@ export default function GenericCrudPage({
   options = {},
   customActions,
   showPagination = false,
-  limit = 10
+  limit = 10,
+  showSearch = false,
+  searchPlaceholder = 'Tìm kiếm...',
+  hideTitle = false,
+  showActions = true,
+  onRowClick = null,
+  onView = null,
+  onEdit = null
 }) {
+  // Generate unique loading key based on title (use entity name or fallback)
+  const loadingKey = title ? `crud-${title.toLowerCase().replace(/\s+/g, '-')}` : 'crud-page';
+  
   const { 
     data, 
-    loading, 
     handleRefresh, 
     handleDelete,
-  } = useEntityCrud(api, options);
-
-  if (loading && data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Đang tải...</p>
-      </div>
-    );
-  }
+    handleSearch,
+    loading,
+    isRefreshing
+  } = useEntityCrud(api, { 
+    ...options, 
+    loadingKey 
+  });
 
   return (
     <GenericTable
       data={data}
       columns={columns}
-      onEdit={handleRefresh}
+      onEdit={onEdit || handleRefresh}
       onDelete={(id) => {
         handleDelete(id);
       }}
-      onView={() => {}}
+      onView={onView || undefined}
       title={title}
       api={api}
       fieldsForModal={fieldsForModal}
       customActions={customActions}
       showPagination={showPagination}
       limit={limit}
+      loading={loading}
+      isRefreshing={isRefreshing}
+      showActions={showActions}
+      showSearch={showSearch}
+      searchPlaceholder={searchPlaceholder}
+      onSearch={handleSearch}
+      hideTitle={hideTitle}
+      onRefresh={handleRefresh}
+      onRowClick={onRowClick}
     />
   );
 }

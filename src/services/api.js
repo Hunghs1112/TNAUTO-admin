@@ -2,123 +2,248 @@
 import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
 
-const API_BASE = 'http://localhost:3000/api'; // Thay bằng backend URL thực tế
+const API_BASE = 'http://103.200.20.253:5000/api'; // Thay bằng backend URL thực tế
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// api.interceptors.request.use((config) => {
-//   console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
-//   return config;
-// });
+// Request interceptor - minimal logging
+api.interceptors.request.use((config) => {
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
-// api.interceptors.response.use(
-//   (response) => {
-//     console.log('API Response:', response.status, response.data);
-//     return response;
-//   },
-//   (error) => {
-//     console.error('API Error:', error.response?.status, error.response?.data);
-//     return Promise.reject(error);
-//   }
-// );
+// Response interceptor - normalize response format
+api.interceptors.response.use(
+  (response) => {
+    // Normalize response data structure
+    // Backend returns: { success: true, data: [...], count, total, page, limit }
+    if (response.data && response.data.success !== undefined) {
+      return response;
+    }
+    // If response doesn't have success field, wrap it
+    return {
+      ...response,
+      data: {
+        success: true,
+        data: response.data
+      }
+    };
+  },
+  (error) => {
+    // Better error handling
+    const errorMessage = error.response?.data?.error || 
+                        error.response?.data?.message || 
+                        error.message || 
+                        'Có lỗi xảy ra';
+    return Promise.reject({
+      ...error,
+      message: errorMessage,
+      status: error.response?.status
+    });
+  }
+);
 
-// Using factory for customers API with custom methods
+// ===== USER MANAGEMENT =====
+
+// Customers API - Admin endpoints per ADMIN_QUICK_REFERENCE.md
 export const customersAPI = createCrudAPI(api, '/customers', {
-  // Override create to use /register endpoint
-  create: (data) => api.post('/customers/register', data),
-  // Custom methods
+  // Stats endpoint
+  getStats: () => api.get('/customers/stats'),
+  // Customer authentication
+  register: (data) => api.post('/customers/register', data),
   login: (data) => api.post('/customers/login', data),
-  getServices: () => api.get('/customers/services'),
-  getOrders: (phone) => api.get('/customers/orders', { params: { phone } }),
-  createOrder: (data) => api.post('/customers/orders', data),
-  getOrderDetails: (id) => api.get(`/customers/orders/${id}`),
+  updateProfile: (data) => api.put('/customers/profile', data),
+  deleteAccount: (data) => api.delete('/customers/account', data),
+  // Upload avatar
+  uploadAvatar: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/customers/${id}/upload-avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
 });
 
-// Using factory for employees API with custom methods
+// Employees API - Admin endpoints per ADMIN_QUICK_REFERENCE.md
 export const employeesAPI = createCrudAPI(api, '/employees', {
+  // Stats endpoint
+  getStats: () => api.get('/employees/stats'),
+  // Employee authentication
   login: (data) => api.post('/employees/login', data),
-  getAssignedOrders: (employeeId, status) => api.get('/employees/orders/assigned', { params: { employee_id: employeeId, status } }),
-  getOrders: (status) => api.get('/employees/orders', { params: { status } }),
-  getOrderDetails: (id) => api.get(`/employees/orders/${id}`),
+  getAssignedOrders: () => api.get('/employees/orders/assigned'),
+  getOrders: () => api.get('/employees/orders'),
+  getOrderById: (id) => api.get(`/employees/orders/${id}`),
+  // Assign order
+  assignOrder: (data) => api.post('/employees/assign-order', data),
+  // Upload avatar
+  uploadAvatar: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/employees/${id}/upload-avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
 });
 
-// Simple CRUD APIs using factory
-export const servicesAPI = createCrudAPI(api, '/services');
+// ===== SERVICE MANAGEMENT =====
 
-// Categories API
-export const categoriesAPI = createCrudAPI(api, '/categories');
+// Services API - Per ADMIN_QUICK_REFERENCE.md
+export const servicesAPI = createCrudAPI(api, '/services', {
+  // Override create/update/delete to use /admin prefix
+  create: (data) => api.post('/services/admin', data),
+  update: (id, data) => api.put(`/services/admin/${id}`, data),
+  delete: (id) => api.delete(`/services/admin/${id}`),
+  // Stats
+  getStats: () => api.get('/services/admin/stats'),
+  // Upload image
+  uploadImage: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/services/admin/${id}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+});
 
-// Products API with category support and image methods
+// ===== PRODUCT MANAGEMENT =====
+
+// Products API - GET uses public endpoint, admin actions use /admin prefix
 export const productsAPI = createCrudAPI(api, '/products', {
-  createImage: (data) => api.post('/products/images', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  // Override create/update/delete to use /admin prefix
+  create: (data) => api.post('/products/admin', data),
+  update: (id, data) => api.put(`/products/admin/${id}`, data),
+  delete: (id) => api.delete(`/products/admin/${id}`),
+  // Admin stats
+  getStats: () => api.get('/products/admin/stats'),
+  // Product images management - using correct endpoints from updated documentation
+  createImage: (data) => api.post('/products/images', data),
+  getImages: (productId) => api.get(`/products/${productId}/images`),
+  updateImage: (id, data) => api.put(`/products/images/${id}`, data),
   deleteImage: (id) => api.delete(`/products/images/${id}`),
 });
 
-// Offers API
-export const offersAPI = createCrudAPI(api, '/offers');
+// ===== CATEGORY MANAGEMENT =====
 
-// Warranties API
-export const warrantiesAPI = createCrudAPI(api, '/warranties');
-
-// Service Orders API with custom methods
-export const serviceOrdersAPI = createCrudAPI(api, '/service-orders', {
-  updateStatus: (id, status) => api.put(`/service-orders/${id}/status`, { status }),
-  complete: (id) => api.patch(`/service-orders/${id}/complete`),
-  assign: (id, employeeId) => api.patch(`/service-orders/${id}/assign`, { employee_id: employeeId }),
-});
-
-// Notifications API with custom methods
-export const notificationsAPI = createCrudAPI(api, '/notifications', {
-  // Override getAll to use admin endpoint
-  getAll: (params) => {
-    // Only add params if they exist and are not empty
-    if (params && Object.keys(params).length > 0) {
-      return api.get('/notifications/admin/all', { params });
-    }
-    return api.get('/notifications/admin/all');
+// Categories API - Per ADMIN_QUICK_REFERENCE.md
+export const categoriesAPI = createCrudAPI(api, '/categories', {
+  // Override create/update/delete to use /admin prefix
+  create: (data) => api.post('/categories/admin', data),
+  update: (id, data) => {
+    console.log(`[Categories API] Updating category ${id} with data:`, data);
+    console.log(`[Categories API] Image URL in update data:`, data.image_url);
+    return api.put(`/categories/admin/${id}`, data);
   },
-  // Mark as read
-  markRead: (id) => api.put(`/notifications/${id}/read`),
-  // Get by recipient
-  getByRecipient: (recipientId, recipientType) => api.get('/notifications', { params: { recipient_id: recipientId, recipient_type: recipientType } }),
-  // Get unread count
-  getUnreadCount: (recipientId, recipientType) => api.get('/notifications/unread-count', { params: { recipient_id: recipientId, recipient_type: recipientType } }),
-  // Send custom notification
-  send: (data) => api.post('/notifications/send', data),
-  // Mark all as read
-  markAllRead: (recipientId, recipientType) => api.put('/notifications/read-all', { recipient_id: recipientId, recipient_type: recipientType }),
-  // Get customers for dropdown
-  getCustomers: () => api.get('/customers'),
-  // Get employees for dropdown
-  getEmployees: () => api.get('/employees'),
+  delete: (id) => api.delete(`/categories/admin/${id}`),
+  // Stats
+  getStats: () => api.get('/categories/admin/stats'),
+  // Upload image
+  uploadImage: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/categories/admin/${id}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
 });
 
-// Push Notifications API
-export const pushNotificationsAPI = {
-  // Send to specific user
-  sendToUser: (data) => api.post('/push-notifications/send-to-user', data),
-  // Broadcast to all users
-  sendToAll: (data) => api.post('/push-notifications/send-to-all', data),
-  // Send to topic
-  sendToTopic: (data) => api.post('/push-notifications/send-to-topic', data),
-  // Test notification
-  test: (data) => api.post('/push-notifications/test', data),
+// ===== VEHICLE MANAGEMENT =====
+
+// Vehicles API - Per ADMIN_QUICK_REFERENCE.md
+export const vehiclesAPI = createCrudAPI(api, '/vehicles/admin', {
+  // Override getAll to use /admin/all endpoint
+  getAll: (params = {}) => api.get('/vehicles/admin/all', { params }),
+  // Stats
+  getStats: () => api.get('/vehicles/admin/stats'),
+  // Upload image
+  uploadImage: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/vehicles/admin/${id}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  // Public search endpoint
+  searchByPlate: (plate) => api.get('/vehicles/search', { params: { plate } }),
+});
+
+// ===== SERVICE ORDER MANAGEMENT =====
+
+// Service Orders API - Admin actions require /admin prefix
+export const serviceOrdersAPI = createCrudAPI(api, '/service-orders', {
+  // Admin stats
+  getStats: () => api.get('/service-orders/admin/stats'),
+  // Order status management - Admin endpoints
+  updateStatus: (id, data) => api.put(`/service-orders/admin/${id}/status`, data),
+  assign: (id, data) => api.patch(`/service-orders/admin/${id}/assign`, data),
+  complete: (id, data) => api.patch(`/service-orders/admin/${id}/complete`, data),
+  // Override delete to use admin endpoint
+  delete: (id) => api.delete(`/service-orders/admin/${id}`),
+});
+
+// ===== OFFER MANAGEMENT =====
+
+// Offers API - Per ADMIN_QUICK_REFERENCE.md
+export const offersAPI = createCrudAPI(api, '/offers', {
+  // Override create/update/delete to use /admin prefix
+  create: (data) => api.post('/offers/admin', data),
+  update: (id, data) => api.put(`/offers/admin/${id}`, data),
+  delete: (id) => api.delete(`/offers/admin/${id}`),
+  // Stats
+  getStats: () => api.get('/offers/admin/stats'),
+  // Upload image
+  uploadImage: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/offers/admin/${id}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+});
+
+// ===== WARRANTY MANAGEMENT =====
+
+// Warranties API - GET uses public endpoint, admin actions use /admin prefix
+export const warrantiesAPI = createCrudAPI(api, '/warranties', {
+  // Override create/update/delete to use /admin prefix
+  create: (data) => api.post('/warranties/admin', data),
+  update: (id, data) => api.put(`/warranties/admin/${id}`, data),
+  delete: (id) => api.delete(`/warranties/admin/${id}`),
+  // Admin stats
+  getStats: () => api.get('/warranties/admin/stats'),
+});
+
+// ===== FILE UPLOAD MANAGEMENT =====
+
+// Upload API - File management
+export const uploadAPI = {
+  single: async (file) => {
+    // Backend expects "image" field name for single upload
+    const formData = new FormData();
+    formData.append('image', file); // Use "image" as per API docs
+    console.log(`Uploading single file with field name: image`);
+    
+    return api.post('/upload/single', formData, { 
+      headers: { 'Content-Type': 'multipart/form-data' } 
+    });
+  },
+  multiple: async (files) => {
+    // Backend expects "images" field name for multiple uploads
+    const formData = new FormData();
+    files.forEach(file => formData.append('images', file)); // Use "images" as specified by backend
+    console.log(`Uploading multiple files with field name: images`);
+    
+    return api.post('/upload/multiple', formData, { 
+      headers: { 'Content-Type': 'multipart/form-data' } 
+    });
+  },
+  delete: (filename) => api.delete(`/upload/${filename}`),
 };
 
-// FCM Tokens API - Optional, comment out if not available on backend
-export const fcmTokensAPI = {
-  // Get all active tokens
-  getActive: () => api.get('/fcm-tokens/active').catch(() => ({ data: { tokens: [], count: 0 } })),
-  // Get tokens for specific user
-  getUserTokens: (userId, userType) => api.get('/fcm-tokens/user', { params: { user_id: userId, user_type: userType } }).catch(() => ({ data: { tokens: [] } })),
-  // Cleanup inactive tokens
-  cleanupInactive: () => api.post('/fcm-tokens/cleanup/inactive').catch(() => ({ data: { deactivated_count: 0 } })),
-  // Delete old tokens
-  deleteOld: (days = 90) => api.delete(`/fcm-tokens/cleanup/old?days=${days}`).catch(() => ({ data: { deleted_count: 0 } })),
-};
+// ===== SERVICE ORDER IMAGE MANAGEMENT =====
 
 // Service Order Images API
 export const serviceOrderImagesAPI = {
@@ -127,36 +252,63 @@ export const serviceOrderImagesAPI = {
   delete: (id) => api.delete(`/service-order-images/${id}`),
 };
 
-// Vehicles API - Sử dụng endpoint admin mới
-export const vehiclesAPI = {
-  // Admin endpoint - lấy tất cả vehicles với phân trang và search
-  getAll: (params = {}) => api.get('/vehicles/admin/all', { params }),
-  getById: (id) => api.get(`/vehicles/${id}`),
-  create: (data) => api.post('/vehicles', data),
-  update: (id, data) => api.patch(`/vehicles/${id}`, data),
-  delete: (id) => api.delete(`/vehicles/${id}`),
-  // Customer-specific endpoints
-  getCustomerVehicles: (customerId) => api.get('/vehicles', { params: { customer_id: customerId } }),
-  searchByPlate: (licensePlate) => api.get('/vehicles/search', { params: { license_plate: licensePlate } }),
+// ===== NOTIFICATION MANAGEMENT =====
+
+// Notifications API - User and admin management
+export const notificationsAPI = {
+  // User notifications
+  getUserNotifications: (params) => api.get('/notifications', { params }),
+  getUnreadCount: (params) => api.get('/notifications/unread-count', { params }),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: (data) => api.put('/notifications/read-all', data),
+  delete: (id) => api.delete(`/notifications/${id}`),
+  
+  // Admin notifications
+  getAll: (params) => api.get('/notifications/admin/all', { params }),
+  send: (data) => api.post('/notifications/send', data),
+  getStats: () => api.get('/notifications/admin/stats'),
+  
+  // Helper methods for dropdowns
+  getCustomers: () => api.get('/customers'),
+  getEmployees: () => api.get('/employees'),
 };
 
-// Upload API
-export const uploadAPI = {
-  single: (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    return api.post('/upload/single', formData, { 
-      headers: { 'Content-Type': 'multipart/form-data' } 
-    });
-  },
-  multiple: (files) => {
-    const formData = new FormData();
-    files.forEach(file => formData.append('images', file));
-    return api.post('/upload/multiple', formData, { 
-      headers: { 'Content-Type': 'multipart/form-data' } 
-    });
-  },
-  delete: (filename) => api.delete(`/upload/${filename}`),
+// ===== FCM TOKEN MANAGEMENT =====
+
+// FCM Tokens API
+export const fcmTokensAPI = {
+  register: (data) => api.post('/fcm-tokens/register', data),
+  refresh: (data) => api.post('/fcm-tokens/refresh', data),
+  getUserTokens: (params) => api.get('/fcm-tokens/user', { params }),
+  delete: (data) => api.delete('/fcm-tokens', { data }),
+  
+  // Admin endpoints
+  getActive: () => api.get('/fcm-tokens/active'),
+  deactivateInactive: () => api.post('/fcm-tokens/deactivate-inactive'),
+  cleanup: () => api.delete('/fcm-tokens/cleanup'),
+  getStats: () => api.get('/fcm-tokens/stats'),
+};
+
+// ===== PUSH NOTIFICATION MANAGEMENT =====
+
+// Push Notifications API
+export const pushNotificationsAPI = {
+  sendToUser: (data) => api.post('/push-notifications/send-to-user', data),
+  sendToAll: (data) => api.post('/push-notifications/send-to-all', data),
+  sendToTopic: (data) => api.post('/push-notifications/send-to-topic', data),
+  test: (data) => api.post('/push-notifications/test', data),
+  
+  // Monitoring
+  getHealth: () => api.get('/push-notifications/health'),
+  getStats: () => api.get('/push-notifications/stats'),
+};
+
+// ===== SYSTEM ENDPOINTS =====
+
+// System API
+export const systemAPI = {
+  health: () => api.get('/health'),
+  docs: () => api.get('/api-docs'),
 };
 
 export default api;

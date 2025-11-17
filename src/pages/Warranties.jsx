@@ -1,5 +1,5 @@
 // src/pages/Warranties.jsx
-import GenericCrudPage from '../components/GenericCrudPage';
+import GenericCrudPage from '../components/features/GenericCrudPage';
 import { warrantiesAPI } from '../services/api';
 import { warrantiesConfig } from '../config/entityConfigs.jsx';
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { pushNotificationsAPI, notificationsAPI } from '../services/api';
 import { buttonStyles } from '../styles/colors';
 import { Send, Users, Radio, Target } from 'lucide-react';
+import ImageUploader from '../components/image/ImageUploader';
 
 export default function PushNotifications() {
   const [pushModal, setPushModal] = useState({
@@ -49,11 +50,6 @@ export default function PushNotifications() {
 
     try {
       let res;
-      const notification = {
-        title: pushModal.title,
-        body: pushModal.body,
-        ...(pushModal.imageUrl && { imageUrl: pushModal.imageUrl })
-      };
 
       // Parse and stringify data values for FCM (FCM requires all string values)
       let data = {};
@@ -70,19 +66,25 @@ export default function PushNotifications() {
         res = await pushNotificationsAPI.sendToUser({
           user_id: parseInt(pushModal.user_id),
           user_type: pushModal.user_type,
-          notification,
+          title: pushModal.title,
+          body: pushModal.body,
+          ...(pushModal.imageUrl && { image_url: pushModal.imageUrl }),
           data
         });
       } else if (pushModal.type === 'broadcast') {
         res = await pushNotificationsAPI.sendToAll({
           user_type: pushModal.broadcast_user_type,
-          notification,
+          title: pushModal.title,
+          body: pushModal.body,
+          ...(pushModal.imageUrl && { image_url: pushModal.imageUrl }),
           data
         });
       } else if (pushModal.type === 'topic') {
         res = await pushNotificationsAPI.sendToTopic({
           topic: pushModal.topic,
-          notification,
+          title: pushModal.title,
+          body: pushModal.body,
+          ...(pushModal.imageUrl && { image_url: pushModal.imageUrl }),
           data
         });
       }
@@ -265,14 +267,27 @@ export default function PushNotifications() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
-            <input
-              type="text"
-              value={pushModal.imageUrl}
-              onChange={(e) => setPushModal({ ...pushModal, imageUrl: e.target.value })}
-              placeholder="https://example.com/promo.jpg"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh (Optional)</label>
+            <ImageUploader
+              onUploadSuccess={(url) => setPushModal({ ...pushModal, imageUrl: url })}
+              multiple={false}
+              maxFiles={1}
+              uploadMode="both"
+              allowFileUpload={true}
+              allowLinkUpload={true}
             />
+            {pushModal.imageUrl && (
+              <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-500 mb-1">Current image URL:</p>
+                <p className="text-sm text-blue-600 break-all">{pushModal.imageUrl}</p>
+                <button
+                  onClick={() => setPushModal({ ...pushModal, imageUrl: '' })}
+                  className="mt-1 text-xs text-red-500 hover:text-red-700"
+                >
+                  Clear image
+                </button>
+              </div>
+            )}
           </div>
 
           <div>

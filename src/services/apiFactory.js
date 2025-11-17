@@ -19,7 +19,7 @@ export function createCrudAPI(api, endpoint, customMethods = {}) {
     },
     getById: (id) => api.get(`${endpoint}/${id}`),
     create: (data) => api.post(endpoint, data),
-    update: (id, data) => api.patch(`${endpoint}/${id}`, data),
+    update: (id, data) => api.put(`${endpoint}/${id}`, data), // Changed from PATCH to PUT to match API docs
     delete: (id) => api.delete(`${endpoint}/${id}`),
   };
 

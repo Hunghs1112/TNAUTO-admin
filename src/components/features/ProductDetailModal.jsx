@@ -1,0 +1,453 @@
+// src/components/features/ProductDetailModal.jsx
+import React, { useState, useEffect } from 'react';
+import { productsAPI } from '../../services/api';
+import { isValidImageUrl, normalizeImageUrl } from '../../utils/format';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import EmptyState from '../ui/EmptyState';
+import ImageUploader from '../image/ImageUploader';
+import { useLoadingKey } from '../../contexts/LoadingContext';
+import { useToast } from '../../contexts/ToastContext';
+import { Plus, Trash2, X, Star } from 'lucide-react';
+
+/**
+ * Product Detail Modal Component
+ * Form chi tiết riêng cho sản phẩm với quản lý ảnh tích hợp
+ */
+export default function ProductDetailModal({
+  isOpen,
+  productId,
+  onClose,
+  onRefresh
+}) {
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productImages, setProductImages] = useState([]);
+  const [showImageUploader, setShowImageUploader] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
+
+  const { startLoading: startDetailLoading, stopLoading: stopDetailLoading, loading: loadingDetail } = useLoadingKey('product-detail', 'Đang tải chi tiết...');
+  const { success, error } = useToast();
+
+  useEffect(() => {
+    if (isOpen && productId) {
+      fetchProductDetails(productId);
+    } else {
+      // Reset state when modal closes
+      setSelectedProduct(null);
+      setProductImages([]);
+      setShowImageUploader(false);
+      setLightboxImage(null);
+    }
+  }, [isOpen, productId]);
+
+  const fetchProductDetails = async (id) => {
+    startDetailLoading('Đang tải chi tiết sản phẩm...');
+    try {
+      const productRes = await productsAPI.getById(id);
+      const productData = productRes.data.data || productRes.data;
+      setSelectedProduct(productData || null);
+
+      // Fetch images
+      const imagesRes = await productsAPI.getImages(id);
+      const imagesData = imagesRes.data.data || imagesRes.data;
+      const validImages = Array.isArray(imagesData) 
+        ? imagesData
+            .filter(img => img.image_url && isValidImageUrl(img.image_url))
+            .map(img => {
+              const normalizedUrl = normalizeImageUrl(img.image_url);
+              return {
+                ...img,
+                image_url: normalizedUrl || img.image_url
+              };
+            })
+            .filter(img => img.image_url)
+        : [];
+      setProductImages(validImages);
+    } catch (err) {
+      console.error('Fetch product details/images error:', err);
+      error('Không thể tải chi tiết sản phẩm: ' + (err.response?.data?.message || err.message));
+      setSelectedProduct(null);
+      setProductImages([]);
+      onClose();
+    } finally {
+      stopDetailLoading();
+    }
+  };
+
+  const handleImageUpload = async (imageUrls) => {
+    if (!selectedProduct) {
+      error('Vui lòng chọn sản phẩm');
+      return;
+    }
+
+    try {
+      startDetailLoading('Đang tải ảnh lên...');
+      const urls = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+      const validUrls = urls.filter(url => !url.startsWith('data:image/'));
+      
+      if (validUrls.length === 0) {
+        error('Không có ảnh hợp lệ để tải lên');
+        return;
+      }
+      
+      let firstImageUrl = null;
+      let isFirstImage = productImages.length === 0;
+      
+      for (const imageUrl of validUrls) {
+        const imageData = {
+          product_id: parseInt(selectedProduct.id),
+          image_url: imageUrl,
+          is_primary: isFirstImage && !firstImageUrl ? 1 : 0 // Đặt ảnh đầu tiên làm ảnh chính
+        };
+        
+        const createdImage = await productsAPI.createImage(imageData);
+        
+        // Lưu URL ảnh đầu tiên để cập nhật product.image_url
+        if (!firstImageUrl) {
+          firstImageUrl = imageUrl;
+        }
+      }
+      
+      // Nếu đây là ảnh đầu tiên hoặc sản phẩm chưa có image_url, cập nhật product.image_url
+      if (isFirstImage && firstImageUrl) {
+        try {
+          await productsAPI.update(selectedProduct.id, {
+            image_url: firstImageUrl
+          });
+          console.log('Updated product image_url to:', firstImageUrl);
+        } catch (updateErr) {
+          console.error('Error updating product image_url:', updateErr);
+          // Không throw error vì ảnh đã được tạo thành công
+        }
+      }
+      
+      success(`Thêm thành công ${validUrls.length} ảnh!`);
+      
+      // Refresh danh sách ảnh và thông tin sản phẩm
+      await fetchProductDetails(selectedProduct.id);
+      setShowImageUploader(false);
+      onRefresh && onRefresh();
+    } catch (err) {
+      console.error('Create image record error:', err);
+      error('Lỗi khi lưu thông tin ảnh: ' + (err.response?.data?.message || err.message));
+    } finally {
+      stopDetailLoading();
+    }
+  };
+
+  const handleDeleteImage = async (imageId, imageUrl) => {
+    if (!confirm('Xóa hình ảnh này?')) return;
+    
+    try {
+      startDetailLoading('Đang xóa ảnh...');
+      
+      // Kiểm tra xem ảnh này có phải là ảnh chính không
+      const deletedImage = productImages.find(img => img.id === imageId);
+      const isPrimary = deletedImage && deletedImage.is_primary === 1;
+      
+      await productsAPI.deleteImage(imageId);
+      
+      // Nếu xóa ảnh chính và còn ảnh khác, đặt ảnh đầu tiên làm ảnh chính
+      if (isPrimary && productImages.length > 1) {
+        const remainingImages = productImages.filter(img => img.id !== imageId);
+        if (remainingImages.length > 0) {
+          const newPrimaryImage = remainingImages[0];
+          try {
+            // Đặt ảnh đầu tiên làm ảnh chính
+            await productsAPI.updateImage(newPrimaryImage.id, { is_primary: 1 });
+            
+            // Cập nhật product.image_url
+            await productsAPI.update(selectedProduct.id, {
+              image_url: newPrimaryImage.image_url
+            });
+            console.log('Updated product image_url to new primary:', newPrimaryImage.image_url);
+          } catch (updateErr) {
+            console.error('Error updating primary image after delete:', updateErr);
+            // Không throw error vì ảnh đã được xóa thành công
+          }
+        }
+      } else if (isPrimary && productImages.length === 1) {
+        // Nếu xóa ảnh chính và không còn ảnh nào, xóa image_url của product
+        try {
+          await productsAPI.update(selectedProduct.id, {
+            image_url: null
+          });
+          console.log('Cleared product image_url (no images left)');
+        } catch (updateErr) {
+          console.error('Error clearing product image_url:', updateErr);
+        }
+      }
+      
+      success('Xóa ảnh thành công!');
+      
+      // Refresh danh sách ảnh
+      if (selectedProduct) {
+        await fetchProductDetails(selectedProduct.id);
+      }
+      onRefresh && onRefresh();
+    } catch (err) {
+      console.error('Delete image error:', err);
+      error('Lỗi khi xóa ảnh');
+    } finally {
+      stopDetailLoading();
+    }
+  };
+
+  const handleSetPrimary = async (imageId) => {
+    if (!selectedProduct) return;
+
+    try {
+      startDetailLoading('Đang đặt làm ảnh chính...');
+      
+      // Tìm ảnh được chọn làm ảnh chính
+      const primaryImage = productImages.find(img => img.id === imageId);
+      if (!primaryImage) {
+        error('Không tìm thấy ảnh');
+        return;
+      }
+      
+      // Update primary image
+      await productsAPI.updateImage(imageId, { is_primary: 1 });
+      
+      // Update other images to remove primary
+      const otherImages = productImages.filter(img => img.id !== imageId && img.is_primary === 1);
+      for (const img of otherImages) {
+        await productsAPI.updateImage(img.id, { is_primary: 0 });
+      }
+      
+      // Cập nhật product.image_url với URL của ảnh chính
+      try {
+        await productsAPI.update(selectedProduct.id, {
+          image_url: primaryImage.image_url
+        });
+        console.log('Updated product image_url to primary image:', primaryImage.image_url);
+      } catch (updateErr) {
+        console.error('Error updating product image_url:', updateErr);
+        // Không throw error vì ảnh chính đã được đặt thành công
+      }
+      
+      success('Đặt ảnh chính thành công!');
+      await fetchProductDetails(selectedProduct.id);
+      onRefresh && onRefresh();
+    } catch (err) {
+      console.error('Set primary image error:', err);
+      error('Có lỗi xảy ra khi đặt ảnh chính: ' + (err.response?.data?.message || err.message));
+    } finally {
+      stopDetailLoading();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Product Detail Modal */}
+      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+        <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-gray-200/50 dark:border-slate-700/50 animate-fade-in">
+          {/* Header */}
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                  {selectedProduct ? `Chi tiết sản phẩm #${selectedProduct.id}` : 'Đang tải...'}
+                </h3>
+                {selectedProduct && (
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {selectedProduct.name}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
+                aria-label="Đóng"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Loading State */}
+          {loadingDetail && (
+            <div className="flex-1 flex items-center justify-center p-8">
+              <LoadingSpinner size="lg" message="Đang tải thông tin sản phẩm..." />
+            </div>
+          )}
+          
+          {/* Content */}
+          {!loadingDetail && selectedProduct && (
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 transition-colors duration-300 space-y-4">
+              {/* Thông tin sản phẩm - Chỉ xem */}
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+                <h4 className="font-semibold text-base sm:text-lg mb-3 text-gray-700 dark:text-gray-300">
+                  Thông tin sản phẩm
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Tên:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.name || '-'}</span></div>
+                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Giá:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedProduct.price) : '-'}</span></div>
+                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Danh mục:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.category_name || '-'}</span></div>
+                  {selectedProduct.description && (
+                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Mô tả:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.description}</span></div>
+                  )}
+                </div>
+              </div>
+
+              {/* Hình ảnh - Có thể thêm/xóa/xem/đặt ảnh chính */}
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                    Hình ảnh sản phẩm ({productImages.length})
+                  </h4>
+                  <button
+                    onClick={() => setShowImageUploader(!showImageUploader)}
+                    className="btn-gradient-primary flex items-center gap-1 px-3 py-1.5 text-sm font-medium"
+                  >
+                    <Plus size={16} />
+                    {showImageUploader ? 'Đóng' : 'Thêm ảnh'}
+                  </button>
+                </div>
+
+                {/* Image Uploader */}
+                {showImageUploader && (
+                  <div className="mb-4 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-600">
+                    <ImageUploader 
+                      onUploadSuccess={handleImageUpload}
+                      multiple={true}
+                      maxFiles={10}
+                      uploadMode="both"
+                      allowFileUpload={true}
+                      allowLinkUpload={true}
+                    />
+                  </div>
+                )}
+
+                {/* Image Grid */}
+                {productImages.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {productImages.map((img) => {
+                      const imageUrl = img.image_url ? (normalizeImageUrl(img.image_url) || img.image_url) : null;
+                      if (!imageUrl) return null;
+                      
+                      return (
+                      <div 
+                        key={img.id} 
+                        className={`group relative aspect-square rounded-lg overflow-hidden border-2 transition-all bg-gray-100 dark:bg-slate-800 ${
+                          img.is_primary === 1 
+                            ? 'border-yellow-400 dark:border-yellow-500 ring-2 ring-yellow-200 dark:ring-yellow-800' 
+                            : 'border-gray-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500'
+                        }`}
+                      >
+                        {/* Primary Badge */}
+                        {img.is_primary === 1 && (
+                          <div className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg z-30">
+                            <Star size={12} fill="currentColor" />
+                            Ảnh chính
+                          </div>
+                        )}
+                        
+                        <img
+                          src={imageUrl}
+                          alt="Hình ảnh sản phẩm"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer relative z-10"
+                          loading="lazy"
+                          onClick={() => setLightboxImage(imageUrl)}
+                          onError={(e) => { 
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.classList.add('flex', 'items-center', 'justify-center', 'bg-gray-100', 'dark:bg-slate-700');
+                              parent.innerHTML = '<svg class="w-12 h-12 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                            }
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 dark:group-hover:bg-black/50 transition-all flex items-center justify-center gap-2 pointer-events-none z-20">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLightboxImage(imageUrl);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
+                          >
+                            Xem lớn
+                          </button>
+                          {img.is_primary !== 1 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSetPrimary(img.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 px-2 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
+                              title="Đặt làm ảnh chính"
+                            >
+                              <Star size={14} />
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteImage(img.id, img.image_url);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-red-600 dark:text-red-400 px-2 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
+                            title="Xóa ảnh"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <EmptyState 
+                    title="Chưa có hình ảnh"
+                    description="Sản phẩm này chưa có hình ảnh nào"
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          {!loadingDetail && selectedProduct && (
+            <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800">
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                >
+                  <X size={16} />
+                  Đóng
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Image Lightbox */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 dark:bg-black/95 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fade-in"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative max-w-7xl max-h-[95vh] w-full h-full flex items-center justify-center">
+            <img
+              src={normalizeImageUrl(lightboxImage) || lightboxImage}
+              alt="Ảnh lớn"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute top-4 right-4 p-3 bg-white/10 dark:bg-slate-800/50 hover:bg-white/20 dark:hover:bg-slate-700/50 text-white rounded-lg transition-all duration-200 backdrop-blur-sm"
+              aria-label="Đóng"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+

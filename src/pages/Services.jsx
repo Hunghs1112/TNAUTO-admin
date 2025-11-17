@@ -1,5 +1,5 @@
 // src/pages/Services.jsx
-import GenericCrudPage from '../components/GenericCrudPage';
+import GenericCrudPage from '../components/features/GenericCrudPage';
 import { servicesAPI } from '../services/api';
 import { servicesConfig } from '../config/entityConfigs.jsx';
 

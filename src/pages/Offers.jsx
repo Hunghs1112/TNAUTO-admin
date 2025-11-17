@@ -1,5 +1,5 @@
 // src/pages/Offers.jsx
-import GenericCrudPage from '../components/GenericCrudPage';
+import GenericCrudPage from '../components/features/GenericCrudPage';
 import { offersAPI } from '../services/api';
 import { offersConfig } from '../config/entityConfigs.jsx';
 

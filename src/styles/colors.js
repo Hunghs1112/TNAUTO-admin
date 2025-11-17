@@ -71,13 +71,13 @@ export const colors = {
   },
 };
 
-// Button styles
+// Button styles - Modern Gradient Buttons
 export const buttonStyles = {
-  primary: `${colors.primary.bg} ${colors.primary.bgHover} text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-sm hover:shadow-md`,
-  success: `${colors.success.bg} ${colors.success.bgHover} text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-sm hover:shadow-md`,
-  warning: `${colors.warning.bg} ${colors.warning.bgHover} text-gray-900 font-medium px-4 py-2 rounded-lg transition-colors shadow-sm hover:shadow-md`,
-  danger: `${colors.danger.bg} ${colors.danger.bgHover} text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-sm hover:shadow-md`,
-  secondary: `${colors.secondary.bg} ${colors.secondary.bgHover} text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-sm hover:shadow-md`,
+  primary: `btn-gradient-primary flex items-center gap-2`,
+  success: `btn-gradient-success flex items-center gap-2`,
+  warning: `btn-gradient-warning flex items-center gap-2`,
+  danger: `btn-gradient-error flex items-center gap-2`,
+  secondary: `btn-gradient-secondary flex items-center gap-2`,
 };
 
 // Badge styles

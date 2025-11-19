@@ -1,10 +1,17 @@
+import { memo, useCallback } from 'react';
+
 /**
  * TabView Component - Responsive tabs component
+ * Optimized with React.memo to prevent unnecessary rerenders
  * @param {Array} tabs - Array of tab objects with { id, label, icon (optional) }
  * @param {string} activeTab - Currently active tab id
  * @param {Function} onTabChange - Callback when tab changes
  */
-export default function TabView({ tabs, activeTab, onTabChange }) {
+function TabView({ tabs, activeTab, onTabChange }) {
+  const handleTabClick = useCallback((tabId) => {
+    onTabChange(tabId);
+  }, [onTabChange]);
+
   return (
     <div className="border-b border-gray-200">
       <nav className="flex flex-wrap -mb-px gap-1">
@@ -15,7 +22,7 @@ export default function TabView({ tabs, activeTab, onTabChange }) {
           return (
             <button
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className={`
                 flex items-center gap-2 px-4 py-2.5 border-b-2 font-medium text-sm transition-all
                 ${isActive 
@@ -34,4 +41,6 @@ export default function TabView({ tabs, activeTab, onTabChange }) {
     </div>
   );
 }
+
+export default memo(TabView);
 

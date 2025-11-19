@@ -11,7 +11,7 @@ import { isValidImageUrl, normalizeImageUrl } from '../../utils/format';
  * Sử dụng form chi tiết riêng (ServiceOrderDetailModal)
  * Các trang khác dùng form xem/sửa chung trong Table.jsx
  */
-export default function ServiceOrderManagement() {
+export default function ServiceOrderManagement({ tableActionsRef = null }) {
   const [employees, setEmployees] = useState([]);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -118,6 +118,8 @@ export default function ServiceOrderManagement() {
         onView={handleViewOrder}
         onEdit={handleViewOrder}
         onRowClick={handleViewOrder}
+        tableActionsRef={tableActionsRef}
+        showTableHeaderActions={false}
         options={{
           transformData: (data) => data.map(order => ({
             ...order,

@@ -1,28 +1,28 @@
 // src/pages/Products.jsx
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import ProductDetailModal from '../components/features/ProductDetailModal';
 import { productsAPI } from '../services/api';
 import { productsConfig } from '../config/entityConfigs.jsx';
 
-export default function Products() {
+function Products() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleViewProduct = (item) => {
+  const handleViewProduct = useCallback((item) => {
     setSelectedProductId(item.id);
     setShowDetailModal(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setShowDetailModal(false);
     setSelectedProductId(null);
-  };
+  }, []);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setRefreshKey(prev => prev + 1);
-  };
+  }, []);
 
   return (
     <>
@@ -48,3 +48,5 @@ export default function Products() {
     </>
   );
 }
+
+export default memo(Products);

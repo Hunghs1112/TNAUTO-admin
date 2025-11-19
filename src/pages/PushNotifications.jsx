@@ -1,11 +1,11 @@
 // src/pages/PushNotifications.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { pushNotificationsAPI, notificationsAPI } from '../services/api';
 import { buttonStyles } from '../styles/colors';
 import { Send, Users, Radio, Target } from 'lucide-react';
 import ImageUploader from '../components/image/ImageUploader';
 
-export default function PushNotifications() {
+function PushNotifications() {
   const [pushModal, setPushModal] = useState({
     type: 'user', // user, broadcast, topic
     user_id: '',
@@ -21,11 +21,7 @@ export default function PushNotifications() {
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
 
-  useEffect(() => {
-    loadCustomersAndEmployees();
-  }, []);
-
-  const loadCustomersAndEmployees = async () => {
+  const loadCustomersAndEmployees = useCallback(async () => {
     try {
       const customersRes = await notificationsAPI.getCustomers();
       setCustomers(customersRes.data.data || customersRes.data || []);
@@ -35,9 +31,13 @@ export default function PushNotifications() {
     } catch (err) {
       console.error('Error loading customers/employees:', err);
     }
-  };
+  }, []);
 
-  const handleSendPush = async () => {
+  useEffect(() => {
+    loadCustomersAndEmployees();
+  }, [loadCustomersAndEmployees]);
+
+  const handleSendPush = useCallback(async () => {
     if (pushModal.type === 'user' && (!pushModal.user_id || !pushModal.user_type)) {
       alert('Vui lòng nhập User ID và chọn User Type');
       return;
@@ -317,4 +317,6 @@ export default function PushNotifications() {
     </div>
   );
 }
+
+export default memo(PushNotifications);
 

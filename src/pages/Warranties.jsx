@@ -1,9 +1,10 @@
 // src/pages/Warranties.jsx
+import { memo } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import { warrantiesAPI } from '../services/api';
 import { warrantiesConfig } from '../config/entityConfigs.jsx';
 
-export default function Warranties() {
+function Warranties() {
   return (
     <GenericCrudPage
       api={warrantiesAPI}
@@ -13,3 +14,5 @@ export default function Warranties() {
     />
   );
 }
+
+export default memo(Warranties);

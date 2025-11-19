@@ -15,6 +15,8 @@ import Notifications from './pages/Notifications';
 import Warranties from './pages/Warranties';
 import Offers from './pages/Offers';
 
+// All page components are already memoized in their respective files
+// to prevent unnecessary rerenders on navigation
 function App() {
   return (
     <ThemeProvider>

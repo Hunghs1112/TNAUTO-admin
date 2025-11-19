@@ -1,7 +1,7 @@
 // src/components/layout/Sidebar.jsx
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Settings, Package, FileText, Bell, Shield, Tag, Menu, X, FolderOpen, Car } from 'lucide-react';
+import { Users, Settings, Package, FileText, Bell, Shield, Tag, FolderOpen, Car, Menu, ChevronDown, X } from 'lucide-react';
 
 const menuItems = [
   { id: 'customers', label: 'Khách hàng', icon: Users, path: '/customers' },
@@ -16,84 +16,149 @@ const menuItems = [
   { id: 'offers', label: 'Ưu đãi', icon: Tag, path: '/offers' },
 ];
 
-export default function Sidebar() {
+// Helper function to get page title from path
+const getPageTitle = (path) => {
+  const item = menuItems.find(item => item.path === path);
+  if (item) return item.label;
+  if (path === '/') return 'Khách hàng';
+  return 'Quản Trị Hệ Thống';
+};
+
+function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeItem, setActiveItem] = useState('customers');
-  const [isOpen, setIsOpen] = useState(false);
   const currentPath = location.pathname;
+  const pageTitle = useMemo(() => getPageTitle(currentPath), [currentPath]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleClick = (item) => {
-    setActiveItem(item.id);
+  const handleClick = useCallback((item) => {
     navigate(item.path);
-    if (window.innerWidth < 1024) setIsOpen(false);
-  };
+    setIsMenuOpen(false); // Đóng menu sau khi chọn
+  }, [navigate]);
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen(prev => !prev);
+  }, []);
 
-  const closeSidebar = () => {
-    if (window.innerWidth < 1024) setIsOpen(false);
-  };
+  // Memoize menu items to prevent recreation on each render
+  const memoizedMenuItems = useMemo(() => menuItems, []);
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={closeSidebar} />}
-      
-      {/* Sidebar - Professional Design with Gradient - Dark Mode Support */}
-      <div className={`fixed z-50 top-0 left-0 h-screen gradient-sidebar text-white transform transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } w-56 lg:w-56 overflow-y-auto shadow-xl border-r border-gray-800/50 dark:border-slate-700/50 dark-scrollbar`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800/50 dark:border-slate-700/50 flex-shrink-0 transition-colors duration-300">
-          <div className="text-base font-semibold truncate text-white">
-            Quản Trị Hệ Thống
+      {/* Desktop Sidebar - Vertical */}
+      <aside 
+        className="hidden lg:flex flex-col w-64 h-screen text-white border-r border-slate-800/50"
+        style={{ background: 'var(--gradient-sidebar)' }}
+      >
+        {/* Header with Title */}
+        <div className="flex flex-col p-6 border-b border-slate-800/50 bg-slate-900/30">
+          <h2 className="text-xl font-bold mb-1.5 text-white">Quản Trị Hệ Thống</h2>
+          <div className="text-sm text-slate-300 font-medium flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+            {pageTitle}
           </div>
-          <button 
-            onClick={toggleSidebar} 
-            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-800/50 dark:hover:bg-slate-700/50 transition-colors duration-200"
-            aria-label="Đóng menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
         
-        {/* Navigation */}
-        <nav className="flex-1 p-2 h-full flex flex-col">
-          {menuItems.map((item) => {
+        {/* Navigation Menu */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          {memoizedMenuItems.map((item) => {
             const isActive = currentPath === item.path || (currentPath === '/' && item.id === 'customers');
             return (
               <button
                 key={item.id}
                 onClick={() => handleClick(item)}
                 className={`
-                  group flex items-center justify-start p-3 rounded-xl cursor-pointer 
-                  transition-all duration-200
+                  w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-medium
+                  transition-all duration-200 min-h-[48px]
                   ${isActive 
-                    ? 'tab-active text-white shadow-lg transform translate-x-1' 
-                    : 'text-gray-300 dark:text-gray-400 hover:bg-gray-800/50 dark:hover:bg-slate-700/50 hover:text-white hover:shadow-md hover:translate-x-1'
+                    ? 'text-white shadow-lg scale-[1.02]' 
+                    : 'text-slate-300 hover:bg-slate-800/50 hover:text-white hover:scale-[1.01]'
                   }
                 `}
+                style={isActive ? { background: 'var(--gradient-primary)' } : {}}
               >
-                <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span className="text-sm font-medium truncate">{item.label}</span>
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-left flex-1">{item.label}</span>
               </button>
             );
           })}
         </nav>
-      </div>
-      
-      {/* Mobile menu button */}
-      {!isOpen && (
-        <button 
-          className="fixed top-4 left-4 z-50 p-2 bg-gray-800 dark:bg-slate-800 text-white rounded-lg lg:hidden shadow-lg hover:bg-gray-700 dark:hover:bg-slate-700 transition-colors duration-200" 
-          onClick={toggleSidebar}
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-      )}
+      </aside>
+
+      {/* Mobile Navbar - Horizontal với Dropdown Menu */}
+      <nav 
+        className="lg:hidden fixed top-0 left-0 right-0 z-50 border-b border-slate-800/50 shadow-lg"
+        style={{ background: 'var(--gradient-sidebar)' }}
+      >
+        {/* Page Title Header với Menu Button */}
+        <div className="px-4 py-3.5 border-b border-slate-800/50 bg-slate-900/30">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-white mb-0.5 truncate">{pageTitle}</h1>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>
+                <p className="text-xs text-slate-300 font-medium truncate">Quản Trị Hệ Thống</p>
+              </div>
+            </div>
+            
+            {/* Menu Dropdown Button */}
+            <button
+              onClick={toggleMenu}
+              className="flex items-center gap-2 px-3 py-2 text-white hover:bg-slate-800/50 rounded-lg transition-colors flex-shrink-0"
+              aria-label="Menu"
+            >
+              {isMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <>
+                  <Menu className="w-5 h-5" />
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Dropdown Menu */}
+        {isMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/50 z-40 top-[73px]"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            
+            {/* Menu Dropdown */}
+            <div className="absolute top-full left-0 right-0 bg-slate-900 border-b-2 border-slate-800/50 shadow-xl max-h-[calc(100vh-73px)] overflow-y-auto z-50">
+              <div className="p-2 space-y-1">
+                {memoizedMenuItems.map((item) => {
+                  const isActive = currentPath === item.path || (currentPath === '/' && item.id === 'customers');
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleClick(item)}
+                      className={`
+                        w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                        transition-all duration-200 min-h-[48px]
+                        ${isActive 
+                          ? 'text-white shadow-lg' 
+                          : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+                        }
+                      `}
+                      style={isActive ? { background: 'var(--gradient-primary)' } : {}}
+                    >
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-left flex-1">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+      </nav>
     </>
   );
 }
+
+export default memo(Sidebar);

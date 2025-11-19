@@ -1,9 +1,10 @@
 // src/pages/Employees.jsx
+import { memo } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import { employeesAPI } from '../services/api';
 import { employeesConfig } from '../config/entityConfigs.jsx';
 
-export default function Employees() {
+function Employees() {
   return (
     <GenericCrudPage
       api={employeesAPI}
@@ -13,3 +14,5 @@ export default function Employees() {
     />
   );
 }
+
+export default memo(Employees);

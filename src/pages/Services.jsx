@@ -1,9 +1,10 @@
 // src/pages/Services.jsx
+import { memo } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import { servicesAPI } from '../services/api';
 import { servicesConfig } from '../config/entityConfigs.jsx';
 
-export default function Services() {
+function Services() {
   return (
     <GenericCrudPage
       api={servicesAPI}
@@ -13,3 +14,5 @@ export default function Services() {
     />
   );
 }
+
+export default memo(Services);

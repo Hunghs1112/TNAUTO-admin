@@ -1,16 +1,32 @@
 // src/pages/ServiceOrders.jsx
+import { useRef, memo, useCallback } from 'react';
+import PageHeader from '../components/layout/PageHeader';
 import ServiceOrderManagement from '../components/features/ServiceOrderManagement';
 
-export default function ServiceOrders() {
+function ServiceOrders() {
+  const tableActionsRef = useRef(null);
+
+  const handleRefresh = useCallback(() => {
+    tableActionsRef.current?.refresh?.();
+  }, []);
+
+  const handleCreate = useCallback(() => {
+    tableActionsRef.current?.openCreateModal?.();
+  }, []);
+
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">Đơn dịch vụ</h1>
-      </div>
+    <>
+      <PageHeader
+        title="Đơn dịch vụ"
+        onRefresh={handleRefresh}
+        onCreate={handleCreate}
+      />
       
       <div className="page-content">
-        <ServiceOrderManagement />
+        <ServiceOrderManagement tableActionsRef={tableActionsRef} />
       </div>
-    </div>
+    </>
   );
 }
+
+export default memo(ServiceOrders);

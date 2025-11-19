@@ -1,9 +1,10 @@
 // src/pages/Customers.jsx
+import { memo } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import { customersAPI } from '../services/api';
 import { customersConfig } from '../config/entityConfigs.jsx';
 
-export default function Customers() {
+function Customers() {
   return (
     <GenericCrudPage
       api={customersAPI}
@@ -14,3 +15,5 @@ export default function Customers() {
     />
   );
 }
+
+export default memo(Customers);

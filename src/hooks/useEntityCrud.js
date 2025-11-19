@@ -22,6 +22,8 @@ export default function useEntityCrud(api, options = {}) {
   const [data, setData] = useState(initialData);
   const [error, setError] = useState(null);
   const [hasFetched, setHasFetched] = useState(false);
+  // Không set loading = true ngay từ đầu để tránh chớp
+  // Chỉ set loading khi thực sự đang fetch và chưa có data
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -32,6 +34,7 @@ export default function useEntityCrud(api, options = {}) {
   const transformDataRef = useRef(transformData);
   const onErrorRef = useRef(onError);
   const initialDataRef = useRef(initialData);
+  const loadingTimeoutRef = useRef(null);
 
   // Update refs when values change
   useEffect(() => {
@@ -46,12 +49,28 @@ export default function useEntityCrud(api, options = {}) {
     // KHÔNG clear data để tránh chớp trắng
     const hasExistingData = data.length > 0;
     
-    if (isRefresh && hasExistingData) {
-      setIsRefreshing(true);
-    } else {
-      setLoading(true);
+    // Clear timeout cũ nếu có
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
     }
-    startLoading('Đang tải dữ liệu...');
+    
+    if (isRefresh && hasExistingData) {
+      // Khi refresh và đã có data, chỉ hiển thị overlay refresh
+      setIsRefreshing(true);
+      // KHÔNG set loading để tránh chớp
+    } else if (!hasExistingData) {
+      // Chỉ set loading sau một khoảng thời gian ngắn để tránh chớp khi data load nhanh
+      loadingTimeoutRef.current = setTimeout(() => {
+        setLoading(true);
+        loadingTimeoutRef.current = null;
+      }, 150); // Delay 150ms để tránh chớp khi data load nhanh
+    }
+    
+    // Chỉ start global loading khi thực sự cần
+    if (!hasExistingData || isRefresh) {
+      startLoading('Đang tải dữ liệu...');
+    }
     setError(null);
     
     try {
@@ -81,6 +100,12 @@ export default function useEntityCrud(api, options = {}) {
       // Always update data when refreshing or fetching
       // Remove the condition that prevents updating on refresh
       setData(transformed || []);
+      
+      // Nếu data đã load xong trước khi timeout chạy, cancel timeout
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
     } catch (err) {
       console.error('Fetch error:', err);
       setError(err);
@@ -90,10 +115,18 @@ export default function useEntityCrud(api, options = {}) {
         setData(initialDataRef.current);
       }
       onErrorRef.current(err);
+      // Cancel timeout nếu có lỗi
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
     } finally {
       setLoading(false);
       setIsRefreshing(false);
-      stopLoading();
+      // Chỉ stop loading nếu đã start
+      if (!hasExistingData || isRefresh) {
+        stopLoading();
+      }
     }
   }, [api, startLoading, stopLoading, data]);
 

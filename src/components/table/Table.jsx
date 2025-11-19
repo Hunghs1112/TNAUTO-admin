@@ -1,5 +1,5 @@
 // src/components/table/Table.jsx
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import FormModal from '../form/FormModal';
 import FormField from '../form/FormField';
 import Pagination from '../ui/Pagination';
@@ -7,12 +7,12 @@ import TableActionButtons from './TableActionButtons';
 import EmptyState from '../ui/EmptyState';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { TableSkeleton } from '../ui/SkeletonLoader';
-import { buttonStyles } from '../../styles/colors';
+import SearchInput from './SearchInput';
 import api from '../../services/api';
 import { 
-  Search, X, Plus, 
+  Plus, 
   ArrowUpDown, ArrowUp, ArrowDown,
-  Eye, RefreshCw, Trash2, Edit2
+  Eye, RefreshCw, Trash2, Edit2, X
 } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -51,38 +51,62 @@ export default function GenericTable({
   enableSort = true,
   enableBulkActions = false,
   onRefresh = null,
-  onRowClick = null
+  onRowClick = null,
+  tableActionsRef = null,
+  showTableHeaderActions = true
 }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
-  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [confirmDelete, setConfirmDelete] = useState(null);
   const { error: showError, success: showSuccess } = useToast();
+  
+  // Frontend search handler - no API call
+  const handleSearch = useCallback((value) => {
+    setSearchTerm(value.toLowerCase().trim());
+  }, []);
 
-  // Sorted data
+  // Filter and sort data - Frontend only
   const sortedData = useMemo(() => {
-    if (!enableSort || !sortConfig.key) return data;
+    let filtered = data;
     
-    const sorted = [...data].sort((a, b) => {
-      const aVal = a[sortConfig.key];
-      const bVal = b[sortConfig.key];
-      
-      if (aVal === bVal) return 0;
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
-      
-      const comparison = aVal < bVal ? -1 : 1;
-      return sortConfig.direction === 'asc' ? comparison : -comparison;
-    });
+    // Frontend search filter
+    if (searchTerm) {
+      filtered = data.filter((item) => {
+        // Search across all columns
+        return columns.some((col) => {
+          const value = item[col.key];
+          if (value === null || value === undefined) return false;
+          
+          // Convert to string and search (case insensitive)
+          const searchValue = String(value).toLowerCase();
+          return searchValue.includes(searchTerm);
+        });
+      });
+    }
     
-    return sorted;
-  }, [data, sortConfig, enableSort]);
+    // Sort if enabled
+    if (enableSort && sortConfig.key) {
+      filtered = [...filtered].sort((a, b) => {
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        
+        if (aVal === bVal) return 0;
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+        
+        const comparison = aVal < bVal ? -1 : 1;
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
+      });
+    }
+    
+    return filtered;
+  }, [data, searchTerm, sortConfig, enableSort, columns]);
 
   // Handle sort
   const handleSort = (key) => {
@@ -315,37 +339,26 @@ export default function GenericTable({
           );
         })}
         
-        <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-slate-700">
-          <button 
-            type="button" 
-            onClick={() => {
-              setShowDetailModal(false);
-              setDetailItem(null);
-              setSelectedItem(null);
-            }} 
-            className={`${buttonStyles.secondary} text-sm`}
-          >
-            Hủy
-          </button>
-          <button type="submit" className={`${buttonStyles.primary} text-sm`} disabled={loadingOptions}>
-            Lưu
-          </button>
-        </div>
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-slate-800">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setDetailItem(null);
+                  setSelectedItem(null);
+                }} 
+                className="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+              >
+                Hủy
+              </button>
+              <button type="submit" className="btn-gradient-primary text-sm" disabled={loadingOptions}>
+                Lưu
+              </button>
+            </div>
       </form>
     );
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setSearchTerm(searchInput);
-    onSearch && onSearch(searchInput);
-  };
-
-  const handleClearSearch = () => {
-    setSearchInput('');
-    setSearchTerm('');
-    onSearch && onSearch('');
-  };
 
   const handleSave = async (savedData) => {
     try {
@@ -413,6 +426,29 @@ export default function GenericTable({
     }
   };
 
+  const handleOpenCreate = useCallback(() => {
+    setSelectedItem(null);
+    setIsEdit(false);
+    setShowModal(true);
+  }, []);
+
+  useEffect(() => {
+    if (!tableActionsRef) return;
+
+    tableActionsRef.current = {
+      openCreateModal: handleOpenCreate,
+      refresh: () => {
+        if (onRefresh && typeof onRefresh === 'function') {
+          onRefresh();
+        }
+      }
+    };
+
+    return () => {
+      tableActionsRef.current = null;
+    };
+  }, [tableActionsRef, handleOpenCreate, onRefresh]);
+
   // Render sort icon
   const renderSortIcon = (key) => {
     if (!enableSort) return null;
@@ -423,110 +459,107 @@ export default function GenericTable({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-slate-700 card-shadow transition-colors duration-200">
-      {/* Header - Professional Design with Gradient */}
-      <div className="gradient-header border-b border-gray-200 dark:border-slate-700 transition-colors duration-300">
-        <div className="p-5">
-          {/* Title & Actions Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            {!hideTitle && (
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-300">
-                  {title}
-                </h2>
-                <span className="px-2.5 py-1 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-md transition-colors duration-300">
-                  {totalItems || data.length}
-                </span>
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 rounded-lg border-2 border-gray-300 dark:border-slate-700 shadow-lg overflow-hidden">
+      {/* Header */}
+      <div className="border-b-2 border-gray-300 dark:border-slate-700">
+        <div 
+          className="p-4 lg:p-6"
+          style={{ background: 'var(--gradient-header)' }}
+        >
+          <div className="flex flex-col gap-4">
+            {/* Title and Actions Row */}
+            {(!hideTitle || showTableHeaderActions) && (
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                {!hideTitle && (
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      {title}
+                    </h2>
+                    <span className="px-2.5 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-md shadow-sm border border-blue-400">
+                      {totalItems || data.length}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-3 flex-1 justify-end">
+                  {/* Search - Đặt cùng hàng với actions */}
+                  {showSearch && (
+                    <div className="relative flex-1 max-w-xs">
+                      <SearchInput
+                        onSearch={handleSearch}
+                        placeholder={searchPlaceholder}
+                      />
+                      
+                      {/* Search Results Count Badge */}
+                      {searchTerm && (
+                        <div className="absolute -top-2 right-2 px-2.5 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-semibold rounded-full shadow-lg animate-fade-in z-20">
+                          {sortedData.length} / {data.length}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {showTableHeaderActions && (
+                    <div className="flex items-center gap-2">
+                      {onRefresh && (
+                        <button
+                          onClick={onRefresh}
+                          className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                          title="Làm mới"
+                        >
+                          <RefreshCw size={18} />
+                        </button>
+                      )}
+                      <button
+                        onClick={handleOpenCreate}
+                        className="btn-gradient-primary"
+                      >
+                        <Plus size={18} />
+                        <span className="hidden sm:inline">Thêm mới</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             
-            {/* Quick Actions */}
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
-              {onRefresh && (
-                <button
-                  onClick={onRefresh}
-                  className="p-2.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all hover:scale-105 active:scale-95"
-                  title="Làm mới"
-                  aria-label="Làm mới dữ liệu"
-                >
-                  <RefreshCw size={18} />
-                </button>
-              )}
-
-              <button
-                onClick={() => { setSelectedItem(null); setIsEdit(false); setShowModal(true); }}
-                className={`${buttonStyles.primary} rounded-lg active:scale-[0.98]`}
-              >
-                <Plus size={18} />
-                <span className="hidden sm:inline">Thêm mới</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Search */}
-          {showSearch && (
-            <form onSubmit={handleSearch} className="flex gap-2">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
+            {/* Nếu không có title nhưng có search, hiển thị search riêng */}
+            {hideTitle && showSearch && (
+              <div className="relative">
+                <SearchInput
+                  onSearch={handleSearch}
                   placeholder={searchPlaceholder}
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
                 />
-                {searchInput && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
-                  >
-                    <X size={16} />
-                  </button>
+                
+                {/* Search Results Count Badge */}
+                {searchTerm && (
+                  <div className="absolute -top-2 right-2 px-2.5 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-semibold rounded-full shadow-lg animate-fade-in z-20">
+                    {sortedData.length} / {data.length} kết quả
+                  </div>
                 )}
               </div>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors font-medium text-sm"
-              >
-                Tìm kiếm
-              </button>
-            </form>
-          )}
+            )}
+          </div>
 
-          {/* Search Results Info */}
-          {searchTerm && (
-            <div className="mt-3 flex items-center gap-2 text-sm">
-              <span className="text-gray-600 dark:text-gray-300">
-                Tìm thấy <span className="font-bold text-blue-600 dark:text-blue-400">{data.length}</span> kết quả cho "{searchTerm}"
-              </span>
-              <button
-                onClick={handleClearSearch}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-medium transition-colors duration-200"
-              >
-                Xóa
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Bulk Actions Bar */}
+        {/* Bulk Actions */}
         {enableBulkActions && selectedRows.size > 0 && (
-          <div className="px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-t border-blue-100 dark:border-blue-800 flex items-center justify-between transition-colors duration-300">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Đã chọn <span className="text-blue-600 dark:text-blue-400 font-bold">{selectedRows.size}</span> mục
+          <div className="px-4 lg:px-6 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-t-2 border-blue-300 dark:border-blue-700 flex items-center justify-between shadow-sm">
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Đã chọn <span className="font-semibold text-blue-600">{selectedRows.size}</span> mục
             </span>
             <div className="flex gap-2">
               <button
                 onClick={handleBulkDelete}
-                className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm font-medium flex items-center gap-2"
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
               >
                 <Trash2 size={16} />
                 Xóa tất cả
               </button>
               <button
                 onClick={() => setSelectedRows(new Set())}
-                className="px-3 py-1.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-all text-sm"
+                className="px-3 py-1.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 text-sm transition-colors"
               >
                 Bỏ chọn
               </button>
@@ -535,27 +568,28 @@ export default function GenericTable({
         )}
       </div>
 
-      {/* Table Content - Luôn có background phù hợp theme để tránh flash */}
-      <div className="flex-1 overflow-auto bg-white dark:bg-slate-800 transition-colors duration-200 relative">
-        {/* Loading Overlay - Chỉ hiển thị khi đang refresh (đã có dữ liệu) */}
+      {/* Table Content */}
+      <div className="flex-1 overflow-auto bg-white dark:bg-slate-900 relative">
+        {/* Refresh overlay - chỉ hiển thị khi đang refresh và đã có data */}
         {isRefreshing && sortedData.length > 0 && (
-          <div className="absolute inset-0 bg-white/70 dark:bg-slate-900/90 backdrop-blur-sm z-20 flex items-center justify-center transition-opacity duration-200">
-            <div className="flex flex-col items-center gap-2 bg-white/95 dark:bg-slate-800/95 px-4 py-3 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700">
-              <div className="w-8 h-8 border-4 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Đang tải...</span>
+          <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-20 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2 bg-white dark:bg-slate-800 px-4 py-3 rounded-xl shadow-xl border-2 border-gray-300 dark:border-slate-700">
+              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Đang tải...</span>
             </div>
           </div>
         )}
         
-        {/* Skeleton chỉ hiển thị khi loading và chưa có dữ liệu (lần đầu load) */}
-        {loading && !isRefreshing && sortedData.length === 0 ? (
-          <div className="p-6 bg-white dark:bg-slate-800 transition-colors duration-200">
+        {/* Skeleton loader - chỉ hiển thị khi đang loading lần đầu và chưa có data */}
+        {/* Tránh hiển thị skeleton nếu đã có data từ lần trước để tránh chớp */}
+        {loading && !isRefreshing && sortedData.length === 0 && data.length === 0 ? (
+          <div className="p-6">
             <TableSkeleton rows={5} columns={columns.length + (showActions ? 1 : 0)} />
           </div>
         ) : sortedData.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse data-table">
-              <thead className="gradient-table-header sticky top-0 z-10 border-b-2 border-gray-200 dark:border-slate-700">
+          <div className="overflow-x-auto border-t-2 border-gray-300 dark:border-slate-700">
+            <table className="w-full data-table border-collapse">
+              <thead className="sticky top-0 z-10">
                 <tr>
                   {enableBulkActions && (
                     <th className="w-12 px-4 py-3">
@@ -563,7 +597,7 @@ export default function GenericTable({
                         type="checkbox"
                         checked={selectedRows.size === sortedData.length}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 rounded-md border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500/50 cursor-pointer bg-white dark:bg-slate-700 transition-all duration-200"
+                        className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                       />
                     </th>
                   )}
@@ -571,9 +605,9 @@ export default function GenericTable({
                     <th
                       key={col.key}
                       onClick={() => col.sortable !== false && handleSort(col.key)}
-                      className={`px-4 py-3.5 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-all duration-200 ${
+                      className={`px-4 py-3 border-b-2 border-gray-300 dark:border-slate-700 ${
                         enableSort && col.sortable !== false 
-                          ? 'cursor-pointer hover:bg-gray-100/50 dark:hover:bg-slate-700/50 transition-all select-none' 
+                          ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors' 
                           : ''
                       }`}
                     >
@@ -584,21 +618,20 @@ export default function GenericTable({
                     </th>
                   ))}
                   {showActions && (
-                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                      Thao tác
-                    </th>
+                    <th className="px-4 py-3">Thao tác</th>
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-slate-700/50 transition-colors duration-300">
-                {sortedData.map((item, index) => (
+              <tbody>
+                {sortedData.map((item) => (
                   <tr
                     key={item[idKey]}
                     onClick={() => onRowClick && onRowClick(item)}
                     className={`
-                      group transition-all duration-200
+                      group border-b border-gray-200 dark:border-slate-700
                       ${onRowClick ? 'cursor-pointer' : ''}
-                      ${selectedRows.has(item[idKey]) ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : ''}
+                      ${selectedRows.has(item[idKey]) ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : ''}
+                      hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors
                     `}
                   >
                     {enableBulkActions && (
@@ -607,42 +640,40 @@ export default function GenericTable({
                           type="checkbox"
                           checked={selectedRows.has(item[idKey])}
                           onChange={(e) => handleSelectRow(item[idKey], e.target.checked)}
-                          className="w-4 h-4 rounded-md border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500/50 bg-white dark:bg-slate-700 transition-all duration-200 cursor-pointer"
+                          className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         />
                       </td>
                     )}
                     {columns.map((col) => (
                       <td 
                         key={col.key} 
-                        className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 transition-colors duration-300"
+                        className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-slate-700 last:border-r-0"
                         onClick={(e) => onRowClick && e.stopPropagation()}
                       >
                         {col.render ? col.render(item[col.key], item) : (
-                          <span className="text-gray-700 dark:text-gray-300">{item[col.key] || <span className="text-gray-400 dark:text-gray-500">-</span>}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{item[col.key] || <span className="text-gray-400">-</span>}</span>
                         )}
                       </td>
                     ))}
                     {showActions && (
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          {/* Combined View/Edit Button */}
+                        <div className="flex items-center gap-1">
                           <button
                             onClick={(e) => {
-                              e.stopPropagation(); // Prevent row click
+                              e.stopPropagation();
                               handleView(item);
                             }}
-                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm hover:shadow-md flex items-center gap-1"
-                            title="Xem chi tiết / Sửa"
+                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                            title="Xem / Sửa"
                           >
                             <Eye size={16} />
-                            <Edit2 size={14} className="opacity-70" />
                           </button>
                           <button
                             onClick={(e) => {
-                              e.stopPropagation(); // Prevent row click
+                              e.stopPropagation();
                               handleDelete(item[idKey]);
                             }}
-                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm hover:shadow-md"
+                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                             title="Xóa"
                           >
                             <Trash2 size={16} />
@@ -662,11 +693,11 @@ export default function GenericTable({
             description={`Chưa có ${title?.toLowerCase()} nào để hiển thị`}
             action={
               <button
-                onClick={() => { setSelectedItem(null); setIsEdit(false); setShowModal(true); }}
-                className={buttonStyles.primary}
+                onClick={handleOpenCreate}
+                className="btn-gradient-primary"
               >
-                <Plus size={18} className="inline mr-2" />
-                Thêm mục đầu tiên
+                <Plus size={18} />
+                <span>Thêm mục đầu tiên</span>
               </button>
             }
           />
@@ -675,7 +706,7 @@ export default function GenericTable({
 
       {/* Pagination */}
       {showPagination && totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 transition-colors duration-300">
+        <div className="px-4 lg:px-6 py-4 border-t-2 border-gray-300 dark:border-slate-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -698,13 +729,12 @@ export default function GenericTable({
         />
       )}
 
-      {/* Edit Modal - Form sửa chung cho tất cả các trang */}
+      {/* Edit Modal */}
       {showDetailModal && detailItem && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-auto border border-gray-200/50 dark:border-slate-700/50 animate-fade-in">
-            {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 p-6 flex items-center justify-between z-10 gradient-header transition-colors duration-300">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-auto border-2 border-gray-300 dark:border-slate-700">
+            <div className="sticky top-0 bg-white dark:bg-slate-900 border-b-2 border-gray-300 dark:border-slate-700 p-6 flex items-center justify-between z-10">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Sửa {title?.slice(0, -1).toLowerCase() || 'mục'}
               </h3>
               <button
@@ -713,15 +743,14 @@ export default function GenericTable({
                   setDetailItem(null);
                   setSelectedItem(null);
                 }}
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                 aria-label="Đóng"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="p-6 bg-white dark:bg-slate-800 transition-colors duration-300">
+            <div className="p-6">
               <FormContent
                 item={selectedItem}
                 isEdit={true}
@@ -761,24 +790,24 @@ export default function GenericTable({
 
       {/* Delete Confirmation Modal */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all border border-gray-200/50 dark:border-slate-700/50 animate-fade-in">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full p-6 border-2 border-gray-300 dark:border-slate-700">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center shadow-md">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                 <Trash2 className="text-red-600 dark:text-red-400" size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">Xác nhận xóa</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">Hành động này không thể hoàn tác</p>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Xác nhận xóa</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Hành động này không thể hoàn tác</p>
               </div>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-6 transition-colors duration-300">
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
               Bạn có chắc chắn muốn xóa mục này không?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium shadow-sm hover:shadow-md active:scale-[0.98]"
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors font-medium"
               >
                 Hủy
               </button>

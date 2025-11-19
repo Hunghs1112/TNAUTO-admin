@@ -109,7 +109,7 @@ export const servicesConfig = {
     createTextFieldForModal('name', 'Tên dịch vụ', 'text', true),
     createTextAreaField('description', 'Mô tả'),
     { name: 'estimated_time', label: 'Thời gian ước tính (giờ)', type: 'number', min: 1 },
-    createTextFieldForModal('image_url', 'URL hình ảnh'),
+    { name: 'image_url', label: 'Hình ảnh', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Dịch vụ',
   apiEndpoint: '/services',

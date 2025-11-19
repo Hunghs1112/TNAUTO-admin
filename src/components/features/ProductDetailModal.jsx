@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { productsAPI } from '../../services/api';
 import { isValidImageUrl, normalizeImageUrl } from '../../utils/format';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import EmptyState from '../ui/EmptyState';
 import ImageUploader from '../image/ImageUploader';
+import ImageGrid from '../image/ImageGrid';
 import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
-import { Plus, Trash2, X, Star } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 /**
  * Product Detail Modal Component
@@ -22,7 +22,6 @@ export default function ProductDetailModal({
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productImages, setProductImages] = useState([]);
   const [showImageUploader, setShowImageUploader] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState(null);
 
   const { startLoading: startDetailLoading, stopLoading: stopDetailLoading, loading: loadingDetail } = useLoadingKey('product-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
@@ -35,7 +34,6 @@ export default function ProductDetailModal({
       setSelectedProduct(null);
       setProductImages([]);
       setShowImageUploader(false);
-      setLightboxImage(null);
     }
   }, [isOpen, productId]);
 
@@ -321,88 +319,13 @@ export default function ProductDetailModal({
                 )}
 
                 {/* Image Grid */}
-                {productImages.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {productImages.map((img) => {
-                      const imageUrl = img.image_url ? (normalizeImageUrl(img.image_url) || img.image_url) : null;
-                      if (!imageUrl) return null;
-                      
-                      return (
-                      <div 
-                        key={img.id} 
-                        className={`group relative aspect-square rounded-lg overflow-hidden border-2 transition-all bg-gray-100 dark:bg-slate-800 ${
-                          img.is_primary === 1 
-                            ? 'border-yellow-400 dark:border-yellow-500 ring-2 ring-yellow-200 dark:ring-yellow-800' 
-                            : 'border-gray-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500'
-                        }`}
-                      >
-                        {/* Primary Badge */}
-                        {img.is_primary === 1 && (
-                          <div className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg z-30">
-                            <Star size={12} fill="currentColor" />
-                            Ảnh chính
-                          </div>
-                        )}
-                        
-                        <img
-                          src={imageUrl}
-                          alt="Hình ảnh sản phẩm"
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer relative z-10"
-                          loading="lazy"
-                          onClick={() => setLightboxImage(imageUrl)}
-                          onError={(e) => { 
-                            const target = e.currentTarget;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.classList.add('flex', 'items-center', 'justify-center', 'bg-gray-100', 'dark:bg-slate-700');
-                              parent.innerHTML = '<svg class="w-12 h-12 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-                            }
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 dark:group-hover:bg-black/50 transition-all flex items-center justify-center gap-2 pointer-events-none z-20">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setLightboxImage(imageUrl);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
-                          >
-                            Xem lớn
-                          </button>
-                          {img.is_primary !== 1 && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSetPrimary(img.id);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 px-2 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
-                              title="Đặt làm ảnh chính"
-                            >
-                              <Star size={14} />
-                            </button>
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteImage(img.id, img.image_url);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-red-600 dark:text-red-400 px-2 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
-                            title="Xóa ảnh"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <EmptyState 
-                    title="Chưa có hình ảnh"
-                    description="Sản phẩm này chưa có hình ảnh nào"
-                  />
-                )}
+                <ImageGrid
+                  images={productImages}
+                  onDelete={handleDeleteImage}
+                  onSetPrimary={handleSetPrimary}
+                  emptyTitle="Chưa có hình ảnh"
+                  emptyDescription="Sản phẩm này chưa có hình ảnh nào"
+                />
               </div>
             </div>
           )}
@@ -424,29 +347,6 @@ export default function ProductDetailModal({
         </div>
       </div>
 
-      {/* Image Lightbox */}
-      {lightboxImage && (
-        <div 
-          className="fixed inset-0 bg-black/90 dark:bg-black/95 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fade-in"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div className="relative max-w-7xl max-h-[95vh] w-full h-full flex items-center justify-center">
-            <img
-              src={normalizeImageUrl(lightboxImage) || lightboxImage}
-              alt="Ảnh lớn"
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute top-4 right-4 p-3 bg-white/10 dark:bg-slate-800/50 hover:bg-white/20 dark:hover:bg-slate-700/50 text-white rounded-lg transition-all duration-200 backdrop-blur-sm"
-              aria-label="Đóng"
-            >
-              <X size={24} />
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

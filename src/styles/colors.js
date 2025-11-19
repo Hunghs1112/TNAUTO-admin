@@ -71,13 +71,13 @@ export const colors = {
   },
 };
 
-// Button styles - Modern Gradient Buttons
+// Button styles - Simplified (uses CSS classes from index.css)
 export const buttonStyles = {
-  primary: `btn-gradient-primary flex items-center gap-2`,
-  success: `btn-gradient-success flex items-center gap-2`,
-  warning: `btn-gradient-warning flex items-center gap-2`,
-  danger: `btn-gradient-error flex items-center gap-2`,
-  secondary: `btn-gradient-secondary flex items-center gap-2`,
+  primary: 'btn-gradient-primary',
+  success: 'btn-gradient-success',
+  warning: 'btn-gradient-warning',
+  danger: 'btn-gradient-error',
+  secondary: 'btn-gradient-secondary',
 };
 
 // Badge styles

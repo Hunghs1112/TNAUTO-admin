@@ -81,11 +81,11 @@ export default function Pagination({
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600 dark:text-gray-300">
             Hiển thị{' '}
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{startItem}</span>
+            <span className="font-bold text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30">{startItem}</span>
             {' '}-{' '}
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{endItem}</span>
+            <span className="font-bold text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30">{endItem}</span>
             {' '}trong tổng số{' '}
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{totalItems}</span>
+            <span className="font-bold text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700">{totalItems}</span>
             {' '}mục
           </span>
           

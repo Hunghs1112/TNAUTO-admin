@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
 
-const API_BASE = 'http://localhost:5000/api'; // Thay bằng backend URL thực tế
+const API_BASE = 'http://103.200.20.253:5000/api'; // Thay bằng backend URL thực tế
 
 const api = axios.create({
   baseURL: API_BASE,

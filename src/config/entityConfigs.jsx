@@ -100,6 +100,11 @@ export const servicesConfig = {
   columns: [
     createIdColumn(),
     createTextField('name', 'Tên dịch vụ'),
+    { key: 'category_name', label: 'Danh mục', render: (val, item) => {
+      if (val) return val;
+      if (item.category_id) return `ID: ${item.category_id}`;
+      return '--';
+    }},
     { key: 'description', label: 'Mô tả', render: (val) => truncateText(val) },
     { key: 'estimated_time', label: 'Thời gian ước tính (giờ)', render: (val) => `${val}h` },
     createImageColumn('image_url', 'Hình ảnh'),
@@ -107,6 +112,7 @@ export const servicesConfig = {
   ],
   fieldsForModal: [
     createTextFieldForModal('name', 'Tên dịch vụ', 'text', true),
+    createSelectField('category_id', 'Danh mục dịch vụ', '/service-categories'),
     createTextAreaField('description', 'Mô tả'),
     { name: 'estimated_time', label: 'Thời gian ước tính (giờ)', type: 'number', min: 1 },
     { name: 'image_url', label: 'Hình ảnh', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
@@ -121,7 +127,11 @@ export const productsConfig = {
     createIdColumn(),
     createTextField('name', 'Tên sản phẩm'),
     { key: 'price', label: 'Giá', render: (val) => formatCurrency(val) },
-    createTextField('category_name', 'Danh mục'),
+    { key: 'category_name', label: 'Danh mục', render: (val, item) => {
+      if (val) return val;
+      if (item.category_id) return `ID: ${item.category_id}`;
+      return '--';
+    }},
     { key: 'description', label: 'Mô tả', render: (val) => truncateText(val) },
     { key: 'primary_image', label: 'Ảnh chính', render: (val) => val?.image_url ? <ImagePreview src={val.image_url} alt="Sản phẩm" className="w-12 h-12 rounded object-cover" showModal={false} directDisplay={true} /> : '-' },
     { key: 'images', label: 'Số ảnh', render: (val) => val ? `${val.length} ảnh` : '0 ảnh' },
@@ -137,12 +147,32 @@ export const productsConfig = {
   apiEndpoint: '/products',
 };
 
+// ===== SERVICE CATEGORY MANAGEMENT =====
+export const serviceCategoriesConfig = {
+  columns: [
+    createIdColumn(),
+    createTextField('name', 'Tên danh mục'),
+    { key: 'description', label: 'Mô tả', render: (val) => truncateText(val) },
+    { key: 'service_count', label: 'Số dịch vụ', render: (val) => val ? `${val} dịch vụ` : '0 dịch vụ' },
+    createImageColumn('image_url', 'Hình ảnh'),
+    createDateColumn('created_at', 'Ngày tạo'),
+  ],
+  fieldsForModal: [
+    createTextFieldForModal('name', 'Tên danh mục', 'text', true),
+    createTextAreaField('description', 'Mô tả'),
+    { name: 'image_url', label: 'Hình ảnh', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
+  ],
+  title: 'Danh mục dịch vụ',
+  apiEndpoint: '/service-categories',
+};
+
 // ===== CATEGORY MANAGEMENT =====
 export const categoriesConfig = {
   columns: [
     createIdColumn(),
     createTextField('name', 'Tên danh mục'),
     { key: 'description', label: 'Mô tả', render: (val) => truncateText(val) },
+    { key: 'product_count', label: 'Số sản phẩm', render: (val) => val ? `${val} sản phẩm` : '0 sản phẩm' },
     createImageColumn('image_url', 'Hình ảnh'),
     createDateColumn('created_at', 'Ngày tạo'),
   ],

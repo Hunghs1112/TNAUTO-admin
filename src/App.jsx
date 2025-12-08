@@ -8,6 +8,7 @@ import Customers from './pages/Customers';
 import Employees from './pages/Employees';
 import Vehicles from './pages/Vehicles';
 import Services from './pages/Services';
+import ServiceCategories from './pages/ServiceCategories';
 import Categories from './pages/Categories';
 import Products from './pages/Products';
 import ServiceOrders from './pages/ServiceOrders';
@@ -30,6 +31,7 @@ function App() {
                 <Route path="employees" element={<Employees />} />
                 <Route path="vehicles" element={<Vehicles />} />
                 <Route path="services" element={<Services />} />
+                <Route path="service-categories" element={<ServiceCategories />} />
                 <Route path="categories" element={<Categories />} />
                 <Route path="products" element={<Products />} />
                 <Route path="service-orders" element={<ServiceOrders />} />

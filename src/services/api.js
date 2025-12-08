@@ -126,6 +126,26 @@ export const productsAPI = createCrudAPI(api, '/products', {
   deleteImage: (id) => api.delete(`/products/images/${id}`),
 });
 
+// ===== SERVICE CATEGORY MANAGEMENT =====
+
+// Service Categories API - Per HUONG_DAN_TICH_HOP.md
+export const serviceCategoriesAPI = createCrudAPI(api, '/service-categories', {
+  // Override create/update/delete to use /admin prefix
+  create: (data) => api.post('/service-categories/admin', data),
+  update: (id, data) => api.put(`/service-categories/admin/${id}`, data),
+  delete: (id) => api.delete(`/service-categories/admin/${id}`),
+  // Stats
+  getStats: () => api.get('/service-categories/admin/stats'),
+  // Upload image
+  uploadImage: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/service-categories/admin/${id}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+});
+
 // ===== CATEGORY MANAGEMENT =====
 
 // Categories API - Per ADMIN_QUICK_REFERENCE.md

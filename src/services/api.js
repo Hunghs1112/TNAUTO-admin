@@ -2,23 +2,36 @@
 import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
 
-const API_BASE = 'http://103.200.20.253:5000/api'; // Thay bằng backend URL thực tế
+const API_BASE = 'http://localhost:5000/api';
+
+// Log API base URL on module load
+console.log('[API Config] Base URL:', API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor - minimal logging
+// Request interceptor - log API calls
 api.interceptors.request.use((config) => {
+  const fullUrl = `${config.baseURL}${config.url}`;
+  console.log(`[API Request] ${config.method?.toUpperCase()} ${fullUrl}`, config.params || config.data || '');
   return config;
 }, (error) => {
+  console.error('[API Request Error]', error);
   return Promise.reject(error);
 });
 
 // Response interceptor - normalize response format
 api.interceptors.response.use(
   (response) => {
+    const fullUrl = `${response.config.baseURL}${response.config.url}`;
+    console.log(`[API Response] ${response.config.method?.toUpperCase()} ${fullUrl}`, {
+      status: response.status,
+      dataCount: Array.isArray(response.data?.data) ? response.data.data.length : 'N/A',
+      hasData: !!response.data
+    });
+    
     // Normalize response data structure
     // Backend returns: { success: true, data: [...], count, total, page, limit }
     if (response.data && response.data.success !== undefined) {
@@ -34,6 +47,12 @@ api.interceptors.response.use(
     };
   },
   (error) => {
+    const fullUrl = error.config ? `${error.config.baseURL}${error.config.url}` : 'Unknown URL';
+    console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${fullUrl}`, {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message
+    });
+    
     // Better error handling
     const errorMessage = error.response?.data?.error || 
                         error.response?.data?.message || 
@@ -238,6 +257,25 @@ export const offersAPI = createCrudAPI(api, '/offers', {
 
 // Warranties API - GET uses public endpoint, admin actions use /admin prefix
 export const warrantiesAPI = createCrudAPI(api, '/warranties', {
+  // Override getAll to log response structure
+  getAll: (params) => {
+    console.log('[Warranties API] Fetching all warranties...');
+    return api.get('/warranties', { params }).then(res => {
+      console.log('[Warranties API] Warranties response:', res.data);
+      // Log sample warranty item structure
+      if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const sample = res.data.data[0];
+        console.log('[Warranties API] Sample warranty item structure:', sample);
+        console.log('[Warranties API] Has employee_id:', 'employee_id' in sample, sample.employee_id);
+        console.log('[Warranties API] Has service_id:', 'service_id' in sample, sample.service_id);
+        console.log('[Warranties API] Has employee_name:', 'employee_name' in sample, sample.employee_name);
+        console.log('[Warranties API] Has service_name:', 'service_name' in sample, sample.service_name);
+        console.log('[Warranties API] Has employee object:', 'employee' in sample, sample.employee);
+        console.log('[Warranties API] Has service object:', 'service' in sample, sample.service);
+      }
+      return res;
+    });
+  },
   // Override create/update/delete to use /admin prefix
   create: (data) => api.post('/warranties/admin', data),
   update: (id, data) => api.put(`/warranties/admin/${id}`, data),

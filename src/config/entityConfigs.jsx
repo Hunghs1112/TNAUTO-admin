@@ -1,5 +1,5 @@
 // src/config/entityConfigs.jsx
-import { formatDate, formatCurrency, truncateText } from '../utils/format';
+import { formatDate, formatCurrency, truncateText, formatTimeDuration, formatWarrantyPeriod } from '../utils/format';
 import StatusBadge from '../components/ui/StatusBadge';
 import ImagePreview from '../components/image/ImagePreview';
 
@@ -106,7 +106,16 @@ export const servicesConfig = {
       return '--';
     }},
     { key: 'description', label: 'Mô tả', render: (val) => truncateText(val) },
-    { key: 'estimated_time', label: 'Thời gian ước tính (giờ)', render: (val) => `${val}h` },
+    { 
+      key: 'estimated_time', 
+      label: 'Thời gian ước tính', 
+      render: (val) => formatTimeDuration(val) // val is in seconds
+    },
+    { 
+      key: 'warranty_period', 
+      label: 'Thời gian bảo hành', 
+      render: (val) => formatWarrantyPeriod(val) // val is in seconds
+    },
     createImageColumn('image_url', 'Hình ảnh'),
     createDateColumn('created_at', 'Ngày tạo'),
   ],
@@ -114,7 +123,16 @@ export const servicesConfig = {
     createTextFieldForModal('name', 'Tên dịch vụ', 'text', true),
     createSelectField('category_id', 'Danh mục dịch vụ', '/service-categories'),
     createTextAreaField('description', 'Mô tả'),
-    { name: 'estimated_time', label: 'Thời gian ước tính (giờ)', type: 'number', min: 1 },
+    { 
+      name: 'estimated_time', 
+      label: 'Thời gian ước tính', 
+      type: 'time_duration',
+    },
+    { 
+      name: 'warranty_period', 
+      label: 'Thời gian bảo hành', 
+      type: 'warranty_period',
+    },
     { name: 'image_url', label: 'Hình ảnh', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Dịch vụ',
@@ -142,6 +160,12 @@ export const productsConfig = {
     { name: 'price', label: 'Giá', type: 'number', min: 0, required: true },
     createSelectField('category_id', 'Danh mục', '/categories'),
     createTextAreaField('description', 'Mô tả'),
+    { 
+      name: 'video_url', 
+      label: 'Video URL', 
+      type: 'text', 
+      placeholder: 'https://www.youtube.com/watch?v=xxxxx hoặc https://youtu.be/xxxxx',
+    },
   ],
   title: 'Sản phẩm',
   apiEndpoint: '/products',
@@ -267,8 +291,49 @@ export const offersConfig = {
 export const warrantiesConfig = {
   columns: [
     { key: 'id', label: 'ID', render: (val) => <span className="font-mono text-xs">{val}</span> },
-    { key: 'order_id', label: 'ID Đơn hàng', render: (val) => <span className="font-mono text-xs">{val}</span> },
-    { key: 'customer_id', label: 'ID Khách hàng', render: (val) => <span className="font-mono text-xs">{val}</span> },
+    { 
+      key: 'order_id', 
+      label: 'Đơn hàng', 
+      render: (val, item) => {
+        // Ưu tiên order_number hoặc order_id
+        if (item.order_number) return `#${item.order_number}`;
+        if (val) return `#${val}`;
+        return '-';
+      }
+    },
+    { 
+      key: 'customer_name', 
+      label: 'Khách hàng', 
+      render: (val, item) => {
+        // Ưu tiên customer_name, nếu không có thì dùng customer.name hoặc customer_id
+        if (val) return <span className="font-medium">{val}</span>;
+        if (item.customer?.name) return <span className="font-medium">{item.customer.name}</span>;
+        if (item.customer_id) return <span className="text-gray-400">ID: {item.customer_id}</span>;
+        return '-';
+      }
+    },
+    { 
+      key: 'service_name', 
+      label: 'Dịch vụ', 
+      render: (val, item) => {
+        // Ưu tiên service_name, nếu không có thì dùng service.name hoặc service_id
+        if (val) return val;
+        if (item.service?.name) return item.service.name;
+        if (item.service_id) return <span className="text-gray-400">ID: {item.service_id}</span>;
+        return '-';
+      }
+    },
+    { 
+      key: 'employee_name', 
+      label: 'Nhân viên', 
+      render: (val, item) => {
+        // Ưu tiên employee_name, nếu không có thì dùng employee.name hoặc employee_id
+        if (val) return val;
+        if (item.employee?.name) return item.employee.name;
+        if (item.employee_id) return <span className="text-gray-400">ID: {item.employee_id}</span>;
+        return <span className="text-gray-400 italic">Chưa giao</span>;
+      }
+    },
     { key: 'warranty_period', label: 'Thời hạn (tháng)', render: (val) => `${val} tháng` },
     { key: 'start_date', label: 'Ngày bắt đầu', render: (val) => formatDate(val) },
     { key: 'end_date', label: 'Ngày hết hạn', render: (val) => formatDate(val) },
@@ -298,6 +363,7 @@ export const warrantiesConfig = {
     },
     { name: 'warranty_period', label: 'Thời hạn (tháng)', type: 'number', min: 1, required: true },
     { name: 'start_date', label: 'Ngày bắt đầu', type: 'date', required: true },
+    { name: 'end_date', label: 'Ngày hết hạn', type: 'date', disabled: true, placeholder: 'Tự động tính từ ngày bắt đầu và thời hạn' },
     { name: 'note', label: 'Ghi chú', type: 'textarea' },
   ],
   title: 'Bảo hành',

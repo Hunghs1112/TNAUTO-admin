@@ -8,7 +8,7 @@ import EmptyState from '../ui/EmptyState';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { TableSkeleton } from '../ui/SkeletonLoader';
 import SearchInput from './SearchInput';
-import api from '../../services/api';
+import httpClient from '../../services/api';
 import { 
   Plus, 
   ArrowUpDown, ArrowUp, ArrowDown,
@@ -53,7 +53,8 @@ export default function GenericTable({
   onRefresh = null,
   onRowClick = null,
   tableActionsRef = null,
-  showTableHeaderActions = true
+  showTableHeaderActions = true,
+  disableCreate = false
 }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -64,6 +65,7 @@ export default function GenericTable({
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [formReloadKey, setFormReloadKey] = useState(0); // Key để force reload form options
   const { error: showError, success: showSuccess } = useToast();
   
   // Frontend search handler - no API call
@@ -151,6 +153,8 @@ export default function GenericTable({
     setSelectedItem(item);
     setIsEdit(true);
     setShowModal(true);
+    // Tăng reload key để force reload options mỗi khi mở modal
+    setFormReloadKey(prev => prev + 1);
   };
 
   const handleDelete = async (id) => {
@@ -194,6 +198,8 @@ export default function GenericTable({
     setSelectedItem(item);
     setIsEdit(true); // Mở form sửa luôn
     setShowDetailModal(true);
+    // Tăng reload key để force reload options mỗi khi mở modal
+    setFormReloadKey(prev => prev + 1);
   };
 
   // Form content component for edit mode
@@ -222,11 +228,34 @@ export default function GenericTable({
           
           await Promise.all(fieldsWithApi.map(async (field) => {
             try {
-              const response = await api.get(field.apiEndpoint);
-              const data = response.data.data || response.data || [];
+              const response = await httpClient.get(field.apiEndpoint);
+              const raw = response.data;
+              
+              // Chuẩn hóa nhiều kiểu response khác nhau về mảng
+              let dataArray = [];
+              if (Array.isArray(raw?.data)) {
+                dataArray = raw.data;
+              } else if (Array.isArray(raw)) {
+                dataArray = raw;
+              } else if (Array.isArray(raw?.data?.data)) {
+                dataArray = raw.data.data;
+              } else if (Array.isArray(raw?.data?.items)) {
+                dataArray = raw.data.items;
+              } else if (Array.isArray(raw?.items)) {
+                dataArray = raw.items;
+              } else {
+                // Thử tìm mảng đầu tiên trong object (data hoặc raw)
+                const source = raw?.data && typeof raw.data === 'object' ? raw.data : raw;
+                if (source && typeof source === 'object') {
+                  const firstArray = Object.values(source).find(v => Array.isArray(v));
+                  if (firstArray) {
+                    dataArray = firstArray;
+                  }
+                }
+              }
               
               // Format options based on field config
-              optionsData[field.name] = data.map(item => ({
+              optionsData[field.name] = dataArray.map(item => ({
                 value: item[field.valueKey || 'id'],
                 label: field.labelFormat 
                   ? field.labelFormat(item)
@@ -310,6 +339,11 @@ export default function GenericTable({
                           `ID: ${item.customer_id}` || 
                           formData[field.name];
           }
+          
+          // For time_duration field, keep as number (seconds) for FormField to handle conversion
+          if (field.type === 'time_duration' && displayValue !== null && displayValue !== undefined) {
+            displayValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
+          }
 
           return (
             <FormField
@@ -365,19 +399,56 @@ export default function GenericTable({
       console.log('Saving data:', savedData);
       console.log('Image URL in saved data:', savedData.image_url);
       
-      // Ensure customer_id is sent (not customer_name) for vehicles
       const dataToSave = { ...savedData };
+      
+      // estimated_time is now in seconds (from days/hours input), no conversion needed
+      
+      // Ensure customer_id is sent (not customer_name) for vehicles
       if (dataToSave.customer_id && typeof dataToSave.customer_id === 'string' && dataToSave.customer_id.startsWith('ID: ')) {
         // Extract ID from "ID: 123" format
         dataToSave.customer_id = parseInt(dataToSave.customer_id.replace('ID: ', ''));
       }
       
+      // Check if this is product or service and if category_id is present
+      const hasCategoryId = dataToSave.category_id !== null && dataToSave.category_id !== undefined && dataToSave.category_id !== '';
+      const isProduct = title && (title.toLowerCase().includes('sản phẩm') || title.toLowerCase().includes('product'));
+      const isService = title && (title.toLowerCase().includes('dịch vụ') || title.toLowerCase().includes('service'));
+      
+      // Store old category_id if editing
+      const oldCategoryId = isEdit && selectedItem ? selectedItem.category_id : null;
+      
       if (isEdit) {
         await api.update(selectedItem[idKey], dataToSave);
         showSuccess('Cập nhật thành công!');
+        
+        // If category_id changed, notify Categories/ServiceCategories to refresh
+        if (hasCategoryId && oldCategoryId !== dataToSave.category_id) {
+          if (isProduct) {
+            console.log('[Table] Product category changed, dispatching productCategoryChanged event');
+            sessionStorage.setItem('productCategoryChanged', Date.now().toString());
+            window.dispatchEvent(new CustomEvent('productCategoryChanged'));
+          } else if (isService) {
+            console.log('[Table] Service category changed, dispatching serviceCategoryChanged event');
+            sessionStorage.setItem('serviceCategoryChanged', Date.now().toString());
+            window.dispatchEvent(new CustomEvent('serviceCategoryChanged'));
+          }
+        }
       } else {
         await api.create(dataToSave);
         showSuccess('Tạo mới thành công!');
+        
+        // If new item has category_id, notify Categories/ServiceCategories to refresh
+        if (hasCategoryId) {
+          if (isProduct) {
+            console.log('[Table] New product with category, dispatching productCategoryChanged event');
+            sessionStorage.setItem('productCategoryChanged', Date.now().toString());
+            window.dispatchEvent(new CustomEvent('productCategoryChanged'));
+          } else if (isService) {
+            console.log('[Table] New service with category, dispatching serviceCategoryChanged event');
+            sessionStorage.setItem('serviceCategoryChanged', Date.now().toString());
+            window.dispatchEvent(new CustomEvent('serviceCategoryChanged'));
+          }
+        }
       }
       
       // Close modal and reset form first
@@ -510,13 +581,15 @@ export default function GenericTable({
                           <RefreshCw size={18} />
                         </button>
                       )}
-                      <button
-                        onClick={handleOpenCreate}
-                        className="btn-gradient-primary"
-                      >
-                        <Plus size={18} />
-                        <span className="hidden sm:inline">Thêm mới</span>
-                      </button>
+                      {!disableCreate && (
+                        <button
+                          onClick={handleOpenCreate}
+                          className="btn-gradient-primary"
+                        >
+                          <Plus size={18} />
+                          <span className="hidden sm:inline">Thêm mới</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -692,13 +765,15 @@ export default function GenericTable({
             title="Không có dữ liệu"
             description={`Chưa có ${title?.toLowerCase()} nào để hiển thị`}
             action={
-              <button
-                onClick={handleOpenCreate}
-                className="btn-gradient-primary"
-              >
-                <Plus size={18} />
-                <span>Thêm mục đầu tiên</span>
-              </button>
+              !disableCreate ? (
+                <button
+                  onClick={handleOpenCreate}
+                  className="btn-gradient-primary"
+                >
+                  <Plus size={18} />
+                  <span>Thêm mục đầu tiên</span>
+                </button>
+              ) : null
             }
           />
         )}
@@ -720,10 +795,23 @@ export default function GenericTable({
       {/* Modals */}
       {showModal && (
         <FormModal
+          key={`modal-${selectedItem?.[idKey] || 'new'}-${formReloadKey}`}
           item={selectedItem}
           isEdit={isEdit}
           onClose={() => setShowModal(false)}
-          onSave={handleSave}
+          onSave={async (savedData) => {
+            // Check if category_id changed before saving (for products/services)
+            const categoryChanged = (savedData.category_id !== undefined && 
+                                    selectedItem?.category_id !== undefined &&
+                                    selectedItem.category_id !== savedData.category_id);
+            
+            await handleSave(savedData);
+            
+            // Reload form options if category changed
+            if (categoryChanged) {
+              setFormReloadKey(prev => prev + 1);
+            }
+          }}
           title={title}
           fields={fieldsForModal}
         />
@@ -752,6 +840,7 @@ export default function GenericTable({
 
             <div className="p-6">
               <FormContent
+                key={`form-${selectedItem?.[idKey]}-${formReloadKey}`}
                 item={selectedItem}
                 isEdit={true}
                 onSave={async (savedData) => {
@@ -761,6 +850,7 @@ export default function GenericTable({
                     
                     // Ensure customer_id is sent (not customer_name) for vehicles
                     const dataToSave = { ...savedData };
+                    // estimated_time is now in seconds (from days/hours input), no conversion needed
                     if (dataToSave.customer_id && typeof dataToSave.customer_id === 'string' && dataToSave.customer_id.startsWith('ID: ')) {
                       // Extract ID from "ID: 123" format
                       dataToSave.customer_id = parseInt(dataToSave.customer_id.replace('ID: ', ''));
@@ -770,9 +860,35 @@ export default function GenericTable({
                       dataToSave.customer_id = selectedItem.customer_id;
                     }
                     
+                    // Check if this is product or service and if category_id changed
+                    const hasCategoryId = dataToSave.category_id !== null && dataToSave.category_id !== undefined && dataToSave.category_id !== '';
+                    const isProduct = title && (title.toLowerCase().includes('sản phẩm') || title.toLowerCase().includes('product'));
+                    const isService = title && (title.toLowerCase().includes('dịch vụ') || title.toLowerCase().includes('service'));
+                    const oldCategoryId = selectedItem ? selectedItem.category_id : null;
+                    const categoryChanged = hasCategoryId && oldCategoryId !== dataToSave.category_id;
+                    
                     await api.update(selectedItem[idKey], dataToSave);
                     onEdit && onEdit();
                     showSuccess('Cập nhật thành công!');
+                    
+                    // If category_id changed, notify Categories/ServiceCategories to refresh
+                    if (categoryChanged) {
+                      if (isProduct) {
+                        console.log('[Table Detail] Product category changed, dispatching productCategoryChanged event');
+                        sessionStorage.setItem('productCategoryChanged', Date.now().toString());
+                        window.dispatchEvent(new CustomEvent('productCategoryChanged'));
+                      } else if (isService) {
+                        console.log('[Table Detail] Service category changed, dispatching serviceCategoryChanged event');
+                        sessionStorage.setItem('serviceCategoryChanged', Date.now().toString());
+                        window.dispatchEvent(new CustomEvent('serviceCategoryChanged'));
+                      }
+                    }
+                    
+                    // Reload form options if category changed
+                    if (categoryChanged) {
+                      setFormReloadKey(prev => prev + 1);
+                    }
+                    
                     setShowDetailModal(false);
                     setDetailItem(null);
                     setSelectedItem(null);

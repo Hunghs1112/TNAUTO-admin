@@ -1,13 +1,16 @@
 // src/components/features/ProductDetailModal.jsx
 import React, { useState, useEffect } from 'react';
-import { productsAPI } from '../../services/api';
+import { productsAPI, categoriesAPI } from '../../services/api';
 import { isValidImageUrl, normalizeImageUrl } from '../../utils/format';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import ImageUploader from '../image/ImageUploader';
 import ImageGrid from '../image/ImageGrid';
+import FormField from '../form/FormField';
+import ProductVideo from '../video/ProductVideo';
 import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
-import { Plus, X } from 'lucide-react';
+import { productsConfig } from '../../config/entityConfigs';
+import { Plus, X, Edit2, Save, XCircle } from 'lucide-react';
 
 /**
  * Product Detail Modal Component
@@ -22,6 +25,10 @@ export default function ProductDetailModal({
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productImages, setProductImages] = useState([]);
   const [showImageUploader, setShowImageUploader] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [fieldOptions, setFieldOptions] = useState({});
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
   const { startLoading: startDetailLoading, stopLoading: stopDetailLoading, loading: loadingDetail } = useLoadingKey('product-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
@@ -34,8 +41,79 @@ export default function ProductDetailModal({
       setSelectedProduct(null);
       setProductImages([]);
       setShowImageUploader(false);
+      setIsEditMode(false);
+      setFormData({});
     }
   }, [isOpen, productId]);
+
+  // Load dynamic options for select fields
+  useEffect(() => {
+    const loadDynamicOptions = async () => {
+      const fieldsWithApi = productsConfig.fieldsForModal.filter(f => f.type === 'select' && f.apiEndpoint);
+      if (fieldsWithApi.length === 0) return;
+
+      setLoadingOptions(true);
+      try {
+        const optionsData = {};
+        
+        await Promise.all(fieldsWithApi.map(async (field) => {
+          try {
+            let response;
+            // Load from correct API based on endpoint
+            if (field.apiEndpoint === '/categories') {
+              response = await categoriesAPI.getAll();
+            } else {
+              response = await productsAPI.getAll();
+            }
+            
+            const raw = response.data;
+            
+            // Chuẩn hóa nhiều kiểu response khác nhau về mảng
+            let dataArray = [];
+            if (Array.isArray(raw?.data)) {
+              dataArray = raw.data;
+            } else if (Array.isArray(raw)) {
+              dataArray = raw;
+            } else if (Array.isArray(raw?.data?.data)) {
+              dataArray = raw.data.data;
+            }
+            
+            optionsData[field.name] = dataArray.map(item => ({
+              value: item[field.valueKey || 'id'],
+              label: field.labelFormat 
+                ? field.labelFormat(item)
+                : item[field.labelKey || 'name']
+            }));
+          } catch (err) {
+            console.error(`Error loading options for ${field.name}:`, err);
+            optionsData[field.name] = [];
+          }
+        }));
+
+        setFieldOptions(optionsData);
+      } catch (err) {
+        console.error('Error loading dynamic options:', err);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
+    if (isOpen) {
+      loadDynamicOptions();
+    }
+  }, [isOpen]);
+
+  // Update form data when product is loaded or edit mode changes
+  useEffect(() => {
+    if (selectedProduct && isEditMode) {
+      setFormData({
+        name: selectedProduct.name || '',
+        price: selectedProduct.price || '',
+        category_id: selectedProduct.category_id || '',
+        description: selectedProduct.description || ''
+      });
+    }
+  }, [selectedProduct, isEditMode]);
 
   const fetchProductDetails = async (id) => {
     startDetailLoading('Đang tải chi tiết sản phẩm...');
@@ -234,6 +312,62 @@ export default function ProductDetailModal({
     }
   };
 
+  const handleEdit = () => {
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    // Reset form data to original product data
+    if (selectedProduct) {
+      setFormData({
+        name: selectedProduct.name || '',
+        price: selectedProduct.price || '',
+        category_id: selectedProduct.category_id || '',
+        description: selectedProduct.description || '',
+        video_url: selectedProduct.video_url || ''
+      });
+    }
+  };
+
+  const handleSaveProduct = async () => {
+    if (!selectedProduct) return;
+
+    try {
+      startDetailLoading('Đang lưu thông tin sản phẩm...');
+      
+      // Check if category_id changed
+      const categoryChanged = selectedProduct.category_id !== formData.category_id;
+      
+      // Gửi video_url như người dùng nhập (backend sẽ validate)
+      // Backend cần hỗ trợ TikTok URLs với query params
+      await productsAPI.update(selectedProduct.id, formData);
+      success('Cập nhật sản phẩm thành công!');
+      
+      // Refresh product data
+      await fetchProductDetails(selectedProduct.id);
+      setIsEditMode(false);
+      onRefresh && onRefresh();
+      
+      // If category changed, notify Categories page to refresh
+      if (categoryChanged) {
+        console.log('[ProductDetailModal] Category changed, dispatching productCategoryChanged event');
+        // Store timestamp in sessionStorage for late listeners
+        sessionStorage.setItem('productCategoryChanged', Date.now().toString());
+        window.dispatchEvent(new CustomEvent('productCategoryChanged'));
+      }
+    } catch (err) {
+      console.error('Update product error:', err);
+      error('Có lỗi xảy ra khi cập nhật sản phẩm: ' + (err.response?.data?.message || err.message));
+    } finally {
+      stopDetailLoading();
+    }
+  };
+
+  const handleFormChange = (fieldName, value) => {
+    setFormData({ ...formData, [fieldName]: value });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -274,19 +408,124 @@ export default function ProductDetailModal({
           {/* Content */}
           {!loadingDetail && selectedProduct && (
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 transition-colors duration-300 space-y-4">
-              {/* Thông tin sản phẩm - Chỉ xem */}
+              {/* Thông tin sản phẩm - Có thể sửa */}
               <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
-                <h4 className="font-semibold text-base sm:text-lg mb-3 text-gray-700 dark:text-gray-300">
-                  Thông tin sản phẩm
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Tên:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.name || '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Giá:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedProduct.price) : '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Danh mục:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.category_name || '-'}</span></div>
-                  {selectedProduct.description && (
-                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Mô tả:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.description}</span></div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                    Thông tin sản phẩm
+                  </h4>
+                  {!isEditMode && (
+                    <button
+                      onClick={handleEdit}
+                      className="btn-gradient-primary flex items-center gap-2 px-3 py-1.5 text-sm font-medium"
+                    >
+                      <Edit2 size={16} />
+                      Sửa
+                    </button>
                   )}
                 </div>
+
+                {isEditMode ? (
+                  // Form sửa
+                  <div className="space-y-4">
+                    {productsConfig.fieldsForModal.filter(field => field.name !== 'video_url').map((field) => {
+                      const options = field.apiEndpoint && fieldOptions[field.name]
+                        ? fieldOptions[field.name]
+                        : field.options || [];
+
+                      return (
+                        <FormField
+                          key={field.name}
+                          name={field.name}
+                          label={field.label}
+                          type={field.type}
+                          value={formData[field.name]}
+                          onChange={(e) => {
+                            const value = e.target ? e.target.value : e.value || e;
+                            handleFormChange(field.name, value);
+                          }}
+                          required={field.required}
+                          placeholder={field.placeholder}
+                          options={options}
+                          min={field.min}
+                          max={field.max}
+                          rows={field.rows}
+                          disabled={field.disabled || (field.apiEndpoint && loadingOptions)}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  // Chế độ xem
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Tên:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.name || '-'}</span></div>
+                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Giá:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedProduct.price) : '-'}</span></div>
+                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Danh mục:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.category_name || '-'}</span></div>
+                    {selectedProduct.description && (
+                      <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Mô tả:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.description}</span></div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Video sản phẩm - Section riêng */}
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                    Video sản phẩm
+                  </h4>
+                  {!isEditMode && (
+                    <button
+                      onClick={handleEdit}
+                      className="btn-gradient-primary flex items-center gap-2 px-3 py-1.5 text-sm font-medium"
+                    >
+                      <Edit2 size={16} />
+                      {selectedProduct.video_url ? 'Sửa' : 'Thêm'}
+                    </button>
+                  )}
+                </div>
+
+                {isEditMode ? (
+                  // Form sửa video
+                  <div className="space-y-3">
+                    <FormField
+                      name="video_url"
+                      label="Video URL"
+                      type="text"
+                      value={formData.video_url || ''}
+                      onChange={(e) => {
+                        const value = e.target ? e.target.value : e.value || e;
+                        handleFormChange('video_url', value);
+                      }}
+                      placeholder="https://www.youtube.com/watch?v=xxxxx hoặc https://youtu.be/xxxxx"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <strong>Hỗ trợ:</strong> YouTube, Vimeo, TikTok, Facebook, Instagram, hoặc direct video URL (.mp4, .webm, .ogg, .mov). Để trống để xóa video.
+                    </p>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 space-y-0.5">
+                      <div>• YouTube: youtube.com/watch?v=... hoặc youtu.be/...</div>
+                      <div>• Vimeo: vimeo.com/...</div>
+                      <div>• TikTok: tiktok.com/@username/video/...</div>
+                      <div>• Facebook: facebook.com/... hoặc fb.watch/...</div>
+                      <div>• Instagram: instagram.com/p/... hoặc instagram.com/reel/...</div>
+                    </div>
+                    {formData.video_url && (
+                      <div className="mt-3">
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Preview:</p>
+                        <ProductVideo videoUrl={formData.video_url} />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Chế độ xem
+                  selectedProduct.video_url ? (
+                    <ProductVideo videoUrl={selectedProduct.video_url} />
+                  ) : (
+                    <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                      Chưa có video nào
+                    </div>
+                  )
+                )}
               </div>
 
               {/* Hình ảnh - Có thể thêm/xóa/xem/đặt ảnh chính */}
@@ -334,13 +573,33 @@ export default function ProductDetailModal({
           {!loadingDetail && selectedProduct && (
             <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800">
               <div className="flex flex-col sm:flex-row gap-2 justify-end">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
-                >
-                  <X size={16} />
-                  Đóng
-                </button>
+                {isEditMode ? (
+                  <>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                    >
+                      <XCircle size={16} />
+                      Hủy
+                    </button>
+                    <button
+                      onClick={handleSaveProduct}
+                      disabled={loadingDetail}
+                      className="btn-gradient-primary px-4 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save size={16} />
+                      Lưu
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={onClose}
+                    className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                  >
+                    <X size={16} />
+                    Đóng
+                  </button>
+                )}
               </div>
             </div>
           )}

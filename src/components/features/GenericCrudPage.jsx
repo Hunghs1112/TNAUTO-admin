@@ -34,7 +34,9 @@ function GenericCrudPage({
   onView = null,
   onEdit = null,
   tableActionsRef = null,
-  showTableHeaderActions = true
+  showTableHeaderActions = true,
+  refreshTrigger = null,
+  disableCreate = false
 }) {
   const { transformData = (data) => data, onError = (error) => console.error('Error:', error) } = options;
   
@@ -64,7 +66,11 @@ function GenericCrudPage({
     }
     
     try {
-      const res = await apiRef.current.getAll();
+      console.log(`[GenericCrudPage] Fetching data for ${title}, isInitial:`, isInitial);
+      // Add cache busting to ensure fresh data - pass timestamp as param
+      const cacheBustParam = { _t: Date.now() };
+      console.log(`[GenericCrudPage] Calling getAll with cache bust param:`, cacheBustParam);
+      const res = await apiRef.current.getAll(cacheBustParam);
       let fetchedData = [];
       
       // Handle response format
@@ -76,12 +82,32 @@ function GenericCrudPage({
         }
       }
       
+      console.log(`[GenericCrudPage] Fetched ${fetchedData.length} items for ${title}`);
+      
+      // Log sample data to verify product_count/service_count
+      if (fetchedData.length > 0 && (title.includes('Danh mục') || title.includes('Category'))) {
+        console.log(`[GenericCrudPage] Sample category data:`, fetchedData[0]);
+        if (fetchedData[0].product_count !== undefined) {
+          console.log(`[GenericCrudPage] First category product_count:`, fetchedData[0].product_count);
+        }
+        if (fetchedData[0].service_count !== undefined) {
+          console.log(`[GenericCrudPage] First category service_count:`, fetchedData[0].service_count);
+        }
+      }
+      
       // Transform data nếu có
       const transformed = transformDataRef.current(fetchedData);
+      console.log(`[GenericCrudPage] Transformed data for ${title}:`, transformed?.length || 0, 'items');
+      
+      // Log transformed sample to verify counts are preserved
+      if (transformed && transformed.length > 0 && (title.includes('Danh mục') || title.includes('Category'))) {
+        console.log(`[GenericCrudPage] Sample transformed category:`, transformed[0]);
+      }
+      
       setAllData(transformed || []);
       setCurrentPage(1);
     } catch (err) {
-      console.error('Fetch error:', err);
+      console.error(`[GenericCrudPage] Fetch error for ${title}:`, err);
       onErrorRef.current(err);
       setAllData([]);
       setCurrentPage(1);
@@ -99,6 +125,30 @@ function GenericCrudPage({
       setHasFetched(true);
     }
   }, [hasFetched]);
+
+  // Refresh when refreshTrigger changes
+  useEffect(() => {
+    if (hasFetched && refreshTrigger !== null && refreshTrigger > 0) {
+      console.log(`[GenericCrudPage] Refresh triggered for ${title}, refreshTrigger:`, refreshTrigger);
+      // Add delay to ensure backend has updated the counts (backend may need time to recalculate)
+      let timeoutId2 = null;
+      const timeoutId1 = setTimeout(() => {
+        console.log(`[GenericCrudPage] Executing first refresh for ${title} after 1s delay`);
+        fetchData();
+        
+        // Second refresh after another delay to ensure backend has fully updated
+        timeoutId2 = setTimeout(() => {
+          console.log(`[GenericCrudPage] Executing second refresh for ${title} after additional 1s delay`);
+          fetchData();
+        }, 1000);
+      }, 1000); // First delay: 1 second
+      
+      return () => {
+        clearTimeout(timeoutId1);
+        if (timeoutId2) clearTimeout(timeoutId2);
+      };
+    }
+  }, [refreshTrigger, hasFetched, title]);
 
   // Handle delete
   const handleDelete = useCallback(async (id) => {
@@ -165,6 +215,7 @@ function GenericCrudPage({
         onRowClick={onRowClick}
         tableActionsRef={tableActionsRef}
         showTableHeaderActions={showTableHeaderActions}
+        disableCreate={disableCreate}
       />
     );
   }
@@ -198,6 +249,7 @@ function GenericCrudPage({
       onRowClick={onRowClick}
       tableActionsRef={tableActionsRef}
       showTableHeaderActions={showTableHeaderActions}
+      disableCreate={disableCreate}
     />
   );
 }

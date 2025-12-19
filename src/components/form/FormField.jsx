@@ -2,6 +2,7 @@
 import React from 'react';
 import ImageUploader from '../image/ImageUploader';
 import ImagePreview from '../image/ImagePreview';
+import { formatTimeDuration, parseTimeDuration, secondsToDaysHours, daysHoursToSeconds, formatWarrantyPeriod, monthsToSeconds, secondsToMonths } from '../../utils/format';
 
 /**
  * Reusable form field component
@@ -143,6 +144,113 @@ export default function FormField({
             disabled={disabled}
             className={`${baseInputClass} ${className}`}
           />
+        );
+      
+      case 'time_duration':
+        // Convert seconds to days and hours for display
+        let currentDays = 0;
+        let currentHours = 0;
+        if (normalizedValue !== null && normalizedValue !== undefined && normalizedValue !== '' && typeof normalizedValue === 'number') {
+          const converted = secondsToDaysHours(normalizedValue);
+          currentDays = converted.days;
+          currentHours = converted.hours;
+        }
+        
+        return (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  Số ngày
+                </label>
+                <input
+                  type="number"
+                  name={`${name}_days`}
+                  value={currentDays}
+                  onChange={(e) => {
+                    const days = e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0;
+                    const hours = currentHours || 0;
+                    const totalSeconds = daysHoursToSeconds(days, hours);
+                    onChange({ 
+                      target: { 
+                        name, 
+                        value: totalSeconds
+                      } 
+                    });
+                  }}
+                  min="0"
+                  placeholder="0"
+                  disabled={disabled}
+                  className={`${baseInputClass} ${className}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  Số giờ
+                </label>
+                <input
+                  type="number"
+                  name={`${name}_hours`}
+                  value={currentHours}
+                  onChange={(e) => {
+                    const hours = e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0;
+                    const days = currentDays || 0;
+                    const totalSeconds = daysHoursToSeconds(days, hours);
+                    onChange({ 
+                      target: { 
+                        name, 
+                        value: totalSeconds
+                      } 
+                    });
+                  }}
+                  min="0"
+                  max="23"
+                  placeholder="0"
+                  disabled={disabled}
+                  className={`${baseInputClass} ${className}`}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Nhập số ngày và số giờ. Giá trị sẽ được chuyển đổi thành giây để lưu vào cơ sở dữ liệu.
+            </p>
+          </div>
+        );
+      
+      case 'warranty_period':
+        // Convert seconds to months for display
+        let currentMonths = 0;
+        if (normalizedValue !== null && normalizedValue !== undefined && normalizedValue !== '' && typeof normalizedValue === 'number') {
+          currentMonths = secondsToMonths(normalizedValue);
+        }
+        
+        return (
+          <div className="space-y-3">
+            <div>
+              <input
+                type="number"
+                name={name}
+                value={currentMonths}
+                onChange={(e) => {
+                  const months = e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0;
+                  const totalSeconds = monthsToSeconds(months);
+                  onChange({ 
+                    target: { 
+                      name, 
+                      value: totalSeconds
+                    } 
+                  });
+                }}
+                min="0"
+                placeholder="0"
+                disabled={disabled}
+                className={`${baseInputClass} ${className}`}
+              />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Nhập số tháng bảo hành. Giá trị sẽ được chuyển đổi thành giây để lưu vào cơ sở dữ liệu.
+            </p>
+          </div>
         );
       
       case 'image':

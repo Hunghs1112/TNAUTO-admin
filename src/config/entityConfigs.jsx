@@ -273,15 +273,21 @@ export const offersConfig = {
   columns: [
     createIdColumn(),
     createTextField('name', 'Tên ưu đãi'),
-    { key: 'service_id', label: 'ID Dịch vụ', render: (val) => <span className="font-mono text-xs">{val}</span> },
-    createImageColumn('image_url', 'Hình ảnh'),
+    { key: 'service_name', label: 'Dịch vụ', render: (val, item) => {
+      if (val) return val;
+      if (item.service_id) return `ID: ${item.service_id}`;
+      return '--';
+    }},
+    { key: 'content', label: 'Nội dung', render: (val) => truncateText(val) },
+    { key: 'primary_image', label: 'Ảnh chính', render: (val) => val?.image_url ? <ImagePreview src={val.image_url} alt="Ưu đãi" className="w-12 h-12 rounded object-cover" showModal={false} directDisplay={true} /> : '-' },
+    { key: 'images', label: 'Số ảnh', render: (val) => val ? `${val.length} ảnh` : '0 ảnh' },
     createDateColumn('created_at', 'Ngày tạo'),
     createDateColumn('updated_at', 'Ngày cập nhật'),
   ],
   fieldsForModal: [
     createTextFieldForModal('name', 'Tên ưu đãi', 'text', true),
     createSelectField('service_id', 'Dịch vụ', '/services'),
-    createTextFieldForModal('image_url', 'URL hình ảnh'),
+    createTextAreaField('content', 'Nội dung ưu đãi'),
   ],
   title: 'Ưu đãi',
   apiEndpoint: '/offers',

@@ -148,10 +148,47 @@ export default function ServiceOrderDetailModal({
     }
   };
 
+  const formatYYYYMMDD = (date) => {
+    const d = new Date(date);
+    // Use local date parts to avoid timezone shifting the day
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const handleStatusChange = async (newStatus) => {
     if (!selectedOrder) return;
 
     try {
+      // Nếu chuyển sang "completed" phải dùng endpoint /complete để đảm bảo tạo bảo hành theo nghiệp vụ
+      if (newStatus === 'completed') {
+        startDetailLoading('Đang hoàn thành đơn dịch vụ...');
+
+        // delivery_date là BẮT BUỘC: ưu tiên lấy từ order. Nếu chưa có thì yêu cầu người dùng cập nhật delivery_date trước.
+        const deliveryDate = selectedOrder.delivery_date
+          ? formatYYYYMMDD(selectedOrder.delivery_date)
+          : null;
+
+        if (!deliveryDate) {
+          error('Thiếu ngày giao (delivery_date). Vui lòng cập nhật ngày giao trước khi hoàn thành.');
+          return;
+        }
+
+        // warranty_period: optional. Không gửi thì backend tự lấy theo service.
+        const res = await serviceOrdersAPI.complete(selectedOrder.id, {
+          delivery_date: deliveryDate,
+        });
+
+        await fetchOrderDetails(selectedOrder.id);
+
+        const msg = res?.data?.message || 'Hoàn thành đơn dịch vụ thành công!';
+        success(msg);
+        onRefresh && onRefresh();
+        return;
+      }
+
+      // Các trạng thái khác vẫn dùng endpoint update status như cũ
       startDetailLoading('Đang cập nhật trạng thái...');
       await serviceOrdersAPI.updateStatus(selectedOrder.id, { status: newStatus });
       await fetchOrderDetails(selectedOrder.id);

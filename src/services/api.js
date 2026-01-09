@@ -10,6 +10,7 @@ console.log('[API Config] Base URL:', API_BASE);
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 30000, // 30 seconds timeout
 });
 
 // Request interceptor - log API calls
@@ -48,10 +49,33 @@ api.interceptors.response.use(
   },
   (error) => {
     const fullUrl = error.config ? `${error.config.baseURL}${error.config.url}` : 'Unknown URL';
-    console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${fullUrl}`, {
+    
+    // Chi tiết error logging để debug
+    const errorDetails = {
       status: error.response?.status,
-      message: error.response?.data?.message || error.message
-    });
+      statusText: error.response?.statusText,
+      message: error.response?.data?.message || error.message,
+      code: error.code,
+      requestUrl: fullUrl,
+      method: error.config?.method?.toUpperCase(),
+    };
+    
+    // Log chi tiết hơn cho các lỗi phổ biến
+    if (error.code === 'ECONNABORTED') {
+      console.error(`[API Error] Timeout: ${fullUrl}`, errorDetails);
+    } else if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      console.error(`[API Error] Network Error (CORS hoặc không kết nối được): ${fullUrl}`, errorDetails);
+      console.error('[API Error] Nguyên nhân có thể:');
+      console.error('  1. CORS: Backend chưa cho phép origin này');
+      console.error('  2. Backend không chạy hoặc không accessible từ IP này');
+      console.error('  3. Firewall chặn kết nối');
+      console.error('  4. Backend chỉ listen trên localhost thay vì 0.0.0.0');
+    } else if (error.response?.status === 0) {
+      console.error(`[API Error] CORS Error (Status 0): ${fullUrl}`, errorDetails);
+      console.error('[API Error] Backend cần cấu hình CORS để cho phép origin này');
+    } else {
+      console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${fullUrl}`, errorDetails);
+    }
     
     // Better error handling
     const errorMessage = error.response?.data?.error || 
@@ -61,7 +85,10 @@ api.interceptors.response.use(
     return Promise.reject({
       ...error,
       message: errorMessage,
-      status: error.response?.status
+      status: error.response?.status,
+      code: error.code,
+      isNetworkError: error.code === 'ERR_NETWORK' || error.message?.includes('Network Error'),
+      isCorsError: error.response?.status === 0 || (error.code === 'ERR_NETWORK' && !error.response),
     });
   }
 );
@@ -251,6 +278,11 @@ export const offersAPI = createCrudAPI(api, '/offers', {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  // Offer images management
+  createImage: (data) => api.post('/offers/images', data),
+  getImages: (offerId) => api.get(`/offers/${offerId}/images`),
+  updateImage: (id, data) => api.put(`/offers/images/${id}`, data),
+  deleteImage: (id) => api.delete(`/offers/images/${id}`),
 });
 
 // ===== WARRANTY MANAGEMENT =====

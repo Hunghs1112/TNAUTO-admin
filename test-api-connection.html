@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test - 103.200.20.253:5000</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.danger {
+            background: #f44336;
+        }
+        button.danger:hover {
+            background: #da190b;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.success { background: #4CAF50; }
+        .status-indicator.error { background: #f44336; }
+        .status-indicator.warning { background: #ff9800; }
+        .status-indicator.info { background: #2196F3; }
+        .endpoint-list {
+            list-style: none;
+            padding: 0;
+        }
+        .endpoint-list li {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 3px;
+            border-left: 3px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 API Connection Diagnostic Tool</h1>
+        <p>Tool này sẽ giúp kiểm tra kết nối đến backend API tại <strong>103.200.20.253:5000</strong></p>
+
+        <div class="test-section">
+            <h2>1. Test Basic Connection</h2>
+            <p>Kiểm tra xem có thể kết nối đến server không</p>
+            <button onclick="testBasicConnection()">Test Connection</button>
+            <div id="basicResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Test CORS</h2>
+            <p>Kiểm tra CORS headers có được cấu hình đúng không</p>
+            <button onclick="testCORS()">Test CORS</button>
+            <div id="corsResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Test API Endpoints</h2>
+            <p>Kiểm tra các API endpoints cụ thể</p>
+            <button onclick="testHealthEndpoint()">Test /api/health</button>
+            <button onclick="testCustomersEndpoint()">Test /api/customers</button>
+            <button onclick="testOffersEndpoint()">Test /api/offers</button>
+            <div id="endpointResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Test All Endpoints</h2>
+            <p>Test tất cả endpoints một lúc</p>
+            <button onclick="testAllEndpoints()">Test All</button>
+            <div id="allResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Network Information</h2>
+            <button onclick="showNetworkInfo()">Show Network Info</button>
+            <div id="networkResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://103.200.20.253:5000/api';
+        
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        async function testBasicConnection() {
+            showResult('basicResult', 'Đang kiểm tra...', 'info');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const endTime = Date.now();
+                const latency = endTime - startTime;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('basicResult', 
+                        `✅ KẾT NỐI THÀNH CÔNG!\n\n` +
+                        `Status: ${response.status} ${response.statusText}\n` +
+                        `Latency: ${latency}ms\n` +
+                        `Response: ${JSON.stringify(data, null, 2)}\n\n` +
+                        `Server đang hoạt động và có thể truy cập được.`,
+                        'success'
+                    );
+                } else {
+                    showResult('basicResult',
+                        `⚠️ KẾT NỐI ĐƯỢC NHƯNG CÓ LỖI\n\n` +
+                        `Status: ${response.status} ${response.statusText}\n` +
+                        `Server phản hồi nhưng trả về lỗi.`,
+                        'warning'
+                    );
+                }
+            } catch (error) {
+                let errorMsg = `❌ KHÔNG THỂ KẾT NỐI!\n\n`;
+                errorMsg += `Error Code: ${error.code || 'N/A'}\n`;
+                errorMsg += `Error Message: ${error.message}\n\n`;
+
+                if (error.message.includes('Failed to fetch') || error.code === 'ERR_NETWORK') {
+                    errorMsg += `NGUYÊN NHÂN CÓ THỂ:\n`;
+                    errorMsg += `1. CORS chưa được cấu hình\n`;
+                    errorMsg += `2. Backend không chạy hoặc không accessible\n`;
+                    errorMsg += `3. Firewall chặn kết nối\n`;
+                    errorMsg += `4. Backend chỉ listen trên localhost\n`;
+                    errorMsg += `5. Network không kết nối được đến server\n\n`;
+                    errorMsg += `Xem file BACKEND_FIX_GUIDE.md để biết cách sửa.`;
+                } else if (error.message.includes('timeout')) {
+                    errorMsg += `NGUYÊN NHÂN: Request timeout\n`;
+                    errorMsg += `- Server có thể đang quá tải\n`;
+                    errorMsg += `- Network chậm\n`;
+                    errorMsg += `- Firewall chặn`;
+                }
+
+                showResult('basicResult', errorMsg, 'error');
+            }
+        }
+
+        async function testCORS() {
+            showResult('corsResult', 'Đang kiểm tra CORS...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'OPTIONS', // Preflight request
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                    'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+                };
+
+                let result = 'CORS Headers:\n';
+                result += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+                
+                if (corsHeaders['Access-Control-Allow-Origin']) {
+                    result += `✅ Access-Control-Allow-Origin: ${corsHeaders['Access-Control-Allow-Origin']}\n`;
+                } else {
+                    result += `❌ Access-Control-Allow-Origin: KHÔNG CÓ (Cần thêm!)\n`;
+                }
+
+                if (corsHeaders['Access-Control-Allow-Methods']) {
+                    result += `✅ Access-Control-Allow-Methods: ${corsHeaders['Access-Control-Allow-Methods']}\n`;
+                } else {
+                    result += `⚠️ Access-Control-Allow-Methods: KHÔNG CÓ\n`;
+                }
+
+                if (corsHeaders['Access-Control-Allow-Headers']) {
+                    result += `✅ Access-Control-Allow-Headers: ${corsHeaders['Access-Control-Allow-Headers']}\n`;
+                } else {
+                    result += `⚠️ Access-Control-Allow-Headers: KHÔNG CÓ\n`;
+                }
+
+                if (corsHeaders['Access-Control-Allow-Credentials']) {
+                    result += `✅ Access-Control-Allow-Credentials: ${corsHeaders['Access-Control-Allow-Credentials']}\n`;
+                }
+
+                result += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+
+                // Test actual GET request
+                try {
+                    const getResponse = await fetch(`${API_BASE}/health`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (getResponse.ok) {
+                        result += `✅ GET request thành công!\n`;
+                        result += `CORS được cấu hình đúng.`;
+                        showResult('corsResult', result, 'success');
+                    } else {
+                        result += `⚠️ GET request trả về status: ${getResponse.status}`;
+                        showResult('corsResult', result, 'warning');
+                    }
+                } catch (getError) {
+                    result += `❌ GET request thất bại: ${getError.message}\n`;
+                    result += `CORS chưa được cấu hình đúng!`;
+                    showResult('corsResult', result, 'error');
+                }
+
+            } catch (error) {
+                showResult('corsResult',
+                    `❌ LỖI KHI KIỂM TRA CORS\n\n` +
+                    `Error: ${error.message}\n\n` +
+                    `CORS chưa được cấu hình hoặc backend không hỗ trợ OPTIONS request.`,
+                    'error'
+                );
+            }
+        }
+
+        async function testHealthEndpoint() {
+            await testEndpoint('/health', 'endpointResult');
+        }
+
+        async function testCustomersEndpoint() {
+            await testEndpoint('/customers', 'endpointResult');
+        }
+
+        async function testOffersEndpoint() {
+            await testEndpoint('/offers', 'endpointResult');
+        }
+
+        async function testEndpoint(path, resultId) {
+            showResult(resultId, `Đang test ${path}...`, 'info');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}${path}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const endTime = Date.now();
+                const latency = endTime - startTime;
+
+                let result = `Endpoint: ${path}\n`;
+                result += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                result += `Status: ${response.status} ${response.statusText}\n`;
+                result += `Latency: ${latency}ms\n\n`;
+
+                // Check CORS headers
+                const corsOrigin = response.headers.get('Access-Control-Allow-Origin');
+                if (corsOrigin) {
+                    result += `✅ CORS: ${corsOrigin}\n`;
+                } else {
+                    result += `❌ CORS: KHÔNG CÓ\n`;
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    result += `\nResponse Data:\n${JSON.stringify(data, null, 2).substring(0, 500)}...`;
+                    showResult(resultId, result, 'success');
+                } else {
+                    result += `\n⚠️ Response không OK`;
+                    showResult(resultId, result, 'warning');
+                }
+            } catch (error) {
+                let errorMsg = `❌ LỖI: ${path}\n\n`;
+                errorMsg += `Error: ${error.message}\n`;
+                errorMsg += `Code: ${error.code || 'N/A'}\n\n`;
+                
+                if (error.message.includes('Failed to fetch') || error.code === 'ERR_NETWORK') {
+                    errorMsg += `NGUYÊN NHÂN: CORS hoặc Network Error`;
+                }
+                
+                showResult(resultId, errorMsg, 'error');
+            }
+        }
+
+        async function testAllEndpoints() {
+            showResult('allResult', 'Đang test tất cả endpoints...', 'info');
+            
+            const endpoints = [
+                '/health',
+                '/customers',
+                '/offers',
+                '/services',
+                '/products'
+            ];
+
+            let results = 'KẾT QUẢ TEST TẤT CẢ ENDPOINTS:\n';
+            results += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+
+            for (const endpoint of endpoints) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(`${API_BASE}${endpoint}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const endTime = Date.now();
+                    const latency = endTime - startTime;
+
+                    const corsHeader = response.headers.get('Access-Control-Allow-Origin');
+                    const status = response.ok ? '✅' : '⚠️';
+                    
+                    results += `${status} ${endpoint}\n`;
+                    results += `   Status: ${response.status}\n`;
+                    results += `   Latency: ${latency}ms\n`;
+                    results += `   CORS: ${corsHeader || '❌ KHÔNG CÓ'}\n\n`;
+                } catch (error) {
+                    results += `❌ ${endpoint}\n`;
+                    results += `   Error: ${error.message}\n\n`;
+                }
+            }
+
+            showResult('allResult', results, 'info');
+        }
+
+        function showNetworkInfo() {
+            const info = `THÔNG TIN NETWORK:\n`;
+            info += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            info += `Current Origin: ${window.location.origin}\n`;
+            info += `Current Protocol: ${window.location.protocol}\n`;
+            info += `Current Host: ${window.location.host}\n`;
+            info += `API Base URL: ${API_BASE}\n\n`;
+            info += `User Agent: ${navigator.userAgent}\n`;
+            info += `Online Status: ${navigator.onLine ? 'Online' : 'Offline'}\n\n`;
+            info += `LƯU Ý:\n`;
+            info += `- Nếu frontend chạy trên HTTPS và API trên HTTP, sẽ bị Mixed Content Error\n`;
+            info += `- Cần đảm bảo CORS được cấu hình đúng trên backend`;
+
+            showResult('networkResult', info, 'info');
+        }
+    </script>
+</body>
+</html>
+
+

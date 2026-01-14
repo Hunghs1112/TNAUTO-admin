@@ -1,10 +1,15 @@
 // src/pages/Warranties.jsx
 import { memo, useCallback, useRef, useState, useEffect } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
+import WarrantyDetailModal from '../components/features/WarrantyDetailModal';
 import { warrantiesAPI, customersAPI, servicesAPI, employeesAPI } from '../services/api';
 import { warrantiesConfig } from '../config/entityConfigs.jsx';
 
 function Warranties() {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedWarrantyId, setSelectedWarrantyId] = useState(null);
+
   // Cache để lưu mapping ID -> Name
   const [nameMaps, setNameMaps] = useState({
     customers: new Map(),
@@ -149,14 +154,35 @@ function Warranties() {
   }
 
   return (
-    <GenericCrudPage
-      api={warrantiesAPI}
-      columns={warrantiesConfig.columns}
-      fieldsForModal={warrantiesConfig.fieldsForModal}
-      title={warrantiesConfig.title}
-      disableCreate={true}
-      options={options}
-    />
+    <>
+      <GenericCrudPage
+        api={warrantiesAPI}
+        columns={warrantiesConfig.columns}
+        fieldsForModal={warrantiesConfig.fieldsForModal}
+        title={warrantiesConfig.title}
+        disableCreate={true}
+        options={options}
+        refreshTrigger={refreshTrigger}
+        onView={(item) => {
+          setSelectedWarrantyId(item?.id || null);
+          setShowDetailModal(true);
+        }}
+        onRowClick={(item) => {
+          setSelectedWarrantyId(item?.id || null);
+          setShowDetailModal(true);
+        }}
+      />
+
+      <WarrantyDetailModal
+        isOpen={showDetailModal}
+        warrantyId={selectedWarrantyId}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedWarrantyId(null);
+        }}
+        onSaved={() => setRefreshTrigger(prev => prev + 1)}
+      />
+    </>
   );
 }
 

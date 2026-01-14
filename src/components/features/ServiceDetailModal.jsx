@@ -334,6 +334,7 @@ export default function ServiceDetailModal({
                     <div><span className="font-medium text-gray-700 dark:text-gray-300">Danh mục:</span> <span className="text-gray-900 dark:text-gray-100">{selectedService.category_name || '-'}</span></div>
                     <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Thời gian ước tính:</span> <span className="text-gray-900 dark:text-gray-100">{formatTimeDuration(selectedService.estimated_time)}</span></div>
                     <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Thời gian bảo hành:</span> <span className="text-gray-900 dark:text-gray-100">{formatWarrantyPeriod(selectedService.warranty_period)}</span></div>
+                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Nhà cung cấp:</span> <span className="text-gray-900 dark:text-gray-100">{selectedService.supplier_name || '-'}</span></div>
                     {selectedService.description && (
                       <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Mô tả:</span> <span className="text-gray-900 dark:text-gray-100">{selectedService.description}</span></div>
                     )}

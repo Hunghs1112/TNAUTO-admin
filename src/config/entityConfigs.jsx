@@ -100,6 +100,7 @@ export const servicesConfig = {
   columns: [
     createIdColumn(),
     createTextField('name', 'Tên dịch vụ'),
+    createTextField('supplier_name', 'Nhà cung cấp'),
     { key: 'category_name', label: 'Danh mục', render: (val, item) => {
       if (val) return val;
       if (item.category_id) return `ID: ${item.category_id}`;
@@ -121,6 +122,7 @@ export const servicesConfig = {
   ],
   fieldsForModal: [
     createTextFieldForModal('name', 'Tên dịch vụ', 'text', true),
+    createTextFieldForModal('supplier_name', 'Nhà cung cấp'),
     createSelectField('category_id', 'Danh mục dịch vụ', '/service-categories'),
     createTextAreaField('description', 'Mô tả'),
     { 

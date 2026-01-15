@@ -103,6 +103,7 @@ export default function ServiceDetailModal({
     if (selectedService && isEditMode) {
       setFormData({
         name: selectedService.name || '',
+        supplier_name: selectedService.supplier_name || '',
         category_id: selectedService.category_id || '',
         description: selectedService.description || '',
         estimated_time: selectedService.estimated_time || 0,
@@ -195,6 +196,7 @@ export default function ServiceDetailModal({
     if (selectedService) {
       setFormData({
         name: selectedService.name || '',
+        supplier_name: selectedService.supplier_name || '',
         category_id: selectedService.category_id || '',
         description: selectedService.description || '',
         estimated_time: selectedService.estimated_time || 0,

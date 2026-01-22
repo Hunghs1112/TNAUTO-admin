@@ -17,6 +17,7 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
     customer_id: '',
     warranty_period: '',
     start_date: '',
+    supplier_name: '',
     note: ''
   });
   const [fieldOptions, setFieldOptions] = useState({
@@ -153,11 +154,16 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
                           : []
                       });
 
+                      // Lấy supplier_name giống như logic hiển thị ở chế độ xem
+                      // Sử dụng trực tiếp từ supplierName computed value, thay '-' thành ''
+                      const supplierValue = supplierName && supplierName !== '-' ? supplierName : '';
+
                       setFormData({
                         order_id: selectedWarranty.order_id || '',
                         customer_id: selectedWarranty.customer_id || '',
                         warranty_period: selectedWarranty.warranty_period ?? '',
                         start_date: selectedWarranty.start_date ? String(selectedWarranty.start_date).slice(0, 10) : '',
+                        supplier_name: supplierValue,
                         note: selectedWarranty.note || ''
                       });
                     } finally {
@@ -198,6 +204,8 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
                     e.preventDefault();
                     try {
                       startLoading('Đang lưu bảo hành...');
+                      
+                      // Cập nhật bảo hành (không có supplier_name)
                       await warrantiesAPI.update(selectedWarranty.id, {
                         order_id: formData.order_id ? parseInt(formData.order_id) : null,
                         customer_id: formData.customer_id ? parseInt(formData.customer_id) : null,
@@ -205,6 +213,34 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
                         start_date: formData.start_date || null,
                         note: formData.note || null,
                       });
+                      
+                      // Nếu có thay đổi supplier_name và có service_id, cập nhật vào dịch vụ
+                      const serviceId = selectedWarranty?.service_id || selectedWarranty?.service?.id;
+                      if (serviceId && formData.supplier_name !== undefined) {
+                        const currentSupplierName = 
+                          serviceInfo?.supplier_name ||
+                          selectedWarranty?.service_supplier_name ||
+                          selectedWarranty?.supplier_name ||
+                          '';
+                        
+                        // Chỉ cập nhật nếu có thay đổi
+                        if (formData.supplier_name !== currentSupplierName) {
+                          try {
+                            await servicesAPI.update(serviceId, {
+                              supplier_name: formData.supplier_name || null
+                            });
+                            // Refresh service info để hiển thị giá trị mới
+                            const sRes = await servicesAPI.getById(serviceId);
+                            const sData = sRes.data?.data || sRes.data;
+                            setServiceInfo(sData || null);
+                          } catch (serviceErr) {
+                            console.error('Update service supplier_name error:', serviceErr);
+                            // Không throw error để không block việc cập nhật bảo hành
+                            error('Cập nhật bảo hành thành công nhưng có lỗi khi cập nhật nhà cung cấp: ' + (serviceErr.response?.data?.message || serviceErr.message));
+                          }
+                        }
+                      }
+                      
                       success('Cập nhật bảo hành thành công!');
                       setIsEditMode(false);
                       await fetchWarrantyDetails(selectedWarranty.id);
@@ -258,6 +294,14 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
                       type="date"
                       value={formData.start_date}
                       onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    />
+
+                    <FormField
+                      name="supplier_name"
+                      label="Nhà cung cấp"
+                      type="text"
+                      value={formData.supplier_name}
+                      onChange={(e) => setFormData({ ...formData, supplier_name: e.target.value })}
                     />
 
                     <div className="sm:col-span-2">

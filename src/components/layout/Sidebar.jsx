@@ -1,7 +1,7 @@
 // src/components/layout/Sidebar.jsx
 import { useState, useCallback, useMemo, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Settings, Package, FileText, Bell, Shield, Tag, FolderOpen, Car, Menu, ChevronDown, X } from 'lucide-react';
+import { Users, Settings, Package, FileText, Bell, Shield, Tag, FolderOpen, Car, Menu, ChevronDown, X, Repeat } from 'lucide-react';
 
 const menuItems = [
   { id: 'customers', label: 'Khách hàng', icon: Users, path: '/customers' },
@@ -13,6 +13,7 @@ const menuItems = [
   { id: 'products', label: 'Sản phẩm', icon: Package, path: '/products' },
   { id: 'service-orders', label: 'Đơn dịch vụ', icon: FileText, path: '/service-orders' },
   { id: 'notifications', label: 'Thông báo', icon: Bell, path: '/notifications' },
+  { id: 'service-reminder-rules', label: 'Rule nhắc dịch vụ', icon: Repeat, path: '/service-reminder-rules' },
   { id: 'warranties', label: 'Bảo hành', icon: Shield, path: '/warranties' },
   { id: 'offers', label: 'Ưu đãi', icon: Tag, path: '/offers' },
 ];

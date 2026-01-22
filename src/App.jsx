@@ -13,6 +13,7 @@ import Categories from './pages/Categories';
 import Products from './pages/Products';
 import ServiceOrders from './pages/ServiceOrders';
 import Notifications from './pages/Notifications';
+import ServiceReminderRules from './pages/ServiceReminderRules';
 import Warranties from './pages/Warranties';
 import Offers from './pages/Offers';
 
@@ -36,6 +37,7 @@ function App() {
                 <Route path="products" element={<Products />} />
                 <Route path="service-orders" element={<ServiceOrders />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="service-reminder-rules" element={<ServiceReminderRules />} />
                 <Route path="warranties" element={<Warranties />} />
                 <Route path="offers" element={<Offers />} />
               </Route>

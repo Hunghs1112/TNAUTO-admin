@@ -13,21 +13,112 @@ const api = axios.create({
   timeout: 30000, // 30 seconds timeout
 });
 
-// Request interceptor - log API calls
+// Request throttling map - track requests để tránh duplicate
+const pendingRequests = new Map();
+const requestCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Request interceptor - log API calls và optimize
 api.interceptors.request.use((config) => {
   const fullUrl = `${config.baseURL}${config.url}`;
-  console.log(`[API Request] ${config.method?.toUpperCase()} ${fullUrl}`, config.params || config.data || '');
+  const method = config.method?.toUpperCase();
+  const cacheKey = `${method}:${fullUrl}:${JSON.stringify(config.params || config.data || {})}`;
+  
+  // Kiểm tra cache cho GET requests
+  if (method === 'GET' && requestCache.has(cacheKey)) {
+    const cached = requestCache.get(cacheKey);
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log(`[API Cache Hit] ${method} ${fullUrl}`);
+      // Return cached response
+      return Promise.reject({
+        __isCached: true,
+        data: cached.data,
+        config
+      });
+    } else {
+      requestCache.delete(cacheKey);
+    }
+  }
+
+  // Kiểm tra duplicate requests (trong 100ms)
+  if (pendingRequests.has(cacheKey)) {
+    console.log(`[API Duplicate] ${method} ${fullUrl} - reusing pending request`);
+    return pendingRequests.get(cacheKey);
+  }
+
+  // Tạo promise cho request
+  const requestPromise = axios(config)
+    .then(response => {
+      // Cache GET responses
+      if (method === 'GET') {
+        requestCache.set(cacheKey, {
+          data: response.data,
+          timestamp: Date.now()
+        });
+        // Limit cache size (keep last 100 entries)
+        if (requestCache.size > 100) {
+          const firstKey = requestCache.keys().next().value;
+          requestCache.delete(firstKey);
+        }
+      }
+      pendingRequests.delete(cacheKey);
+      return response;
+    })
+    .catch(error => {
+      pendingRequests.delete(cacheKey);
+      throw error;
+    });
+
+  // Lưu pending request (chỉ trong 5 giây)
+  pendingRequests.set(cacheKey, requestPromise);
+  setTimeout(() => {
+    pendingRequests.delete(cacheKey);
+  }, 5000);
+
+  console.log(`[API Request] ${method} ${fullUrl}`, config.params || config.data || '');
   return config;
 }, (error) => {
   console.error('[API Request Error]', error);
   return Promise.reject(error);
 });
 
-// Response interceptor - normalize response format
+// Response interceptor - normalize response format và cache responses
 api.interceptors.response.use(
   (response) => {
     const fullUrl = `${response.config.baseURL}${response.config.url}`;
-    console.log(`[API Response] ${response.config.method?.toUpperCase()} ${fullUrl}`, {
+    const method = response.config.method?.toUpperCase();
+    const cacheKey = response.config.__cacheKey;
+    
+    // Handle cached response
+    if (response.config.__useCache && response.config.__cachedData) {
+      console.log(`[API Cache Return] ${method} ${fullUrl}`);
+      return {
+        ...response,
+        data: response.config.__cachedData,
+        status: 200,
+        statusText: 'OK (Cached)'
+      };
+    }
+    
+    // Cache GET responses
+    if (method === 'GET' && cacheKey && !response.config.__useCache) {
+      requestCache.set(cacheKey, {
+        data: response.data,
+        timestamp: Date.now()
+      });
+      // Limit cache size (keep last 100 entries)
+      if (requestCache.size > 100) {
+        const firstKey = requestCache.keys().next().value;
+        requestCache.delete(firstKey);
+      }
+    }
+
+    // Remove from pending requests
+    if (cacheKey) {
+      pendingRequests.delete(cacheKey);
+    }
+
+    console.log(`[API Response] ${method} ${fullUrl}`, {
       status: response.status,
       dataCount: Array.isArray(response.data?.data) ? response.data.data.length : 'N/A',
       hasData: !!response.data
@@ -48,7 +139,21 @@ api.interceptors.response.use(
     };
   },
   (error) => {
-    const fullUrl = error.config ? `${error.config.baseURL}${error.config.url}` : 'Unknown URL';
+    // Xử lý trường hợp cache hit - không phải là lỗi thực sự
+    if (error.__isCached) {
+      // Trả về response object giống như axios response
+      return Promise.resolve({
+        data: error.data,
+        status: 200,
+        statusText: 'OK (Cached)',
+        headers: {},
+        config: error.config || {},
+        request: {}
+      });
+    }
+    
+    const fullUrl = error.config ? `${error.config.baseURL || ''}${error.config.url || ''}` : 'Unknown URL';
+    const method = error.config?.method ? error.config.method.toUpperCase() : 'UNKNOWN';
     
     // Chi tiết error logging để debug
     const errorDetails = {
@@ -57,7 +162,7 @@ api.interceptors.response.use(
       message: error.response?.data?.message || error.message,
       code: error.code,
       requestUrl: fullUrl,
-      method: error.config?.method?.toUpperCase(),
+      method: method,
     };
     
     // Log chi tiết hơn cho các lỗi phổ biến
@@ -74,7 +179,7 @@ api.interceptors.response.use(
       console.error(`[API Error] CORS Error (Status 0): ${fullUrl}`, errorDetails);
       console.error('[API Error] Backend cần cấu hình CORS để cho phép origin này');
     } else {
-      console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${fullUrl}`, errorDetails);
+      console.error(`[API Error] ${method} ${fullUrl}`, errorDetails);
     }
     
     // Better error handling
@@ -363,10 +468,13 @@ export const notificationsAPI = {
   markAllAsRead: (data) => api.put('/notifications/read-all', data),
   delete: (id) => api.delete(`/notifications/${id}`),
   
-  // Admin notifications
+  // Admin notifications (legacy)
   getAll: (params) => api.get('/notifications/admin/all', { params }),
   send: (data) => api.post('/notifications/send', data),
   getStats: () => api.get('/notifications/admin/stats'),
+
+  // Admin notifications (spec)
+  getAdminLogs: (params) => api.get('/admin/notifications', { params }),
   
   // Helper methods for dropdowns
   getCustomers: () => api.get('/customers'),
@@ -387,6 +495,22 @@ export const fcmTokensAPI = {
   deactivateInactive: () => api.post('/fcm-tokens/deactivate-inactive'),
   cleanup: () => api.delete('/fcm-tokens/cleanup'),
   getStats: () => api.get('/fcm-tokens/stats'),
+};
+
+// ===== SERVICE REMINDER CONFIGS API =====
+
+// Per Notification System Guide
+export const serviceReminderConfigsAPI = {
+  getAll: (params) => api.get('/admin/service-reminder-configs', { params }),
+  upsert: (serviceId, data) => api.put(`/admin/service-reminder-configs/${serviceId}`, data),
+  setEnabled: (serviceId, enabled) => api.patch(`/admin/service-reminder-configs/${serviceId}/enabled`, { enabled }),
+};
+
+// ===== ADMIN NOTIFICATIONS (LOGS) API =====
+
+// Per Notification System Guide
+export const adminNotificationsAPI = {
+  getAll: (params) => api.get('/admin/notifications', { params }),
 };
 
 // ===== PUSH NOTIFICATION MANAGEMENT =====

@@ -54,6 +54,27 @@ const createTextFieldForModal = (name, label, type = 'text', required = false) =
   ...(required && { required })
 });
 
+// ===== DEALER MANAGEMENT (ADMIN ONLY) =====
+export const dealersConfig = {
+  columns: [
+    createIdColumn(),
+    createTextField('name', 'Tên'),
+    createTextField('phone', 'Số điện thoại'),
+    createTextField('email', 'Email'),
+    createTextField('address', 'Địa chỉ'),
+  ],
+  fieldsForModal: [
+    createTextFieldForModal('name', 'Tên', 'text', true),
+    createTextFieldForModal('phone', 'Số điện thoại', 'text', true),
+    createTextFieldForModal('password', 'Mật khẩu', 'password', true),
+    createTextFieldForModal('email', 'Email', 'email'),
+    createTextFieldForModal('address', 'Địa chỉ'),
+    { name: 'avatar_url', label: 'Ảnh đại diện', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
+  ],
+  title: 'Quản lý đại lý',
+  apiEndpoint: '/dealers',
+};
+
 // ===== CUSTOMER MANAGEMENT (ADMIN ONLY) =====
 export const customersConfig = {
   columns: [
@@ -311,12 +332,15 @@ export const warrantiesConfig = {
     },
     { 
       key: 'customer_name', 
-      label: 'Khách hàng', 
+      label: 'Khách hàng/Đại lý', 
       render: (val, item) => {
-        // Ưu tiên customer_name, nếu không có thì dùng customer.name hoặc customer_id
+        // Ưu tiên customer_name, sau đó đến dealer_name
         if (val) return <span className="font-medium">{val}</span>;
+        if (item.dealer_name) return <span className="font-medium text-indigo-600 dark:text-indigo-400">Đại lý: {item.dealer_name}</span>;
         if (item.customer?.name) return <span className="font-medium">{item.customer.name}</span>;
-        if (item.customer_id) return <span className="text-gray-400">ID: {item.customer_id}</span>;
+        if (item.dealer?.name) return <span className="font-medium text-indigo-600 dark:text-indigo-400">Đại lý: {item.dealer.name}</span>;
+        if (item.customer_id) return <span className="text-gray-400">KH ID: {item.customer_id}</span>;
+        if (item.dealer_id) return <span className="text-indigo-400">ĐL ID: {item.dealer_id}</span>;
         return '-';
       }
     },
@@ -350,24 +374,23 @@ export const warrantiesConfig = {
   ],
   fieldsForModal: [
     { 
-      name: 'order_id', 
-      label: 'Đơn hàng', 
+      name: 'dealer_id', 
+      label: 'Đại lý', 
       type: 'select', 
       required: true,
-      apiEndpoint: '/service-orders',
-      valueKey: 'id',
-      labelKey: 'id',
-      labelFormat: (item) => `#${item.id} - ${item.receiver_name} (${item.license_plate})`
-    },
-    { 
-      name: 'customer_id', 
-      label: 'Khách hàng', 
-      type: 'select', 
-      required: true,
-      apiEndpoint: '/customers',
+      apiEndpoint: '/dealers',
       valueKey: 'id',
       labelKey: 'name',
       labelFormat: (item) => `${item.name} - ${item.phone}`
+    },
+    { 
+      name: 'service_id', 
+      label: 'Dịch vụ', 
+      type: 'select', 
+      required: true,
+      apiEndpoint: '/services',
+      valueKey: 'id',
+      labelKey: 'name'
     },
     { name: 'warranty_period', label: 'Thời hạn (tháng)', type: 'number', min: 1, required: true },
     { name: 'start_date', label: 'Ngày bắt đầu', type: 'date', required: true },

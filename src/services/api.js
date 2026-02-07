@@ -200,6 +200,25 @@ api.interceptors.response.use(
 
 // ===== USER MANAGEMENT =====
 
+// Dealers API
+export const dealersAPI = createCrudAPI(api, '/dealers', {
+  getAll: (params = {}) => api.get('/dealers', { params }),
+  getById: (id) => api.get(`/dealers/${id}`),
+  create: (data) => api.post('/dealers', data),
+  update: (id, data) => api.put(`/dealers/${id}`, data),
+  delete: (id) => api.delete(`/dealers/${id}`),
+  getStats: () => api.get('/dealers/stats'),
+  register: (data) => api.post('/auth/dealer/register', data),
+  // Upload avatar
+  uploadAvatar: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/dealers/${id}/upload-avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+});
+
 // Customers API - Admin endpoints per ADMIN_QUICK_REFERENCE.md
 export const customersAPI = createCrudAPI(api, '/customers', {
   // Stats endpoint
@@ -217,6 +236,10 @@ export const customersAPI = createCrudAPI(api, '/customers', {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  // Get driver license info
+  getDriverLicense: (id) => api.get(`/customers/${id}/driver-license`),
+  // Get customer vehicles
+  getVehicles: (id) => api.get(`/customers/${id}/vehicles`),
 });
 
 // Employees API - Admin endpoints per ADMIN_QUICK_REFERENCE.md
@@ -413,12 +436,10 @@ export const warrantiesAPI = createCrudAPI(api, '/warranties', {
       return res;
     });
   },
-  // Override create/update/delete to use /admin prefix
-  create: (data) => api.post('/warranties/admin', data),
-  update: (id, data) => api.put(`/warranties/admin/${id}`, data),
-  delete: (id) => api.delete(`/warranties/admin/${id}`),
-  // Admin stats
-  getStats: () => api.get('/warranties/admin/stats'),
+  create: (data) => api.post('/warranties', data),
+  update: (id, data) => api.put(`/warranties/${id}`, data),
+  delete: (id) => api.delete(`/warranties/${id}`),
+  getStats: () => api.get('/warranties/stats'),
 });
 
 // ===== FILE UPLOAD MANAGEMENT =====

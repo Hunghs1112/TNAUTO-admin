@@ -1,8 +1,9 @@
 // src/pages/Warranties.jsx
 import { memo, useCallback, useRef, useState, useEffect } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
+import FormModal from '../components/form/FormModal';
 import WarrantyDetailModal from '../components/features/WarrantyDetailModal';
-import { warrantiesAPI, customersAPI, servicesAPI, employeesAPI } from '../services/api';
+import { warrantiesAPI, customersAPI, servicesAPI, employeesAPI, dealersAPI } from '../services/api';
 import { warrantiesConfig } from '../config/entityConfigs.jsx';
 
 function Warranties() {
@@ -13,6 +14,7 @@ function Warranties() {
   // Cache để lưu mapping ID -> Name
   const [nameMaps, setNameMaps] = useState({
     customers: new Map(),
+    dealers: new Map(),
     services: new Map(),
     employees: new Map()
   });
@@ -29,9 +31,13 @@ function Warranties() {
       try {
         console.log('[Warranties] Loading name mappings...');
         // Load tất cả mappings cùng lúc với warranties để chỉ fetch 1 lần
-        const [customersRes, servicesRes, employeesRes] = await Promise.all([
+        const [customersRes, dealersRes, servicesRes, employeesRes] = await Promise.all([
           customersAPI.getAll().catch((err) => {
             console.error('[Warranties] Error loading customers:', err);
+            return { data: { data: [] } };
+          }),
+          dealersAPI.getAll().catch((err) => {
+            console.error('[Warranties] Error loading dealers:', err);
             return { data: { data: [] } };
           }),
           servicesAPI.getAll().catch((err) => {
@@ -45,6 +51,7 @@ function Warranties() {
         ]);
 
         const customersMap = new Map();
+        const dealersMap = new Map();
         const servicesMap = new Map();
         const employeesMap = new Map();
 
@@ -57,6 +64,17 @@ function Warranties() {
             }
           });
           console.log(`[Warranties] Loaded ${customersMap.size} customers`);
+        }
+
+        // Process dealers
+        const dealersData = dealersRes.data?.data || dealersRes.data || [];
+        if (Array.isArray(dealersData)) {
+          dealersData.forEach(dealer => {
+            if (dealer.id && dealer.name) {
+              dealersMap.set(dealer.id, dealer.name);
+            }
+          });
+          console.log(`[Warranties] Loaded ${dealersMap.size} dealers`);
         }
 
         // Process services
@@ -83,6 +101,7 @@ function Warranties() {
 
         setNameMaps({
           customers: customersMap,
+          dealers: dealersMap,
           services: servicesMap,
           employees: employeesMap
         });
@@ -94,6 +113,7 @@ function Warranties() {
         // Set empty maps on error
         setNameMaps({
           customers: new Map(),
+          dealers: new Map(),
           services: new Map(),
           employees: new Map()
         });
@@ -116,6 +136,11 @@ function Warranties() {
       // Add customer_name
       if (warranty.customer_id && nameMaps.customers.has(warranty.customer_id)) {
         result.customer_name = nameMaps.customers.get(warranty.customer_id);
+      }
+      
+      // Add dealer_name
+      if (warranty.dealer_id && nameMaps.dealers.has(warranty.dealer_id)) {
+        result.dealer_name = nameMaps.dealers.get(warranty.dealer_id);
       }
       
       // Add service_name
@@ -141,6 +166,13 @@ function Warranties() {
     onError: handleError
   };
 
+  const [showCreateDealerWarranty, setShowCreateDealerWarranty] = useState(false);
+
+  // Filter fields for Dealer Warranty (only show dealer, service, and period)
+  const dealerWarrantyFields = warrantiesConfig.fieldsForModal
+    .filter((f) => ['dealer_id', 'service_id', 'warranty_period', 'start_date', 'note'].includes(f.name))
+    .map((f) => ({ ...f, required: f.name !== 'note' }));
+
   // Chỉ render GenericCrudPage khi mappings đã load xong để tránh fetch 2 lần
   if (!mapsLoaded) {
     return (
@@ -160,7 +192,8 @@ function Warranties() {
         columns={warrantiesConfig.columns}
         fieldsForModal={warrantiesConfig.fieldsForModal}
         title={warrantiesConfig.title}
-        disableCreate={true}
+        disableCreate={false}
+        showTableHeaderActions={true}
         options={options}
         refreshTrigger={refreshTrigger}
         onView={(item) => {
@@ -172,6 +205,29 @@ function Warranties() {
           setShowDetailModal(true);
         }}
       />
+
+      {showCreateDealerWarranty && (
+        <FormModal
+          title="Thêm bảo hành Đại lý (Thủ công)"
+          fields={dealerWarrantyFields}
+          onClose={() => setShowCreateDealerWarranty(false)}
+          onSave={async (data) => {
+            try {
+              // Gọi endpoint admin create (hoặc endpoint riêng nếu backend yêu cầu)
+              await warrantiesAPI.create({
+                ...data,
+                customer_id: null,
+                order_id: null
+              });
+              setRefreshTrigger(prev => prev + 1);
+              setShowCreateDealerWarranty(false);
+            } catch (err) {
+              console.error('Lỗi tạo bảo hành đại lý:', err);
+              throw err;
+            }
+          }}
+        />
+      )}
 
       <WarrantyDetailModal
         isOpen={showDetailModal}

@@ -1,10 +1,11 @@
 // src/components/layout/Sidebar.jsx
 import { useState, useCallback, useMemo, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Settings, Package, FileText, Bell, Shield, Tag, FolderOpen, Car, Menu, ChevronDown, X, Repeat } from 'lucide-react';
+import { Users, Settings, Package, FileText, Bell, Shield, Tag, FolderOpen, Car, Menu, ChevronDown, X, Repeat, Store } from 'lucide-react';
 
 const menuItems = [
   { id: 'customers', label: 'Khách hàng', icon: Users, path: '/customers' },
+  { id: 'dealers', label: 'Quản lý Đại lý', icon: Store, path: '/dealers' },
   { id: 'employees', label: 'Nhân viên', icon: Users, path: '/employees' },
   { id: 'vehicles', label: 'Quản lý xe', icon: Car, path: '/vehicles' },
   { id: 'services', label: 'Dịch vụ', icon: Settings, path: '/services' },
@@ -15,6 +16,7 @@ const menuItems = [
   { id: 'notifications', label: 'Thông báo', icon: Bell, path: '/notifications' },
   { id: 'service-reminder-rules', label: 'Rule nhắc dịch vụ', icon: Repeat, path: '/service-reminder-rules' },
   { id: 'warranties', label: 'Bảo hành', icon: Shield, path: '/warranties' },
+  { id: 'dealer-warranties', label: 'Bảo hành đại lí', icon: Shield, path: '/dealer-warranties' },
   { id: 'offers', label: 'Ưu đãi', icon: Tag, path: '/offers' },
 ];
 

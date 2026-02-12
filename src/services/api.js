@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
 
-const API_BASE = 'http://103.200.20.253:5000/api';
+const API_BASE = 'http://localhost:5000/api';
 
 // Log API base URL on module load
 console.log('[API Config] Base URL:', API_BASE);
@@ -23,57 +23,17 @@ api.interceptors.request.use((config) => {
   const fullUrl = `${config.baseURL}${config.url}`;
   const method = config.method?.toUpperCase();
   const cacheKey = `${method}:${fullUrl}:${JSON.stringify(config.params || config.data || {})}`;
-  
+  config.__cacheKey = cacheKey; // Lưu lại để dùng ở response interceptor
+
   // Kiểm tra cache cho GET requests
   if (method === 'GET' && requestCache.has(cacheKey)) {
     const cached = requestCache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_TTL) {
       console.log(`[API Cache Hit] ${method} ${fullUrl}`);
-      // Return cached response
-      return Promise.reject({
-        __isCached: true,
-        data: cached.data,
-        config
-      });
-    } else {
-      requestCache.delete(cacheKey);
+      config.__useCache = true;
+      config.__cachedData = cached.data;
     }
   }
-
-  // Kiểm tra duplicate requests (trong 100ms)
-  if (pendingRequests.has(cacheKey)) {
-    console.log(`[API Duplicate] ${method} ${fullUrl} - reusing pending request`);
-    return pendingRequests.get(cacheKey);
-  }
-
-  // Tạo promise cho request
-  const requestPromise = axios(config)
-    .then(response => {
-      // Cache GET responses
-      if (method === 'GET') {
-        requestCache.set(cacheKey, {
-          data: response.data,
-          timestamp: Date.now()
-        });
-        // Limit cache size (keep last 100 entries)
-        if (requestCache.size > 100) {
-          const firstKey = requestCache.keys().next().value;
-          requestCache.delete(firstKey);
-        }
-      }
-      pendingRequests.delete(cacheKey);
-      return response;
-    })
-    .catch(error => {
-      pendingRequests.delete(cacheKey);
-      throw error;
-    });
-
-  // Lưu pending request (chỉ trong 5 giây)
-  pendingRequests.set(cacheKey, requestPromise);
-  setTimeout(() => {
-    pendingRequests.delete(cacheKey);
-  }, 5000);
 
   console.log(`[API Request] ${method} ${fullUrl}`, config.params || config.data || '');
   return config;
@@ -89,33 +49,17 @@ api.interceptors.response.use(
     const method = response.config.method?.toUpperCase();
     const cacheKey = response.config.__cacheKey;
     
-    // Handle cached response
-    if (response.config.__useCache && response.config.__cachedData) {
-      console.log(`[API Cache Return] ${method} ${fullUrl}`);
-      return {
-        ...response,
-        data: response.config.__cachedData,
-        status: 200,
-        statusText: 'OK (Cached)'
-      };
-    }
-    
-    // Cache GET responses
-    if (method === 'GET' && cacheKey && !response.config.__useCache) {
+    // Nếu là GET request, lưu vào cache
+    if (method === 'GET' && cacheKey) {
       requestCache.set(cacheKey, {
         data: response.data,
         timestamp: Date.now()
       });
-      // Limit cache size (keep last 100 entries)
+      // Giới hạn kích thước cache
       if (requestCache.size > 100) {
         const firstKey = requestCache.keys().next().value;
         requestCache.delete(firstKey);
       }
-    }
-
-    // Remove from pending requests
-    if (cacheKey) {
-      pendingRequests.delete(cacheKey);
     }
 
     console.log(`[API Response] ${method} ${fullUrl}`, {
@@ -125,11 +69,9 @@ api.interceptors.response.use(
     });
     
     // Normalize response data structure
-    // Backend returns: { success: true, data: [...], count, total, page, limit }
     if (response.data && response.data.success !== undefined) {
       return response;
     }
-    // If response doesn't have success field, wrap it
     return {
       ...response,
       data: {

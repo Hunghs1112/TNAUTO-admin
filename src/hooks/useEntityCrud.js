@@ -131,12 +131,15 @@ export default function useEntityCrud(api, options = {}) {
   }, [api, startLoading, stopLoading, data]);
 
   // Auto-fetch on mount only - runs once
+  // Guard for React 18 StrictMode (dev) which mounts/unmounts and runs effects twice
+  const didInitialFetchRef = useRef(false);
+
   useEffect(() => {
-    if (!hasFetched) {
-      fetchData();
-      setHasFetched(true);
-    }
-  }, []);
+    if (didInitialFetchRef.current) return;
+    didInitialFetchRef.current = true;
+    fetchData();
+    setHasFetched(true);
+  }, [fetchData]);
 
   // Refresh handler
   const handleRefresh = useCallback(() => {

@@ -1,7 +1,7 @@
 // src/components/features/NotificationSendModal.jsx
 import { useState } from 'react';
 import { Send, X } from 'lucide-react';
-import { notificationsAPI, pushNotificationsAPI } from '../../services/api';
+import { notificationsAPI } from '../../services/api';
 import { buttonStyles } from '../../styles/colors';
 import ImageUploader from '../image/ImageUploader';
 
@@ -31,46 +31,21 @@ export default function NotificationSendModal({
     }
 
     try {
+      // Backend handles both DB and Push in a single call now.
+      // recipient_type and recipient_id are required.
       const res = await notificationsAPI.send({
         recipient_id: parseInt(sendForm.recipient_id),
         recipient_type: sendForm.recipient_type,
+        title: 'Thông báo mới',
         message: sendForm.message,
-        image_url: sendForm.image_url || undefined,
-        title: 'Thông báo mới'
+        data: { 
+          type: 'custom_notification',
+          image_url: sendForm.image_url || undefined
+        }
       });
 
-      const notificationId = res.data.notification_id;
-
-      if (sendForm.send_push) {
-        try {
-          const pushRes = await pushNotificationsAPI.sendToUser({
-            user_id: parseInt(sendForm.recipient_id),
-            user_type: sendForm.recipient_type,
-            title: 'Thông báo mới',
-            body: sendForm.message,
-            ...(sendForm.image_url && { image_url: sendForm.image_url }),
-            data: {
-              type: 'custom_notification',
-              notification_id: String(notificationId)
-            }
-          });
-
-          const results = pushRes.data.results;
-          alert(
-            `✅ Đã gửi thông báo thành công!\n` +
-            `📝 Notification ID: ${notificationId}\n` +
-            `📱 Push notification: Thành công ${results?.successCount || 0}, Thất bại ${results?.failureCount || 0}`
-          );
-        } catch (pushErr) {
-          console.error('Push notification error:', pushErr);
-          alert(
-            `✅ Đã lưu thông báo vào database (ID: ${notificationId})\n` +
-            `⚠️ Nhưng gửi push notification thất bại: ${pushErr.response?.data?.message || pushErr.message}`
-          );
-        }
-      } else {
-        alert(`✅ Đã gửi thông báo thành công! ID: ${notificationId}`);
-      }
+      const notificationId = res.data?.notification_id || res.data?.id;
+      alert(`✅ Đã gửi thông báo thành công!${notificationId ? ` ID: ${notificationId}` : ''}`);
 
       onClose();
       setSendForm({

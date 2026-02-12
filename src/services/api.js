@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://103.200.20.253:5000/api';
 
 // Log API base URL on module load
 console.log('[API Config] Base URL:', API_BASE);
@@ -180,8 +180,10 @@ export const customersAPI = createCrudAPI(api, '/customers', {
   },
   // Get driver license info
   getDriverLicense: (id) => api.get(`/customers/${id}/driver-license`),
-  // Get customer vehicles
-  getVehicles: (id) => api.get(`/customers/${id}/vehicles`),
+  // Update driver license info (Upsert)
+  updateDriverLicense: (id, data) => api.put(`/customers/${id}/driver-license`, data),
+  // Get customer vehicles - Admin route update
+  getVehicles: (id) => api.get('/vehicles', { params: { customer_id: id } }),
 });
 
 // Employees API - Admin endpoints per ADMIN_QUICK_REFERENCE.md
@@ -298,11 +300,18 @@ export const categoriesAPI = createCrudAPI(api, '/categories', {
 
 // ===== VEHICLE MANAGEMENT =====
 
-// Vehicles API - Per ADMIN_QUICK_REFERENCE.md
-export const vehiclesAPI = createCrudAPI(api, '/vehicles/admin', {
-  // Override getAll to use /admin/all endpoint
-  getAll: (params = {}) => api.get('/vehicles/admin/all', { params }),
-  // Stats
+// Vehicles API - Admin endpoints per ADMIN_QUICK_REFERENCE.md
+export const vehiclesAPI = createCrudAPI(api, '/vehicles', {
+  // List all vehicles for admin by default, or filter by customer_id when provided
+  getAll: (params = {}) => {
+    const hasCustomerId = params && (params.customer_id != null && String(params.customer_id).length > 0);
+    if (hasCustomerId) return api.get('/vehicles', { params });
+    return api.get('/vehicles/admin/all', { params });
+  },
+  // Admin update/delete endpoints
+  update: (id, data) => api.put(`/vehicles/admin/${id}`, data),
+  delete: (id) => api.delete(`/vehicles/admin/${id}`),
+  // Admin stats
   getStats: () => api.get('/vehicles/admin/stats'),
   // Upload image
   uploadImage: (id, file) => {
@@ -314,6 +323,11 @@ export const vehiclesAPI = createCrudAPI(api, '/vehicles/admin', {
   },
   // Public search endpoint
   searchByPlate: (plate) => api.get('/vehicles/search', { params: { plate } }),
+  
+  // Inspection API (New)
+  getInspection: (vehicleId) => api.get(`/vehicles/${vehicleId}/inspection`),
+  updateInspection: (vehicleId, data) => api.put(`/vehicles/${vehicleId}/inspection`, data),
+  deleteInspection: (vehicleId) => api.delete(`/vehicles/${vehicleId}/inspection`),
 });
 
 // ===== SERVICE ORDER MANAGEMENT =====

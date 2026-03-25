@@ -75,8 +75,6 @@ export default function useEntityCrud(api, options = {}) {
     
     try {
       const res = await api.getAll();
-      console.log('[useEntityCrud] API response:', res);
-      console.log('[useEntityCrud] Response data:', res.data);
       
       // Handle response format: { success: true, data: [...], count, total, page, limit }
       let fetchedData = [];
@@ -90,12 +88,7 @@ export default function useEntityCrud(api, options = {}) {
         }
       }
       
-      console.log('[useEntityCrud] Extracted data:', fetchedData);
-      console.log('[useEntityCrud] Data length:', fetchedData.length);
-      
       const transformed = transformDataRef.current(fetchedData);
-      console.log('[useEntityCrud] Transformed data:', transformed);
-      console.log('[useEntityCrud] Transformed length:', transformed?.length);
       
       // Always update data when refreshing or fetching
       // Remove the condition that prevents updating on refresh

@@ -1,197 +1,167 @@
-// src/components/features/NotificationSendModal.jsx
-import { useState } from 'react';
-import { Send, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Send } from 'lucide-react';
 import { notificationsAPI } from '../../services/api';
+import { useToast } from '../../contexts/ToastContext';
 import { buttonStyles } from '../../styles/colors';
 import ImageUploader from '../image/ImageUploader';
+import Modal from '../ui/Modal';
 
-/**
- * Notification Send Modal Component
- * Tách từ Notifications.jsx để tái sử dụng
- */
-export default function NotificationSendModal({ 
-  isOpen, 
-  customers = [], 
-  employees = [], 
-  onClose, 
-  onSuccess 
+export default function NotificationSendModal({
+  isOpen,
+  customers = [],
+  employees = [],
+  onClose,
+  onSuccess,
 }) {
   const [sendForm, setSendForm] = useState({
     recipient_id: '',
     recipient_type: 'customer',
     message: '',
     image_url: '',
-    send_push: false
   });
+  const [submitting, setSubmitting] = useState(false);
+
+  const { success, error } = useToast();
+
+  const recipients = useMemo(
+    () => (sendForm.recipient_type === 'customer' ? customers : employees),
+    [customers, employees, sendForm.recipient_type]
+  );
+
+  const resetForm = () => {
+    setSendForm({
+      recipient_id: '',
+      recipient_type: 'customer',
+      message: '',
+      image_url: '',
+    });
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose?.();
+  };
 
   const handleSendNotification = async () => {
-    if (!sendForm.recipient_id || !sendForm.message) {
-      alert('Vui lòng chọn người nhận và nhập nội dung thông báo');
+    if (!sendForm.recipient_id || !sendForm.message.trim()) {
+      error('Vui lòng chọn người nhận và nhập nội dung thông báo.');
       return;
     }
 
+    setSubmitting(true);
     try {
-      // Backend handles both DB and Push in a single call now.
-      // recipient_type and recipient_id are required.
-      const res = await notificationsAPI.send({
-        recipient_id: parseInt(sendForm.recipient_id),
+      const response = await notificationsAPI.send({
+        recipient_id: Number(sendForm.recipient_id),
         recipient_type: sendForm.recipient_type,
         title: 'Thông báo mới',
-        message: sendForm.message,
-        data: { 
+        message: sendForm.message.trim(),
+        data: {
           type: 'custom_notification',
-          image_url: sendForm.image_url || undefined
-        }
+          image_url: sendForm.image_url || undefined,
+        },
       });
 
-      const notificationId = res.data?.notification_id || res.data?.id;
-      alert(`✅ Đã gửi thông báo thành công!${notificationId ? ` ID: ${notificationId}` : ''}`);
-
-      onClose();
-      setSendForm({
-        recipient_id: '',
-        recipient_type: 'customer',
-        message: '',
-        image_url: '',
-        send_push: false
-      });
-      onSuccess && onSuccess();
-    } catch (err) {
-      console.error('Send notification error:', err);
-      alert('❌ Lỗi khi gửi: ' + (err.response?.data?.message || err.message));
+      const notificationId = response.data?.notification_id || response.data?.id;
+      success(notificationId ? `Đã gửi thông báo #${notificationId}.` : 'Đã gửi thông báo thành công.');
+      resetForm();
+      onSuccess?.();
+    } catch (sendError) {
+      error(sendError?.message || 'Không thể gửi thông báo.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-50 p-4 transition-colors duration-300">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700 transition-colors duration-300">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-              <Send size={24} className="text-blue-600 dark:text-blue-400" />
-              Gửi thông báo tùy chỉnh
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
-            >
-              <X size={24} />
-            </button>
-          </div>
+    <Modal isOpen={isOpen} onClose={handleClose} title="Gửi thông báo" size="lg">
+      <div className="space-y-4">
+        <div>
+          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Loại người nhận <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={sendForm.recipient_type}
+            onChange={(event) =>
+              setSendForm((prev) => ({ ...prev, recipient_type: event.target.value, recipient_id: '' }))
+            }
+            className="app-input"
+          >
+            <option value="customer">Khách hàng</option>
+            <option value="employee">Nhân viên</option>
+          </select>
+        </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Recipient Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={sendForm.recipient_type}
-                onChange={(e) => setSendForm({ ...sendForm, recipient_type: e.target.value, recipient_id: '' })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-              >
-                <option value="customer">Khách hàng</option>
-                <option value="employee">Nhân viên</option>
-              </select>
-            </div>
+        <div>
+          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Người nhận <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={sendForm.recipient_id}
+            onChange={(event) => setSendForm((prev) => ({ ...prev, recipient_id: event.target.value }))}
+            className="app-input"
+          >
+            <option value="">
+              {sendForm.recipient_type === 'customer' ? 'Chọn khách hàng' : 'Chọn nhân viên'}
+            </option>
+            {recipients.map((recipient) => (
+              <option key={recipient.id} value={recipient.id}>
+                #{recipient.id} - {recipient.name} {recipient.phone ? `- ${recipient.phone}` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Chọn người nhận <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={sendForm.recipient_id}
-                onChange={(e) => setSendForm({ ...sendForm, recipient_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 transition-colors duration-300"
-              >
-                <option value="">-- Chọn {sendForm.recipient_type === 'customer' ? 'khách hàng' : 'nhân viên'} --</option>
-                {sendForm.recipient_type === 'customer' 
-                  ? customers.map(customer => (
-                      <option key={customer.id} value={customer.id}>
-                        #{customer.id} - {customer.name} - {customer.phone}
-                      </option>
-                    ))
-                  : employees.map(employee => (
-                      <option key={employee.id} value={employee.id}>
-                        #{employee.id} - {employee.name} - {employee.phone}
-                      </option>
-                    ))
-                }
-              </select>
-            </div>
+        <div>
+          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Nội dung <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={sendForm.message}
+            onChange={(event) => setSendForm((prev) => ({ ...prev, message: event.target.value }))}
+            rows={4}
+            placeholder="Nhập nội dung thông báo..."
+            className="app-textarea"
+          />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Message <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={sendForm.message}
-                onChange={(e) => setSendForm({ ...sendForm, message: e.target.value })}
-                placeholder="Nhập nội dung thông báo..."
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300"
-              />
-            </div>
+        <div>
+          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">Hình ảnh</label>
+          <ImageUploader
+            onUploadSuccess={(value) =>
+              setSendForm((prev) => ({ ...prev, image_url: Array.isArray(value) ? value[0] || '' : value || '' }))
+            }
+            multiple={false}
+            maxFiles={1}
+            uploadMode="both"
+            allowFileUpload={true}
+            allowLinkUpload={true}
+          />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Hình ảnh (Optional)
-              </label>
-              <ImageUploader
-                onUploadSuccess={(url) => setSendForm({ ...sendForm, image_url: url })}
-                multiple={false}
-                maxFiles={1}
-                uploadMode="both"
-                allowFileUpload={true}
-                allowLinkUpload={true}
-              />
-              {sendForm.image_url && (
-                <div className="mt-2 p-2 bg-gray-50 dark:bg-slate-700 rounded-lg transition-colors duration-300">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Current image URL:</p>
-                  <p className="text-sm text-blue-600 dark:text-blue-400 break-all">{sendForm.image_url}</p>
-                  <button
-                    onClick={() => setSendForm({ ...sendForm, image_url: '' })}
-                    className="mt-1 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
-                  >
-                    Clear image
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="send-push-checkbox"
-                checked={sendForm.send_push}
-                onChange={(e) => setSendForm({ ...sendForm, send_push: e.target.checked })}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-slate-600 rounded focus:ring-blue-500 bg-white dark:bg-slate-700 transition-colors duration-300"
-              />
-              <label htmlFor="send-push-checkbox" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Gửi cả Push Notification (realtime)
-              </label>
-            </div>
-
-            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
+          {sendForm.image_url ? (
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-300">Ảnh đang chọn</p>
+              <p className="mt-1 break-all text-sm text-slate-700 dark:text-slate-200">{sendForm.image_url}</p>
               <button
-                onClick={handleSendNotification}
-                className={buttonStyles.primary}
+                type="button"
+                onClick={() => setSendForm((prev) => ({ ...prev, image_url: '' }))}
+                className="mt-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
               >
-                <Send size={18} />
-                Gửi thông báo
-              </button>
-              <button
-                onClick={onClose}
-                className={buttonStyles.secondary}
-              >
-                Hủy
+                Xóa ảnh
               </button>
             </div>
-          </div>
+          ) : null}
+        </div>
+
+        <div className="flex flex-col justify-end gap-3 border-t border-slate-200 pt-4 sm:flex-row dark:border-slate-800">
+          <button type="button" onClick={handleClose} className={buttonStyles.secondary} disabled={submitting}>
+            Hủy
+          </button>
+          <button type="button" onClick={handleSendNotification} className={buttonStyles.primary} disabled={submitting}>
+            <Send size={18} />
+            <span>{submitting ? 'Đang gửi...' : 'Gửi thông báo'}</span>
+          </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
-

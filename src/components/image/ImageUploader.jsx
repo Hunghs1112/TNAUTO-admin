@@ -197,7 +197,6 @@ export default function ImageUploader({
         if (multiple && fileObjects.length > 1) {
           // Upload multiple files
           const response = await uploadAPI.multiple(fileObjects);
-          console.log('Upload multiple response:', response.data);
           
           if (response.data.success) {
             let urls = [];
@@ -211,7 +210,6 @@ export default function ImageUploader({
         } else {
           // Upload single file
           const response = await uploadAPI.single(fileObjects[0]);
-          console.log('Upload single response:', response.data);
           
           if (response.data.success && response.data.url) {
             allUrls.push(response.data.url);

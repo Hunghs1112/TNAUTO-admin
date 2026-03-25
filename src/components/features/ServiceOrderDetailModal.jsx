@@ -1,71 +1,91 @@
-// src/components/features/ServiceOrderDetailModal.jsx
-import React, { useState, useEffect } from 'react';
-import { serviceOrdersAPI, serviceOrderImagesAPI, uploadAPI } from '../../services/api';
-import { formatDate, isValidImageUrl, normalizeImageUrl } from '../../utils/format';
-import StatusBadge from '../ui/StatusBadge';
-import LoadingSpinner from '../ui/LoadingSpinner';
-import ImageUploader from '../image/ImageUploader';
-import ImageGrid from '../image/ImageGrid';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, Trash2, X } from 'lucide-react';
+import { serviceOrderImagesAPI, serviceOrdersAPI, uploadAPI } from '../../services/api';
 import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
-import { Plus, Trash2, X } from 'lucide-react';
+import { formatDate, isValidImageUrl, normalizeImageUrl } from '../../utils/format';
+import {
+  getAdminServiceOrderStatusOptions,
+  getServiceOrderAssigneeLabel,
+  getServiceOrderFlowHint,
+  getServiceOrderStatusLabel,
+  isOrderWaitingForClaim,
+} from '../../utils/serviceOrderFlow';
+import ImageGrid from '../image/ImageGrid';
+import ImageUploader from '../image/ImageUploader';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import StatusBadge from '../ui/StatusBadge';
 
-/**
- * Service Order Detail Modal Component
- * Form chi tiết riêng cho đơn dịch vụ
- * Cho phép sửa: trạng thái, thêm/xóa ảnh, gán/đổi nhân viên
- * Các trường còn lại chỉ xem
- */
+function formatYYYYMMDD(date) {
+  const parsedDate = new Date(date);
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(parsedDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getErrorMessage(error, fallbackMessage) {
+  return error.response?.data?.error || error.response?.data?.message || error.message || fallbackMessage;
+}
+
 export default function ServiceOrderDetailModal({
   isOpen,
   orderId,
   employees = [],
   onClose,
-  onRefresh
+  onRefresh,
 }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderImages, setOrderImages] = useState([]);
   const [showImageUploader, setShowImageUploader] = useState(false);
 
-  const { startLoading: startDetailLoading, stopLoading: stopDetailLoading, loading: loadingDetail } = useLoadingKey('service-orders-detail', 'Đang tải chi tiết...');
+  const {
+    startLoading: startDetailLoading,
+    stopLoading: stopDetailLoading,
+    loading: loadingDetail,
+  } = useLoadingKey('service-orders-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
+
+  const waitingForClaim = useMemo(() => isOrderWaitingForClaim(selectedOrder), [selectedOrder]);
+  const statusLabel = useMemo(() => getServiceOrderStatusLabel(selectedOrder), [selectedOrder]);
+  const assigneeLabel = useMemo(() => getServiceOrderAssigneeLabel(selectedOrder), [selectedOrder]);
+  const flowHint = useMemo(() => getServiceOrderFlowHint(selectedOrder), [selectedOrder]);
+  const statusOptions = useMemo(() => getAdminServiceOrderStatusOptions(selectedOrder), [selectedOrder]);
 
   useEffect(() => {
     if (isOpen && orderId) {
       fetchOrderDetails(orderId);
-    } else {
-      // Reset state when modal closes
-      setSelectedOrder(null);
-      setOrderImages([]);
-      setShowImageUploader(false);
+      return;
     }
+
+    setSelectedOrder(null);
+    setOrderImages([]);
+    setShowImageUploader(false);
   }, [isOpen, orderId]);
 
   const fetchOrderDetails = async (id) => {
     startDetailLoading('Đang tải chi tiết đơn dịch vụ...');
+
     try {
-      const orderRes = await serviceOrdersAPI.getById(id);
-      const orderData = orderRes.data.data || orderRes.data;
+      const orderResponse = await serviceOrdersAPI.getById(id);
+      const orderData = orderResponse.data.data || orderResponse.data;
       setSelectedOrder(orderData || null);
 
-      const imagesRes = await serviceOrderImagesAPI.getByOrder(id);
-      const imagesData = imagesRes.data.data || imagesRes.data;
-      const validImages = Array.isArray(imagesData) 
+      const imagesResponse = await serviceOrderImagesAPI.getByOrder(id);
+      const imagesData = imagesResponse.data.data || imagesResponse.data;
+      const validImages = Array.isArray(imagesData)
         ? imagesData
-            .filter(img => img.image_url && isValidImageUrl(img.image_url))
-            .map(img => {
-              const normalizedUrl = normalizeImageUrl(img.image_url);
-              return {
-                ...img,
-                image_url: normalizedUrl || img.image_url // Fallback về URL gốc nếu normalize trả về null
-              };
-            })
-            .filter(img => img.image_url) // Chỉ giữ lại những ảnh có URL hợp lệ
+            .filter((image) => image.image_url && isValidImageUrl(image.image_url))
+            .map((image) => ({
+              ...image,
+              image_url: normalizeImageUrl(image.image_url) || image.image_url,
+            }))
+            .filter((image) => image.image_url)
         : [];
+
       setOrderImages(validImages);
-    } catch (err) {
-      console.error('Fetch order details/images error:', err);
-      error('Không thể tải chi tiết đơn dịch vụ: ' + (err.response?.data?.message || err.message));
+    } catch (fetchError) {
+      error(`Không thể tải chi tiết đơn dịch vụ: ${getErrorMessage(fetchError, 'Lỗi không xác định')}`);
       setSelectedOrder(null);
       setOrderImages([]);
       onClose();
@@ -80,382 +100,460 @@ export default function ServiceOrderDetailModal({
       return;
     }
 
+    startDetailLoading('Đang tải ảnh lên...');
+
     try {
-      startDetailLoading('Đang tải ảnh lên...');
       const urls = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
-      
-      for (const imageUrl of urls) {
-        if (imageUrl.startsWith('data:image/')) {
-          continue;
-        }
-        
-        const imageData = {
-          order_id: parseInt(selectedOrder.id),
+      const validUrls = urls.filter(
+        (url) => typeof url === 'string' && url.trim() && !url.startsWith('data:image/')
+      );
+
+      if (!validUrls.length) {
+        error('Không nhận được URL ảnh hợp lệ để lưu cho đơn dịch vụ.');
+        return;
+      }
+
+      for (const imageUrl of validUrls) {
+        await serviceOrderImagesAPI.create({
+          order_id: Number(selectedOrder.id),
           image_url: imageUrl,
           status_at_time: selectedOrder.status || 'received',
-        };
-        
-        await serviceOrderImagesAPI.create(imageData);
+        });
       }
-      
-      const validUrls = urls.filter(url => !url.startsWith('data:image/'));
-      
-      // Hiển thị thông báo thành công
-      success(`Thêm thành công ${validUrls.length} ảnh!`);
-      
-      // Refresh danh sách ảnh mà không reload trang
+
       await fetchOrderDetails(selectedOrder.id);
       setShowImageUploader(false);
-      onRefresh && onRefresh();
-    } catch (err) {
-      console.error('Create image record error:', err);
-      error('Lỗi khi lưu thông tin ảnh: ' + (err.response?.data?.message || err.message));
+      onRefresh?.();
+      success(`Đã thêm ${validUrls.length} ảnh cho đơn dịch vụ.`);
+    } catch (uploadError) {
+      error(`Lưu thông tin ảnh thất bại: ${getErrorMessage(uploadError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
   };
 
   const handleDeleteImage = async (imageId, imageUrl) => {
-    if (!confirm('Xóa hình ảnh này?')) return;
-    
+    if (!window.confirm('Bạn có chắc muốn xóa hình ảnh này?')) {
+      return;
+    }
+
+    startDetailLoading('Đang xóa ảnh...');
+
     try {
-      startDetailLoading('Đang xóa ảnh...');
-      
       await serviceOrderImagesAPI.delete(imageId);
-      
-      const filename = imageUrl.split('/uploads/')[1];
-      if (filename) {
+
+      const uploadedFileName = imageUrl.split('/uploads/')[1];
+      if (uploadedFileName) {
         try {
-          await uploadAPI.delete(filename);
-        } catch (err) {
-          console.warn('Could not delete file from server:', err);
+          await uploadAPI.delete(uploadedFileName);
+        } catch {
+          // Bỏ qua nếu file vật lý đã không còn trên server.
         }
       }
-      
-      // Hiển thị thông báo thành công
-      success('Xóa ảnh thành công!');
-      
-      // Refresh danh sách ảnh mà không reload trang
+
       if (selectedOrder) {
         await fetchOrderDetails(selectedOrder.id);
       }
-      onRefresh && onRefresh();
-    } catch (err) {
-      console.error('Delete image error:', err);
-      error('Lỗi khi xóa ảnh');
+
+      onRefresh?.();
+      success('Đã xóa ảnh của đơn dịch vụ.');
+    } catch (deleteError) {
+      error(`Xóa ảnh thất bại: ${getErrorMessage(deleteError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
   };
 
-  const formatYYYYMMDD = (date) => {
-    const d = new Date(date);
-    // Use local date parts to avoid timezone shifting the day
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
   const handleStatusChange = async (newStatus) => {
-    if (!selectedOrder) return;
+    if (!selectedOrder || !newStatus || newStatus === selectedOrder.status) {
+      return;
+    }
+
+    if (!selectedOrder.employee_id && ['in_progress', 'ready_for_pickup', 'completed'].includes(newStatus)) {
+      error('Vui lòng giao việc cho nhân viên trước khi chuyển đơn sang trạng thái xử lý.');
+      return;
+    }
+
+    startDetailLoading(
+      newStatus === 'completed' ? 'Đang hoàn thành đơn dịch vụ...' : 'Đang cập nhật trạng thái...'
+    );
 
     try {
-      // Nếu chuyển sang "completed" phải dùng endpoint /complete để đảm bảo tạo bảo hành theo nghiệp vụ
       if (newStatus === 'completed') {
-        startDetailLoading('Đang hoàn thành đơn dịch vụ...');
-
-        // delivery_date là BẮT BUỘC: ưu tiên lấy từ order. Nếu chưa có thì yêu cầu người dùng cập nhật delivery_date trước.
         const deliveryDate = selectedOrder.delivery_date
           ? formatYYYYMMDD(selectedOrder.delivery_date)
           : null;
 
         if (!deliveryDate) {
-          error('Thiếu ngày giao (delivery_date). Vui lòng cập nhật ngày giao trước khi hoàn thành.');
+          error('Thiếu ngày giao. Vui lòng cập nhật ngày giao trước khi hoàn thành đơn.');
           return;
         }
 
-        // warranty_period: optional. Không gửi thì backend tự lấy theo service.
-        const res = await serviceOrdersAPI.complete(selectedOrder.id, {
+        const response = await serviceOrdersAPI.complete(selectedOrder.id, {
           delivery_date: deliveryDate,
         });
 
         await fetchOrderDetails(selectedOrder.id);
-
-        const msg = res?.data?.message || 'Hoàn thành đơn dịch vụ thành công!';
-        success(msg);
-        onRefresh && onRefresh();
+        onRefresh?.();
+        success(response?.data?.message || 'Hoàn thành đơn dịch vụ thành công.');
         return;
       }
 
-      // Các trạng thái khác vẫn dùng endpoint update status như cũ
-      startDetailLoading('Đang cập nhật trạng thái...');
       await serviceOrdersAPI.updateStatus(selectedOrder.id, { status: newStatus });
       await fetchOrderDetails(selectedOrder.id);
-      success('Cập nhật trạng thái thành công!');
-      onRefresh && onRefresh();
-    } catch (err) {
-      console.error('Update status error:', err);
-      error('Có lỗi xảy ra khi cập nhật trạng thái: ' + (err.response?.data?.message || err.message));
+      onRefresh?.();
+      success('Cập nhật trạng thái thành công.');
+    } catch (statusError) {
+      error(`Cập nhật trạng thái thất bại: ${getErrorMessage(statusError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
   };
 
   const handleAssignEmployee = async (employeeId) => {
-    if (!selectedOrder || !employeeId) return;
+    if (!selectedOrder || !employeeId || String(employeeId) === String(selectedOrder.employee_id || '')) {
+      return;
+    }
+
+    const wasWaitingForClaim = isOrderWaitingForClaim(selectedOrder);
+    startDetailLoading('Đang giao việc...');
 
     try {
-      startDetailLoading('Đang giao việc...');
-      await serviceOrdersAPI.assign(selectedOrder.id, { employee_id: parseInt(employeeId) });
+      await serviceOrdersAPI.assign(selectedOrder.id, { employee_id: Number(employeeId) });
       await fetchOrderDetails(selectedOrder.id);
-      success('Giao việc thành công!');
-      onRefresh && onRefresh();
-    } catch (err) {
-      console.error('Assign error:', err);
-      error('Có lỗi xảy ra khi giao việc: ' + (err.response?.data?.message || err.message));
+      onRefresh?.();
+      success(
+        wasWaitingForClaim
+          ? 'Đã giao việc thành công. Đơn sẽ rời khỏi danh sách chờ nhận trên app.'
+          : 'Cập nhật nhân viên phụ trách thành công.'
+      );
+    } catch (assignError) {
+      error(`Giao việc thất bại: ${getErrorMessage(assignError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
   };
 
   const handleDeleteOrder = async () => {
-    if (!selectedOrder) return;
-    if (!confirm('Bạn có chắc chắn muốn xóa đơn dịch vụ này?')) return;
+    if (!selectedOrder) {
+      return;
+    }
+
+    if (!window.confirm('Bạn có chắc muốn xóa đơn dịch vụ này?')) {
+      return;
+    }
+
+    startDetailLoading('Đang xóa đơn dịch vụ...');
 
     try {
-      startDetailLoading('Đang xóa đơn dịch vụ...');
       await serviceOrdersAPI.delete(selectedOrder.id);
-      success('Xóa đơn dịch vụ thành công!');
+      success('Đã xóa đơn dịch vụ.');
+      onRefresh?.();
       onClose();
-      onRefresh && onRefresh();
-      // Reload page to refresh table
-      window.location.reload();
-    } catch (err) {
-      console.error('Delete order error:', err);
-      error('Có lỗi xảy ra khi xóa: ' + (err.response?.data?.message || err.message));
+    } catch (deleteError) {
+      error(`Xóa đơn thất bại: ${getErrorMessage(deleteError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
-    <>
-      {/* Order Detail Modal */}
-      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
-        <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-gray-200/50 dark:border-slate-700/50 animate-fade-in">
-          {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">
-                  {selectedOrder ? `Chi tiết đơn dịch vụ #${selectedOrder.id}` : 'Đang tải...'}
-                </h3>
-                {selectedOrder && (
-                  <div className="mt-2">
-                    <StatusBadge status={selectedOrder.status} type="order" />
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
-                aria-label="Đóng"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm dark:bg-black/70 sm:p-4">
+      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col rounded-xl border border-gray-200/50 bg-white shadow-2xl dark:border-slate-700/50 dark:bg-slate-800">
+        <div className="gradient-header flex-shrink-0 border-b border-gray-200 p-4 transition-colors duration-300 dark:border-slate-700 sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 transition-colors duration-300 dark:text-gray-100 sm:text-xl">
+                {selectedOrder ? `Chi tiết đơn dịch vụ #${selectedOrder.id}` : 'Đang tải...'}
+              </h3>
+              {selectedOrder ? (
+                <div className="mt-2">
+                  <StatusBadge
+                    status={selectedOrder.status}
+                    type="order"
+                    labelOverride={statusLabel}
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-2 text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-gray-600 active:scale-95 dark:text-gray-500 dark:hover:bg-slate-700 dark:hover:text-gray-300"
+              aria-label="Đóng"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {loadingDetail ? (
+          <div className="flex flex-1 items-center justify-center p-8">
+            <LoadingSpinner size="lg" message="Đang tải thông tin đơn dịch vụ..." />
+          </div>
+        ) : null}
+
+        {!loadingDetail && selectedOrder ? (
+          <div className="flex-1 space-y-4 overflow-y-auto bg-white p-4 transition-colors duration-300 dark:bg-slate-800 sm:p-6">
+            {flowHint ? (
+              <div
+                className={`rounded-xl border px-4 py-3 text-sm ${
+                  waitingForClaim
+                    ? 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100'
+                    : 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-100'
+                }`}
               >
-                <X size={20} />
+                {flowHint}
+              </div>
+            ) : null}
+
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
+              <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+                Thông tin đơn dịch vụ
+              </h4>
+              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Khách hàng:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">{selectedOrder.customer_name || '-'}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">SĐT:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">{selectedOrder.receiver_phone || '-'}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Dịch vụ:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">{selectedOrder.service_name || '-'}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Nhà cung cấp:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">
+                    {selectedOrder.service_supplier_name || selectedOrder.supplier_name || '-'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Nhân viên:</span>{' '}
+                  <span
+                    className={
+                      waitingForClaim
+                        ? 'font-medium text-amber-700 dark:text-amber-300'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }
+                  >
+                    {assigneeLabel}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Trạng thái đơn:</span>{' '}
+                  <StatusBadge
+                    status={selectedOrder.status}
+                    type="order"
+                    labelOverride={statusLabel}
+                  />
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày nhận:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">
+                    {selectedOrder.receive_date
+                      ? new Date(selectedOrder.receive_date).toLocaleDateString('vi-VN')
+                      : '-'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày giao:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">
+                    {selectedOrder.delivery_date
+                      ? new Date(selectedOrder.delivery_date).toLocaleDateString('vi-VN')
+                      : '-'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày tạo:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">{formatDate(selectedOrder.created_at)}</span>
+                </div>
+                {selectedOrder.address ? (
+                  <div className="sm:col-span-2">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Địa chỉ:</span>{' '}
+                    <span className="text-gray-900 dark:text-gray-100">{selectedOrder.address}</span>
+                  </div>
+                ) : null}
+                {selectedOrder.note ? (
+                  <div className="sm:col-span-2">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Ghi chú:</span>{' '}
+                    <span className="text-gray-900 dark:text-gray-100">{selectedOrder.note}</span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {selectedOrder.license_plate || selectedOrder.vehicle_model ? (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+                  Thông tin xe
+                </h4>
+                <div className="flex gap-4">
+                  {selectedOrder.vehicle_image_url ? (
+                    <div className="flex-shrink-0">
+                      <img
+                        src={normalizeImageUrl(selectedOrder.vehicle_image_url) || selectedOrder.vehicle_image_url}
+                        alt="Xe"
+                        className="h-24 w-24 rounded-lg border-2 border-gray-200 bg-white object-cover dark:border-slate-600 dark:bg-slate-700 sm:h-32 sm:w-32"
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="grid flex-1 grid-cols-1 gap-2 text-sm text-gray-900 dark:text-gray-100">
+                    {selectedOrder.license_plate ? (
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Biển số xe:</span>{' '}
+                        <span className="rounded bg-yellow-400 px-3 py-1 font-bold text-black dark:bg-yellow-500 dark:text-gray-900">
+                          {selectedOrder.license_plate}
+                        </span>
+                      </div>
+                    ) : null}
+                    {selectedOrder.vehicle_model ? (
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Mẫu xe:</span>{' '}
+                        {selectedOrder.vehicle_model}
+                      </div>
+                    ) : null}
+                    {selectedOrder.vehicle_type ? (
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Loại xe:</span>{' '}
+                        {selectedOrder.vehicle_type}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
+              <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+                Thao tác
+              </h4>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Trạng thái đơn
+                  </label>
+                  <select
+                    value={selectedOrder.status || ''}
+                    onChange={(event) => handleStatusChange(event.target.value)}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm transition-all duration-200 hover:shadow-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 focus:shadow-lg dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 dark:focus:border-blue-400"
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    {waitingForClaim
+                      ? 'Đơn chỉ nên chuyển sang xử lý sau khi có nhân viên nhận hoặc được admin giao thủ công.'
+                      : 'Trạng thái này sẽ đồng bộ với app nhân viên và các thông báo liên quan.'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Nhân viên phụ trách
+                  </label>
+                  <select
+                    value={selectedOrder.employee_id || ''}
+                    onChange={(event) => handleAssignEmployee(event.target.value)}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm transition-all duration-200 hover:shadow-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 focus:shadow-lg dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 dark:focus:border-blue-400"
+                  >
+                    <option value="">
+                      {waitingForClaim ? 'Chọn nhân viên để giao thủ công' : 'Chưa giao'}
+                    </option>
+                    {employees.map((employee) => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.name} ({employee.phone})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    {waitingForClaim
+                      ? 'Khi web giao thủ công, đơn sẽ không còn xuất hiện trong danh sách "Đơn chờ nhận" trên app.'
+                      : 'Có thể đổi nhân viên phụ trách tại đây nếu backend cho phép.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h4 className="text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+                  Hình ảnh đơn dịch vụ ({orderImages.length})
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowImageUploader((current) => !current)}
+                  className="btn-gradient-primary flex items-center gap-1 px-3 py-1.5 text-sm font-medium"
+                >
+                  <Plus size={16} />
+                  {showImageUploader ? 'Đóng' : 'Thêm ảnh'}
+                </button>
+              </div>
+
+              {showImageUploader ? (
+                <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800">
+                  <ImageUploader
+                    onUploadSuccess={handleImageUpload}
+                    multiple={true}
+                    maxFiles={10}
+                    uploadMode="both"
+                    allowFileUpload={true}
+                    allowLinkUpload={true}
+                  />
+                </div>
+              ) : null}
+
+              <ImageGrid
+                images={orderImages}
+                onDelete={handleDeleteImage}
+                emptyTitle="Chưa có hình ảnh"
+                emptyDescription="Đơn dịch vụ này chưa có hình ảnh nào."
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {!loadingDetail && selectedOrder ? (
+          <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+            <div className="flex flex-col justify-between gap-2 sm:flex-row">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeleteOrder}
+                  className="btn-gradient-error flex items-center gap-2 px-4 py-2 text-sm font-medium"
+                >
+                  <Trash2 size={16} />
+                  Xóa
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex items-center gap-2 rounded-xl bg-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-300 hover:shadow-md active:scale-[0.98] dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600"
+              >
+                <X size={16} />
+                Đóng
               </button>
             </div>
           </div>
-          
-          {/* Loading State */}
-          {loadingDetail && (
-            <div className="flex-1 flex items-center justify-center p-8">
-              <LoadingSpinner size="lg" message="Đang tải thông tin đơn dịch vụ..." />
-            </div>
-          )}
-          
-          {/* Content */}
-          {!loadingDetail && selectedOrder && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 transition-colors duration-300 space-y-4">
-              {/* Thông tin đơn dịch vụ - Chỉ xem */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
-                <h4 className="font-semibold text-base sm:text-lg mb-3 text-gray-700 dark:text-gray-300">
-                  Thông tin đơn dịch vụ
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Khách hàng:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.customer_name || '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">SĐT:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.receiver_phone || '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Loại dịch vụ:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.service_name || '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Nhà cung cấp:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.service_supplier_name || selectedOrder.supplier_name || '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Nhân viên:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.employee_name || 'Chưa giao'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Ngày nhận:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.receive_date ? new Date(selectedOrder.receive_date).toLocaleDateString('vi-VN') : '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Ngày giao:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.delivery_date ? new Date(selectedOrder.delivery_date).toLocaleDateString('vi-VN') : '-'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Ngày tạo:</span> <span className="text-gray-900 dark:text-gray-100">{formatDate(selectedOrder.created_at)}</span></div>
-                  {selectedOrder.address && (
-                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Địa chỉ:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.address}</span></div>
-                  )}
-                  {selectedOrder.note && (
-                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Ghi chú:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOrder.note}</span></div>
-                  )}
-                </div>
-              </div>
-
-              {/* Thông tin xe - Chỉ xem */}
-              {(selectedOrder.license_plate || selectedOrder.vehicle_model) && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-                  <h4 className="font-semibold text-base sm:text-lg mb-3 text-gray-700 dark:text-gray-300">
-                    Thông tin xe
-                  </h4>
-                  <div className="flex gap-4">
-                    {selectedOrder.vehicle_image_url && (
-                      <div className="flex-shrink-0">
-                        <img 
-                          src={normalizeImageUrl(selectedOrder.vehicle_image_url) || selectedOrder.vehicle_image_url} 
-                          alt="Xe" 
-                          className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => {}}
-                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 grid grid-cols-1 gap-2 text-sm text-gray-900 dark:text-gray-100">
-                      {selectedOrder.license_plate && (
-                        <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Biển số xe:</span>{' '}
-                          <span className="bg-yellow-400 dark:bg-yellow-500 text-black dark:text-gray-900 px-3 py-1 rounded font-bold">
-                            {selectedOrder.license_plate}
-                          </span>
-                        </div>
-                      )}
-                      {selectedOrder.vehicle_model && (
-                        <div><span className="font-medium text-gray-700 dark:text-gray-300">Mẫu xe:</span> {selectedOrder.vehicle_model}</div>
-                      )}
-                      {selectedOrder.vehicle_type && (
-                        <div><span className="font-medium text-gray-700 dark:text-gray-300">Loại xe:</span> {selectedOrder.vehicle_type}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Thao tác - Có thể sửa: Trạng thái, Assign nhân viên */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
-                <h4 className="font-semibold text-base sm:text-lg mb-3 text-gray-700 dark:text-gray-300">
-                  Thao tác
-                </h4>
-                <div className="space-y-3">
-                  {/* Trạng thái - Có thể sửa */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Trạng thái
-                    </label>
-                    <select
-                      value={selectedOrder.status || ''}
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 transition-all duration-200 shadow-sm hover:shadow-md focus:shadow-lg"
-                    >
-                      <option value="received">Đã nhận</option>
-                      <option value="in_progress">Đang xử lý</option>
-                      <option value="completed">Hoàn thành</option>
-                      <option value="cancelled">Đã hủy</option>
-                    </select>
-                  </div>
-
-                  {/* Giao / đổi nhân viên */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Nhân viên phụ trách
-                    </label>
-                    <select
-                      value={selectedOrder.employee_id || ''}
-                      onChange={(e) => {
-                        const employeeId = e.target.value;
-                        if (employeeId && employeeId !== String(selectedOrder.employee_id || '')) {
-                          handleAssignEmployee(employeeId);
-                        }
-                      }}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 transition-all duration-200 shadow-sm hover:shadow-md focus:shadow-lg"
-                    >
-                      <option value="">Chưa giao</option>
-                      {employees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name} ({emp.phone})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Hình ảnh - Có thể thêm/xóa/xem */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
-                    Hình ảnh đơn dịch vụ ({orderImages.length})
-                  </h4>
-                  <button
-                    onClick={() => setShowImageUploader(!showImageUploader)}
-                    className="btn-gradient-primary flex items-center gap-1 px-3 py-1.5 text-sm font-medium"
-                  >
-                    <Plus size={16} />
-                    {showImageUploader ? 'Đóng' : 'Thêm ảnh'}
-                  </button>
-                </div>
-
-                {/* Image Uploader */}
-                {showImageUploader && (
-                  <div className="mb-4 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-600">
-                    <ImageUploader 
-                      onUploadSuccess={handleImageUpload}
-                      multiple={true}
-                      maxFiles={10}
-                      uploadMode="both"
-                      allowFileUpload={true}
-                      allowLinkUpload={true}
-                    />
-                  </div>
-                )}
-
-                {/* Image Grid */}
-                <ImageGrid
-                  images={orderImages}
-                  onDelete={handleDeleteImage}
-                  emptyTitle="Chưa có hình ảnh"
-                  emptyDescription="Đơn dịch vụ này chưa có hình ảnh nào"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          {!loadingDetail && selectedOrder && (
-            <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800">
-              <div className="flex flex-col sm:flex-row gap-2 justify-between">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={handleDeleteOrder}
-                    className="btn-gradient-error flex items-center gap-2 px-4 py-2 text-sm font-medium"
-                  >
-                    <Trash2 size={16} />
-                    Xóa
-                  </button>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
-                >
-                  <X size={16} />
-                  Đóng
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        ) : null}
       </div>
-
-    </>
+    </div>
   );
 }
-

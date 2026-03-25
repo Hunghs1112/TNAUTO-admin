@@ -92,9 +92,9 @@ export const badgeStyles = {
 
 // Status badge colors (for order status)
 export const statusColors = {
-  received: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Đã nhận' },
+  received: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Đã tiếp nhận' },
   in_progress: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Đang xử lý' },
-  ready_for_pickup: { bg: 'bg-indigo-100', text: 'text-indigo-800', label: 'Sẵn sàng lấy' },
+  ready_for_pickup: { bg: 'bg-indigo-100', text: 'text-indigo-800', label: 'Sẵn sàng bàn giao' },
   completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Hoàn thành' },
   cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Đã hủy' },
 };

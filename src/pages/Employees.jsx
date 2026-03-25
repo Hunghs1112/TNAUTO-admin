@@ -11,6 +11,8 @@ function Employees() {
       columns={employeesConfig.columns}
       fieldsForModal={employeesConfig.fieldsForModal}
       title={employeesConfig.title}
+      showPagination={true}
+      limit={20}
     />
   );
 }

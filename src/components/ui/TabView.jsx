@@ -1,38 +1,32 @@
 import { memo, useCallback } from 'react';
 
-/**
- * TabView Component - Responsive tabs component
- * Optimized with React.memo to prevent unnecessary rerenders
- * @param {Array} tabs - Array of tab objects with { id, label, icon (optional) }
- * @param {string} activeTab - Currently active tab id
- * @param {Function} onTabChange - Callback when tab changes
- */
 function TabView({ tabs, activeTab, onTabChange }) {
-  const handleTabClick = useCallback((tabId) => {
-    onTabChange(tabId);
-  }, [onTabChange]);
+  const handleTabClick = useCallback(
+    (tabId) => {
+      onTabChange(tabId);
+    },
+    [onTabChange]
+  );
 
   return (
-    <div className="border-b border-gray-200">
-      <nav className="flex flex-wrap -mb-px gap-1">
+    <div className="border-b border-slate-300/90 dark:border-slate-700/90">
+      <nav className="-mb-px flex flex-wrap gap-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
-          
+
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => handleTabClick(tab.id)}
-              className={`
-                flex items-center gap-2 px-4 py-2.5 border-b-2 font-medium text-sm transition-all
-                ${isActive 
-                  ? 'border-blue-600 text-blue-600 bg-blue-50/50' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50/50'
-                }
-                whitespace-nowrap rounded-t-lg
-              `}
+              className={`inline-flex items-center gap-2 rounded-t-2xl border-b-2 px-4 py-3 text-sm font-semibold transition-all ${
+                isActive
+                  ? 'border-blue-600 bg-white text-blue-700 shadow-[0_10px_28px_-20px_rgba(37,99,235,0.45)] ring-1 ring-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-900/60'
+                  : 'border-transparent text-slate-600 hover:border-slate-400 hover:bg-white/85 hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800/60 dark:hover:text-slate-100'
+              }`}
             >
-              {Icon && <Icon className="w-4 h-4" />}
+              {Icon ? <Icon className="h-4 w-4" /> : null}
               <span>{tab.label}</span>
             </button>
           );
@@ -43,4 +37,3 @@ function TabView({ tabs, activeTab, onTabChange }) {
 }
 
 export default memo(TabView);
-

@@ -189,7 +189,6 @@ export default function ProductDetailModal({
           await productsAPI.update(selectedProduct.id, {
             image_url: firstImageUrl
           });
-          console.log('Updated product image_url to:', firstImageUrl);
         } catch (updateErr) {
           console.error('Error updating product image_url:', updateErr);
           // Không throw error vì ảnh đã được tạo thành công
@@ -235,7 +234,6 @@ export default function ProductDetailModal({
             await productsAPI.update(selectedProduct.id, {
               image_url: newPrimaryImage.image_url
             });
-            console.log('Updated product image_url to new primary:', newPrimaryImage.image_url);
           } catch (updateErr) {
             console.error('Error updating primary image after delete:', updateErr);
             // Không throw error vì ảnh đã được xóa thành công
@@ -247,7 +245,6 @@ export default function ProductDetailModal({
           await productsAPI.update(selectedProduct.id, {
             image_url: null
           });
-          console.log('Cleared product image_url (no images left)');
         } catch (updateErr) {
           console.error('Error clearing product image_url:', updateErr);
         }
@@ -295,7 +292,6 @@ export default function ProductDetailModal({
         await productsAPI.update(selectedProduct.id, {
           image_url: primaryImage.image_url
         });
-        console.log('Updated product image_url to primary image:', primaryImage.image_url);
       } catch (updateErr) {
         console.error('Error updating product image_url:', updateErr);
         // Không throw error vì ảnh chính đã được đặt thành công
@@ -351,7 +347,6 @@ export default function ProductDetailModal({
       
       // If category changed, notify Categories page to refresh
       if (categoryChanged) {
-        console.log('[ProductDetailModal] Category changed, dispatching productCategoryChanged event');
         // Store timestamp in sessionStorage for late listeners
         sessionStorage.setItem('productCategoryChanged', Date.now().toString());
         window.dispatchEvent(new CustomEvent('productCategoryChanged'));
@@ -490,7 +485,7 @@ export default function ProductDetailModal({
                   <div className="space-y-3">
                     <FormField
                       name="video_url"
-                      label="Video URL"
+                      label="URL video"
                       type="text"
                       value={formData.video_url || ''}
                       onChange={(e) => {
@@ -511,7 +506,7 @@ export default function ProductDetailModal({
                     </div>
                     {formData.video_url && (
                       <div className="mt-3">
-                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Preview:</p>
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Xem trước:</p>
                         <ProductVideo videoUrl={formData.video_url} />
                       </div>
                     )}

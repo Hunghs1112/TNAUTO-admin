@@ -213,7 +213,6 @@ export default function OfferDetailModal({
           await offersAPI.update(selectedOffer.id, {
             image_url: firstImageUrl
           });
-          console.log('Updated offer image_url to:', firstImageUrl);
         } catch (updateErr) {
           console.error('Error updating offer image_url:', updateErr);
           // Không throw error vì ảnh đã được tạo thành công
@@ -268,7 +267,6 @@ export default function OfferDetailModal({
               await offersAPI.update(selectedOffer.id, {
                 image_url: newPrimaryImage.image_url
               });
-              console.log('Updated offer image_url to new primary:', newPrimaryImage.image_url);
             } catch (updateErr) {
               console.error('Error updating primary image after delete:', updateErr);
               // Không throw error vì ảnh đã được xóa thành công
@@ -281,7 +279,6 @@ export default function OfferDetailModal({
           await offersAPI.update(selectedOffer.id, {
             image_url: null
           });
-          console.log('Cleared offer image_url (no images left)');
         } catch (updateErr) {
           console.error('Error clearing offer image_url:', updateErr);
         }
@@ -337,7 +334,6 @@ export default function OfferDetailModal({
         await offersAPI.update(selectedOffer.id, {
           image_url: primaryImage.image_url
         });
-        console.log('Updated offer image_url to primary image:', primaryImage.image_url);
       } catch (updateErr) {
         console.error('Error updating offer image_url:', updateErr);
         // Không throw error vì ảnh chính đã được đặt thành công

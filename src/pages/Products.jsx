@@ -1,9 +1,8 @@
-// src/pages/Products.jsx
-import { useState, memo, useCallback } from 'react';
-import GenericCrudPage from '../components/features/GenericCrudPage';
+import { memo, useCallback, useState } from 'react';
 import ProductDetailModal from '../components/features/ProductDetailModal';
-import { productsAPI } from '../services/api';
+import GenericCrudPage from '../components/features/GenericCrudPage';
 import { productsConfig } from '../config/entityConfigs.jsx';
+import { productsAPI } from '../services/api';
 
 function Products() {
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -21,24 +20,25 @@ function Products() {
   }, []);
 
   const handleRefresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   }, []);
 
   return (
     <>
       <GenericCrudPage
-        key={refreshKey}
         api={productsAPI}
         columns={productsConfig.columns}
         fieldsForModal={productsConfig.fieldsForModal}
         title={productsConfig.title}
+        showPagination={true}
+        limit={12}
+        refreshTrigger={refreshKey}
         showActions={true}
         onView={handleViewProduct}
         onEdit={handleViewProduct}
         onRowClick={handleViewProduct}
       />
 
-      {/* Product Detail Modal - Form riêng cho sản phẩm với quản lý ảnh */}
       <ProductDetailModal
         isOpen={showDetailModal}
         productId={selectedProductId}

@@ -1,9 +1,8 @@
-// src/pages/Offers.jsx
-import { useState, memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import OfferDetailModal from '../components/features/OfferDetailModal';
-import { offersAPI } from '../services/api';
 import { offersConfig } from '../config/entityConfigs.jsx';
+import { offersAPI } from '../services/api';
 
 function Offers() {
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -21,24 +20,25 @@ function Offers() {
   }, []);
 
   const handleRefresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   }, []);
 
   return (
     <>
       <GenericCrudPage
-        key={refreshKey}
         api={offersAPI}
         columns={offersConfig.columns}
         fieldsForModal={offersConfig.fieldsForModal}
         title={offersConfig.title}
+        showPagination={true}
+        limit={12}
+        refreshTrigger={refreshKey}
         showActions={true}
         onView={handleViewOffer}
         onEdit={handleViewOffer}
         onRowClick={handleViewOffer}
       />
 
-      {/* Offer Detail Modal - Form riêng cho ưu đãi với quản lý ảnh */}
       <OfferDetailModal
         isOpen={showDetailModal}
         offerId={selectedOfferId}

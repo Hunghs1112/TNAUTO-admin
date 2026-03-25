@@ -1,26 +1,24 @@
-// src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Layout from './components/layout/Layout';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
-import Layout from './components/layout/Layout';
-import Customers from './pages/Customers';
-import Dealers from './pages/Dealers';
-import Employees from './pages/Employees';
-import Vehicles from './pages/Vehicles';
-import Services from './pages/Services';
-import ServiceCategories from './pages/ServiceCategories';
 import Categories from './pages/Categories';
-import Products from './pages/Products';
-import ServiceOrders from './pages/ServiceOrders';
-import Notifications from './pages/Notifications';
-import ServiceReminderRules from './pages/ServiceReminderRules';
-import Warranties from './pages/Warranties';
+import Customers from './pages/Customers';
+import DealerCatalog from './pages/DealerCatalog';
+import Dealers from './pages/Dealers';
 import DealerWarranties from './pages/DealerWarranties';
+import Employees from './pages/Employees';
+import Notifications from './pages/Notifications';
 import Offers from './pages/Offers';
+import Products from './pages/Products';
+import ServiceCategories from './pages/ServiceCategories';
+import ServiceOrders from './pages/ServiceOrders';
+import ServiceReminderRules from './pages/ServiceReminderRules';
+import Services from './pages/Services';
+import Vehicles from './pages/Vehicles';
+import Warranties from './pages/Warranties';
 
-// All page components are already memoized in their respective files
-// to prevent unnecessary rerenders on navigation
 function App() {
   return (
     <ThemeProvider>
@@ -38,6 +36,7 @@ function App() {
                 <Route path="service-categories" element={<ServiceCategories />} />
                 <Route path="categories" element={<Categories />} />
                 <Route path="products" element={<Products />} />
+                <Route path="dealer-catalog" element={<DealerCatalog />} />
                 <Route path="service-orders" element={<ServiceOrders />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="service-reminder-rules" element={<ServiceReminderRules />} />

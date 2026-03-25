@@ -375,7 +375,7 @@ export default function ProductVideo({ videoUrl, className = '' }) {
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
-          title="Product Video"
+          title="Video sản phẩm"
         />
       </div>
     </div>

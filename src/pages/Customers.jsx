@@ -1,9 +1,8 @@
-// src/pages/Customers.jsx
 import { memo, useState } from 'react';
-import GenericCrudPage from '../components/features/GenericCrudPage';
-import { customersAPI } from '../services/api';
-import { customersConfig } from '../config/entityConfigs.jsx';
 import CustomerDetailModal from '../components/features/CustomerDetailModal';
+import GenericCrudPage from '../components/features/GenericCrudPage';
+import { customersConfig } from '../config/entityConfigs.jsx';
+import { customersAPI } from '../services/api';
 
 function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -16,7 +15,9 @@ function Customers() {
         columns={customersConfig.columns}
         fieldsForModal={customersConfig.fieldsForModal}
         title={customersConfig.title}
-        showDelete={false} // Admin không xóa khách hàng
+        showPagination={true}
+        limit={20}
+        showDelete={false}
         disableCreate={false}
         onView={(item) => {
           setSelectedCustomer(item || null);

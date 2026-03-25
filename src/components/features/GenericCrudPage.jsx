@@ -1,27 +1,42 @@
-// src/components/features/GenericCrudPage.jsx
-import { useState, useEffect, memo, useCallback, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import PageHeader from '../layout/PageHeader';
 import GenericTable from '../table/Table';
 
-/**
- * Generic CRUD page component that handles standard entity management
- * Pattern giống NotificationManagement để tránh chớp loading
- * Tự quản lý state, không dùng useEntityCrud để tránh loading state ban đầu
- * 
- * @param {Object} props - Configuration for the page
- * @param {Object} props.api - API object with CRUD methods
- * @param {Array} props.columns - Column definitions for the table
- * @param {Array} props.fieldsForModal - Field definitions for the form modal
- * @param {string} props.title - Page/entity title
- * @param {Object} props.options - Additional options (transformData, onError, etc.)
- * @param {React.Component} props.customActions - Custom action buttons
- * @param {boolean} props.showPagination - Whether to show pagination
- * @param {number} props.limit - Items per page
- */
-function GenericCrudPage({ 
-  api, 
-  columns, 
-  fieldsForModal, 
-  title, 
+function extractListData(response) {
+  const raw = response?.data;
+
+  if (Array.isArray(raw?.data)) {
+    return raw.data;
+  }
+
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+
+  return [];
+}
+
+function extractPaginationMeta(response, fallbackPage, fallbackLimit, fallbackTotal) {
+  const raw = response?.data || {};
+  const pagination = raw.pagination || {};
+  const totalItems = Number(raw.total ?? pagination.totalItems ?? fallbackTotal ?? 0) || 0;
+  const pageSize = Number(raw.limit ?? pagination.pageSize ?? fallbackLimit ?? 10) || fallbackLimit || 10;
+  const totalPages =
+    Number(raw.totalPages ?? pagination.totalPages ?? Math.max(1, Math.ceil(totalItems / Math.max(pageSize, 1)))) || 1;
+  const currentPage = Number(raw.page ?? pagination.currentPage ?? fallbackPage ?? 1) || 1;
+
+  return {
+    totalItems,
+    totalPages: Math.max(1, totalPages),
+    currentPage: Math.max(1, currentPage),
+  };
+}
+
+function GenericCrudPage({
+  api,
+  columns,
+  fieldsForModal,
+  title,
   options = {},
   customActions,
   showPagination = false,
@@ -30,166 +45,178 @@ function GenericCrudPage({
   searchPlaceholder = 'Tìm kiếm...',
   hideTitle = false,
   showActions = true,
+  showDelete = true,
   onRowClick = null,
   onView = null,
   onEdit = null,
   tableActionsRef = null,
   showTableHeaderActions = true,
   refreshTrigger = null,
-  disableCreate = false
+  disableCreate = false,
+  categoryChangeEventName,
 }) {
-  const { transformData = (data) => data, onError = (error) => console.error('Error:', error) } = options;
-  
-  // Tự quản lý state giống NotificationManagement - không có loading state ban đầu
+  const { transformData = (data) => data, onError = () => {} } = options;
+
   const [allData, setAllData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasFetched, setHasFetched] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true); // Track initial load để tránh hiển thị empty state ngay
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Use refs để giữ stable references và tránh infinite loop
+  const internalTableActionsRef = useRef(null);
+  const resolvedTableActionsRef = tableActionsRef || internalTableActionsRef;
   const apiRef = useRef(api);
   const transformDataRef = useRef(transformData);
   const onErrorRef = useRef(onError);
+  const hasLoadedOnceRef = useRef(false);
 
-  // Update refs khi props thay đổi
   useEffect(() => {
     apiRef.current = api;
     transformDataRef.current = transformData;
     onErrorRef.current = onError;
   }, [api, transformData, onError]);
 
-  // Fetch data - không set loading state để tránh chớp (giống NotificationManagement)
-  // Không dùng useCallback với dependencies để tránh infinite loop
-  const fetchData = async (isInitial = false) => {
-    if (isInitial) {
-      setIsInitialLoading(true);
-    }
-    
-    try {
-      console.log(`[GenericCrudPage] Fetching data for ${title}, isInitial:`, isInitial);
-      // Add cache busting to ensure fresh data - pass timestamp as param
-      const cacheBustParam = { _t: Date.now() };
-      console.log(`[GenericCrudPage] Calling getAll with cache bust param:`, cacheBustParam);
-      const res = await apiRef.current.getAll(cacheBustParam);
-      let fetchedData = [];
-      
-      // Handle response format
-      if (res.data) {
-        if (Array.isArray(res.data.data)) {
-          fetchedData = res.data.data;
-        } else if (Array.isArray(res.data)) {
-          fetchedData = res.data;
-        }
-      }
-      
-      console.log(`[GenericCrudPage] Fetched ${fetchedData.length} items for ${title}`);
-      
-      // Log sample data to verify product_count/service_count
-      if (fetchedData.length > 0 && (title.includes('Danh mục') || title.includes('Category'))) {
-        console.log(`[GenericCrudPage] Sample category data:`, fetchedData[0]);
-        if (fetchedData[0].product_count !== undefined) {
-          console.log(`[GenericCrudPage] First category product_count:`, fetchedData[0].product_count);
-        }
-        if (fetchedData[0].service_count !== undefined) {
-          console.log(`[GenericCrudPage] First category service_count:`, fetchedData[0].service_count);
-        }
-      }
-      
-      // Transform data nếu có
-      const transformed = transformDataRef.current(fetchedData);
-      console.log(`[GenericCrudPage] Transformed data for ${title}:`, transformed?.length || 0, 'items');
-      
-      // Log transformed sample to verify counts are preserved
-      if (transformed && transformed.length > 0 && (title.includes('Danh mục') || title.includes('Category'))) {
-        console.log(`[GenericCrudPage] Sample transformed category:`, transformed[0]);
-      }
-      
-      setAllData(transformed || []);
-      setCurrentPage(1);
-    } catch (err) {
-      console.error(`[GenericCrudPage] Fetch error for ${title}:`, err);
-      onErrorRef.current(err);
-      setAllData([]);
-      setCurrentPage(1);
-    } finally {
+  const fetchData = useCallback(
+    async ({ isInitial = false } = {}) => {
       if (isInitial) {
-        setIsInitialLoading(false);
+        setIsInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
       }
-    }
-  };
 
-  // Fetch on mount - chỉ chạy một lần (giống NotificationManagement)
+      try {
+        const params = { _t: Date.now() };
+
+        if (showPagination) {
+          params.page = currentPage;
+          params.limit = limit;
+          params.paginate = true;
+        }
+
+        if (searchTerm) {
+          params.search = searchTerm;
+        }
+
+        const response = await apiRef.current.getAll(params);
+        const fetchedData = transformDataRef.current(extractListData(response)) || [];
+
+        if (showPagination) {
+          const meta = extractPaginationMeta(response, currentPage, limit, fetchedData.length);
+
+          setAllData(fetchedData);
+          setTotalItems(meta.totalItems);
+          setTotalPages(meta.totalPages);
+
+          if (meta.totalPages > 0 && currentPage > meta.totalPages) {
+            setCurrentPage(meta.totalPages);
+            return;
+          }
+
+          if (meta.currentPage !== currentPage) {
+            setCurrentPage(meta.currentPage);
+          }
+        } else {
+          setAllData(fetchedData);
+          setTotalItems(fetchedData.length);
+          setTotalPages(1);
+          setCurrentPage(1);
+        }
+      } catch (error) {
+        onErrorRef.current(error);
+        setAllData([]);
+        setTotalItems(0);
+        setTotalPages(1);
+
+        if (!showPagination) {
+          setCurrentPage(1);
+        }
+      } finally {
+        hasLoadedOnceRef.current = true;
+
+        if (isInitial) {
+          setIsInitialLoading(false);
+        } else {
+          setIsRefreshing(false);
+        }
+      }
+    },
+    [currentPage, limit, searchTerm, showPagination]
+  );
+
   useEffect(() => {
-    if (!hasFetched) {
-      fetchData(true); // Pass isInitial = true
-      setHasFetched(true);
-    }
-  }, [hasFetched]);
+    fetchData({ isInitial: !hasLoadedOnceRef.current });
+  }, [fetchData]);
 
-  // Refresh when refreshTrigger changes
   useEffect(() => {
-    if (hasFetched && refreshTrigger !== null && refreshTrigger > 0) {
-      console.log(`[GenericCrudPage] Refresh triggered for ${title}, refreshTrigger:`, refreshTrigger);
-      // Add delay to ensure backend has updated the counts (backend may need time to recalculate)
-      let timeoutId2 = null;
-      const timeoutId1 = setTimeout(() => {
-        console.log(`[GenericCrudPage] Executing first refresh for ${title} after 1s delay`);
-        fetchData();
-        
-        // Second refresh after another delay to ensure backend has fully updated
-        timeoutId2 = setTimeout(() => {
-          console.log(`[GenericCrudPage] Executing second refresh for ${title} after additional 1s delay`);
-          fetchData();
-        }, 1000);
-      }, 1000); // First delay: 1 second
-      
-      return () => {
-        clearTimeout(timeoutId1);
-        if (timeoutId2) clearTimeout(timeoutId2);
-      };
+    if (refreshTrigger === null || refreshTrigger <= 0 || !hasLoadedOnceRef.current) {
+      return undefined;
     }
-  }, [refreshTrigger, hasFetched, title]);
 
-  // Handle delete
-  const handleDelete = useCallback(async (id) => {
-    try {
-      await apiRef.current.delete(id);
-      // Update local state instead of refetching immediately
-      setAllData(prevData => prevData.filter(item => item.id !== id));
-    } catch (err) {
-      console.error('Delete error:', err);
-      onErrorRef.current(err);
-      // Refresh on error
+    let delayedRefresh;
+
+    const firstRefresh = setTimeout(() => {
       fetchData();
-    }
+
+      delayedRefresh = setTimeout(() => {
+        fetchData();
+      }, 1000);
+    }, 400);
+
+    return () => {
+      clearTimeout(firstRefresh);
+      clearTimeout(delayedRefresh);
+    };
+  }, [fetchData, refreshTrigger]);
+
+  const handleDelete = useCallback((id) => {
+    setAllData((prev) => prev.filter((item) => item.id !== id));
+    setTotalItems((prev) => Math.max(0, prev - 1));
   }, []);
 
-  // Handle refresh
   const handleRefresh = useCallback(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-  // Pagination - giống NotificationManagement: paginate trước khi truyền vào GenericTable
-  const paginatedData = useCallback(() => {
-    if (!showPagination) return allData;
-    const startIndex = (currentPage - 1) * limit;
-    return allData.slice(startIndex, startIndex + limit);
-  }, [allData, showPagination, currentPage, limit]);
+  const handlePageChange = useCallback(
+    (page) => {
+      if (page >= 1 && page <= totalPages && page !== currentPage) {
+        setCurrentPage(page);
+      }
+    },
+    [currentPage, totalPages]
+  );
 
-  const totalPages = showPagination ? Math.ceil(allData.length / limit) : 1;
+  const handleSearchChange = useCallback(
+    (value) => {
+      const nextSearchTerm = String(value || '').trim();
+      setSearchTerm(nextSearchTerm);
+      setCurrentPage(1);
+    },
+    []
+  );
 
-  const handlePageChange = useCallback((page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  }, [totalPages]);
+  const handleCreate = useCallback(() => {
+    resolvedTableActionsRef.current?.openCreateModal?.();
+  }, [resolvedTableActionsRef]);
 
-  // Chỉ render table sau khi đã fetch xong lần đầu để tránh hiển thị empty state rồi nháy
-  // Trong lúc initial loading, không render gì hoặc render skeleton nhẹ
-  if (isInitialLoading) {
-    return (
+  const renderPageHeader = !hideTitle;
+  const badgeCount = showPagination ? totalItems : allData.length;
+
+  return (
+    <div className={renderPageHeader ? 'app-page' : undefined}>
+      {renderPageHeader ? (
+        <PageHeader
+          title={title}
+          badge={isInitialLoading ? 'Đang tải' : `${badgeCount} mục`}
+          onRefresh={handleRefresh}
+          onCreate={disableCreate ? undefined : handleCreate}
+        />
+      ) : null}
+
       <GenericTable
-        data={[]}
+        data={isInitialLoading ? [] : allData}
         columns={columns}
         onEdit={onEdit || handleRefresh}
         onDelete={handleDelete}
@@ -201,56 +228,26 @@ function GenericCrudPage({
         showPagination={showPagination}
         currentPage={currentPage}
         totalPages={totalPages}
-        totalItems={0}
+        totalItems={isInitialLoading ? 0 : totalItems}
         limit={limit}
         onPageChange={handlePageChange}
-        // Hiển thị skeleton trong lúc initial loading
-        loading={true}
-        isRefreshing={false}
+        loading={isInitialLoading}
+        isRefreshing={isRefreshing}
         showActions={showActions}
+        showDelete={showDelete}
         showSearch={showSearch}
         searchPlaceholder={searchPlaceholder}
-        hideTitle={hideTitle}
+        hideTitle={renderPageHeader ? true : hideTitle}
         onRefresh={handleRefresh}
         onRowClick={onRowClick}
-        tableActionsRef={tableActionsRef}
-        showTableHeaderActions={showTableHeaderActions}
+        tableActionsRef={resolvedTableActionsRef}
+        showTableHeaderActions={renderPageHeader ? false : showTableHeaderActions}
         disableCreate={disableCreate}
+        categoryChangeEventName={categoryChangeEventName}
+        onSearchChange={showPagination ? handleSearchChange : undefined}
+        serverSideSearch={showPagination}
       />
-    );
-  }
-
-  return (
-    <GenericTable
-      data={paginatedData()}
-      columns={columns}
-      onEdit={onEdit || handleRefresh}
-      onDelete={handleDelete}
-      onView={onView || undefined}
-      title={title}
-      api={api}
-      fieldsForModal={fieldsForModal}
-      customActions={customActions}
-      showPagination={showPagination}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      totalItems={allData.length}
-      limit={limit}
-      onPageChange={handlePageChange}
-      // Sau khi initial load xong, không hiển thị loading nữa
-      loading={false}
-      isRefreshing={false}
-      showActions={showActions}
-      showSearch={showSearch}
-      searchPlaceholder={searchPlaceholder}
-      // GenericTable sẽ tự xử lý search trên paginated data
-      hideTitle={hideTitle}
-      onRefresh={handleRefresh}
-      onRowClick={onRowClick}
-      tableActionsRef={tableActionsRef}
-      showTableHeaderActions={showTableHeaderActions}
-      disableCreate={disableCreate}
-    />
+    </div>
   );
 }
 

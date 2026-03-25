@@ -1,53 +1,53 @@
-// src/components/layout/PageHeader.jsx
 import { memo } from 'react';
-import { RefreshCw, Plus } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 
-function PageHeader({ 
-  title, 
-  onRefresh, 
+function PageHeader({
+  title,
+  description,
+  badge,
+  onRefresh,
   onCreate,
-  createButtonText = "Thêm mới",
-  children 
+  createButtonText = 'Thêm mới',
+  children,
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
-      <div 
-        className="p-4 lg:p-6 border-b border-gray-200 dark:border-slate-800"
-        style={{ background: 'var(--gradient-header)' }}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            {title}
-          </h1>
-          <div className="flex items-center gap-2">
-            {onRefresh && (
+    <section className="app-hero">
+      <div className="app-hero-content">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{title}</h1>
+              {badge ? <span className="app-badge">{badge}</span> : null}
+            </div>
+            {description ? (
+              <p className="max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">{description}</p>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {onRefresh ? (
               <button
                 type="button"
                 onClick={onRefresh}
-                className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                className="app-icon-button"
                 title="Làm mới dữ liệu"
                 aria-label="Làm mới dữ liệu"
               >
                 <RefreshCw size={18} />
               </button>
-            )}
-            {onCreate && (
-              <button
-                type="button"
-                onClick={onCreate}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
-              >
+            ) : null}
+            {onCreate ? (
+              <button type="button" onClick={onCreate} className="btn-gradient-primary">
                 <Plus size={18} />
-                <span className="hidden sm:inline">{createButtonText}</span>
+                <span>{createButtonText}</span>
               </button>
-            )}
+            ) : null}
             {children}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 export default memo(PageHeader);
-

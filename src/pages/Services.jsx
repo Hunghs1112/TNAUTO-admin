@@ -1,9 +1,8 @@
-// src/pages/Services.jsx
-import { useState, memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import ServiceDetailModal from '../components/features/ServiceDetailModal';
-import { servicesAPI } from '../services/api';
 import { servicesConfig } from '../config/entityConfigs.jsx';
+import { servicesAPI } from '../services/api';
 
 function Services() {
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -21,24 +20,25 @@ function Services() {
   }, []);
 
   const handleRefresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   }, []);
 
   return (
     <>
       <GenericCrudPage
-        key={refreshKey}
         api={servicesAPI}
         columns={servicesConfig.columns}
         fieldsForModal={servicesConfig.fieldsForModal}
         title={servicesConfig.title}
+        showPagination={true}
+        limit={12}
+        refreshTrigger={refreshKey}
         showActions={true}
         onView={handleViewService}
         onEdit={handleViewService}
         onRowClick={handleViewService}
       />
 
-      {/* Service Detail Modal - Form riêng cho dịch vụ với quản lý ảnh */}
       <ServiceDetailModal
         isOpen={showDetailModal}
         serviceId={selectedServiceId}

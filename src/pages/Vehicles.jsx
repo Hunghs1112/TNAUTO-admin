@@ -54,14 +54,16 @@ function Vehicles() {
   return (
     <>
       <GenericCrudPage
-        key={refreshKey}
         api={vehiclesAPI}
         columns={vehiclesConfig.columns}
         fieldsForModal={vehiclesConfig.fieldsForModal}
         title={vehiclesConfig.title}
+        showPagination={true}
+        limit={20}
         showSearch={true}
         searchPlaceholder="Tìm biển số, mẫu xe, tên KH..."
         options={options}
+        refreshTrigger={refreshKey}
         onView={openVehicle}
         onEdit={openVehicle}
         onRowClick={openVehicle}

@@ -1,44 +1,78 @@
-// src/components/ui/StatusBadge.jsx
-import React from 'react';
+const ORDER_STATUS_CONFIG = {
+  pending: {
+    color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+    label: 'Chờ xử lý',
+  },
+  received: {
+    color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+    label: 'Đã tiếp nhận',
+  },
+  in_progress: {
+    color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+    label: 'Đang xử lý',
+  },
+  ready_for_pickup: {
+    color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300',
+    label: 'Sẵn sàng bàn giao',
+  },
+  completed: {
+    color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    label: 'Hoàn thành',
+  },
+  cancelled: {
+    color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+    label: 'Đã hủy',
+  },
+};
 
-export default function StatusBadge({ status, type = 'default' }) {
-  const getStatusConfig = () => {
-    switch (type) {
-      case 'order':
-        return {
-          'pending': { color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', label: 'Chờ xử lý' },
-          'in_progress': { color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300', label: 'Đang xử lý' },
-          'completed': { color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', label: 'Hoàn thành' },
-          'cancelled': { color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300', label: 'Đã hủy' }
-        };
-      case 'notification':
-        return {
-          'read': { color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', label: 'Đã đọc' },
-          'unread': { color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300', label: 'Chưa đọc' }
-        };
-      case 'user':
-        return {
-          'customer': { color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300', label: 'Khách hàng' },
-          'employee': { color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', label: 'Nhân viên' }
-        };
-      case 'image_status':
-        return {
-          'received': { color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300', label: 'Đã nhận' },
-          'in_progress': { color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', label: 'Đang xử lý' },
-          'completed': { color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', label: 'Hoàn thành' }
-        };
-      default:
-        return {
-          [status]: { color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300', label: status }
-        };
-    }
+const STATUS_CONFIGS = {
+  order: ORDER_STATUS_CONFIG,
+  notification: {
+    read: {
+      color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      label: 'Đã đọc',
+    },
+    unread: {
+      color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      label: 'Chưa đọc',
+    },
+  },
+  user: {
+    customer: {
+      color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+      label: 'Khách hàng',
+    },
+    employee: {
+      color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      label: 'Nhân viên',
+    },
+  },
+  image_status: {
+    received: ORDER_STATUS_CONFIG.received,
+    in_progress: ORDER_STATUS_CONFIG.in_progress,
+    ready_for_pickup: ORDER_STATUS_CONFIG.ready_for_pickup,
+    completed: ORDER_STATUS_CONFIG.completed,
+  },
+};
+
+export default function StatusBadge({ status, type = 'default', labelOverride = null }) {
+  const configMap =
+    STATUS_CONFIGS[type] || {
+      [status]: {
+        color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300',
+        label: status,
+      },
+    };
+
+  const config = configMap[status] || {
+    color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300',
+    label: status || 'Không xác định',
   };
 
-  const config = getStatusConfig()[status] || { color: 'bg-gray-100 text-gray-800', label: status };
-
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
-      {config.label}
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${config.color}`}>
+      {labelOverride || config.label}
     </span>
   );
 }
+

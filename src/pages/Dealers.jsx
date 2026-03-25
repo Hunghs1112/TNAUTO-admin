@@ -12,7 +12,7 @@ function Dealers() {
       title={dealersConfig.title}
       options={{}}
       showPagination={true}
-      limit={10}
+      limit={20}
       showSearch={true}
       searchPlaceholder="Tìm theo tên / SĐT / email..."
     />

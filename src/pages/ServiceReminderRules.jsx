@@ -1,10 +1,12 @@
-// src/pages/ServiceReminderRules.jsx
+﻿// src/pages/ServiceReminderRules.jsx
 import { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import { servicesAPI, serviceReminderConfigsAPI } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 import { buttonStyles } from '../styles/colors';
 import Modal from '../components/ui/Modal';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
+import PageHeader from '../components/layout/PageHeader';
 
 function parseDaysInput(value) {
   if (!value) return [];
@@ -44,15 +46,16 @@ function ServiceReminderRules() {
     enabled: true,
     reminder_days_input: '30,60,90',
     send_time: '08:00',
-    title_template: 'Nhắc dịch vụ',
-    body_template: 'Chào {customer_name} ạ, đã {days_after} ngày từ lần {service_name} gần nhất...',
+    title_template: 'Nháº¯c dá»‹ch vá»¥',
+    body_template: 'ChÃ o {customer_name} áº¡, Ä‘Ã£ {days_after} ngÃ y tá»« láº§n {service_name} gáº§n nháº¥t...',
     cooldown_days: 7,
   });
+  const { success, error } = useToast();
 
   const mockPreviewData = useMemo(
     () => ({
-      customer_name: 'Anh/Chị',
-      service_name: editService?.name || editService?.service_name || 'Dịch vụ',
+      customer_name: 'Anh/Chá»‹',
+      service_name: editService?.name || editService?.service_name || 'Dá»‹ch vá»¥',
       days_after: 30,
       order_id: 1234,
     }),
@@ -78,13 +81,13 @@ function ServiceReminderRules() {
       setServices(servicesList);
       setConfigsByServiceId(map);
     } catch (err) {
-      console.error('Load service reminder rules error:', err);
       setServices([]);
       setConfigsByServiceId({});
+      error(err?.message || 'Không thể tải cấu hình nhắc dịch vụ.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [error]);
 
   useEffect(() => {
     loadAll();
@@ -112,47 +115,49 @@ function ServiceReminderRules() {
       enabled: cfg?.enabled ?? true,
       reminder_days_input: normalizedDays.length ? normalizedDays.join(',') : '30,60,90',
       send_time: cfg?.send_time || '08:00',
-      title_template: cfg?.title_template || 'Nhắc dịch vụ',
+      title_template: cfg?.title_template || 'Nháº¯c dá»‹ch vá»¥',
       body_template:
         cfg?.body_template ||
-        'Chào {customer_name} ạ, đã {days_after} ngày từ lần {service_name} gần nhất...',
+        'ChÃ o {customer_name} áº¡, Ä‘Ã£ {days_after} ngÃ y tá»« láº§n {service_name} gáº§n nháº¥t...',
       cooldown_days: cfg?.cooldown_days ?? 7,
     });
     setIsEditOpen(true);
   };
 
-  const handleToggle = async (serviceId, enabled) => {
-    setSavingServiceId(serviceId);
-    try {
-      const res = await serviceReminderConfigsAPI.setEnabled(serviceId, enabled);
-      const updated = res?.data?.data || res?.data;
+  const handleToggle = useCallback(
+    async (serviceId, enabled) => {
+      setSavingServiceId(serviceId);
+      try {
+        const res = await serviceReminderConfigsAPI.setEnabled(serviceId, enabled);
+        const updated = res?.data?.data || res?.data;
 
-      if (updated && (updated.service_id != null || updated.serviceId != null)) {
-        const updatedServiceId = updated.service_id ?? updated.serviceId;
-        setConfigsByServiceId((prev) => ({
-          ...prev,
-          [String(updatedServiceId)]: {
-            ...(prev[String(updatedServiceId)] || {}),
-            ...updated,
-          },
-        }));
-      } else {
-        await loadAll();
+        if (updated && (updated.service_id != null || updated.serviceId != null)) {
+          const updatedServiceId = updated.service_id ?? updated.serviceId;
+          setConfigsByServiceId((prev) => ({
+            ...prev,
+            [String(updatedServiceId)]: {
+              ...(prev[String(updatedServiceId)] || {}),
+              ...updated,
+            },
+          }));
+        } else {
+          await loadAll();
+        }
+      } catch (err) {
+        error(err?.message || 'Không thể cập nhật trạng thái nhắc dịch vụ.');
+      } finally {
+        setSavingServiceId(null);
       }
-    } catch (err) {
-      console.error('Toggle service reminder error:', err);
-      alert('Lỗi: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setSavingServiceId(null);
-    }
-  };
+    },
+    [error, loadAll]
+  );
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!editService) return;
 
     const reminder_days = uniqueSortedNumbers(parseDaysInput(form.reminder_days_input));
     if (!reminder_days.length) {
-      alert('Vui lòng nhập milestones hợp lệ, ví dụ: 30,60,90');
+      error('Vui lòng nhập mốc nhắc hợp lệ, ví dụ: 30,60,90.');
       return;
     }
 
@@ -171,13 +176,13 @@ function ServiceReminderRules() {
       setIsEditOpen(false);
       setEditService(null);
       await loadAll();
+      success('Đã lưu cấu hình nhắc dịch vụ.');
     } catch (err) {
-      console.error('Save service reminder config error:', err);
-      alert('Lỗi: ' + (err.response?.data?.message || err.message));
+      error(err?.message || 'Không thể lưu cấu hình nhắc dịch vụ.');
     } finally {
       setSavingServiceId(null);
     }
-  };
+  }, [editService, error, form, loadAll, success]);
 
   const filteredServices = useMemo(() => {
     const q = (searchText || '').trim().toLowerCase();
@@ -192,45 +197,57 @@ function ServiceReminderRules() {
 
   if (loading) {
     return (
-      <div className="p-4">
-        <LoadingSpinner />
+      <div className="app-panel">
+        <div className="app-panel-body">
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }
 
   if (!services.length) {
     return (
-      <div className="p-4">
-        <EmptyState title="Không có dịch vụ" description="Chưa tải được danh sách dịch vụ" />
+      <div className="app-panel">
+        <EmptyState title="Không có dịch vụ" description="Chưa tải được danh sách dịch vụ để cấu hình nhắc dịch vụ." />
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-4 bg-transparent">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Quy tắc nhắc dịch vụ</h2>
+    <div className="app-page">
+      <PageHeader
+        title="Quy tắc nhắc dịch vụ"
+        description="Thiết lập mốc ngày nhắc, khung giờ gửi và nội dung mẫu cho từng dịch vụ trong cùng một cấu trúc giao diện với các màn quản trị khác."
+        badge={`${filteredServices.length} dịch vụ`}
+      />
 
-        <div className="w-full sm:w-80">
-          <input
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-            placeholder="Tìm theo tên hoặc mã dịch vụ..."
-          />
+      <div className="app-panel">
+        <div className="app-panel-header">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Danh sách cấu hình</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Tìm nhanh dịch vụ rồi bật hoặc chỉnh sửa quy tắc nhắc tương ứng.</p>
+            </div>
+            <div className="w-full lg:w-80">
+              <input
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="app-input"
+                placeholder="Tìm theo tên hoặc mã dịch vụ..."
+              />
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-slate-800/60">
-              <tr className="text-left text-gray-700 dark:text-gray-200">
-                <th className="px-4 py-3">Dịch vụ</th>
-                <th className="px-4 py-3">Bật</th>
-                <th className="px-4 py-3">Mốc nhắc (ngày sau)</th>
-                <th className="px-4 py-3">Thời gian giãn cách (ngày)</th>
-                <th className="px-4 py-3">Hành động</th>
+          <table className="data-table min-w-full text-sm">
+            <thead>
+              <tr>
+                <th>Dịch vụ</th>
+                <th>Trạng thái</th>
+                <th>Mốc nhắc</th>
+                <th>Giãn cách</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -238,27 +255,23 @@ function ServiceReminderRules() {
                 const cfg = configsByServiceId[String(svc.id)];
                 const enabled = !!cfg?.enabled;
                 const days = cfg?.reminder_days || cfg?.reminder_days_json;
-                const daysText =
-                  Array.isArray(days) ? days.join(', ') : typeof days === 'string' ? days : '—';
+                const daysText = Array.isArray(days) ? days.join(', ') : typeof days === 'string' ? days : '—';
                 const cooldown = cfg?.cooldown_days ?? '—';
 
                 return (
-                  <tr
-                    key={svc.id}
-                    className="border-t border-gray-100 dark:border-slate-800 text-gray-900 dark:text-gray-100"
-                  >
+                  <tr key={svc.id} className="text-gray-900 dark:text-gray-100">
                     <td className="px-4 py-3 font-medium">{svc.name || svc.service_name || `#${svc.id}`}</td>
                     <td className="px-4 py-3">
                       <button
-                        className={`${enabled ? buttonStyles.success : buttonStyles.secondary} px-3 py-1.5`}
+                        className={enabled ? buttonStyles.success : buttonStyles.secondary}
                         onClick={() => handleToggle(svc.id, !enabled)}
                         disabled={savingServiceId === svc.id}
                       >
-                        {savingServiceId === svc.id ? '...' : enabled ? 'ON' : 'OFF'}
+                        {savingServiceId === svc.id ? 'Đang cập nhật...' : enabled ? 'Đang bật' : 'Đang tắt'}
                       </button>
                     </td>
                     <td className="px-4 py-3">{daysText}</td>
-                    <td className="px-4 py-3">{cooldown}</td>
+                    <td className="px-4 py-3">{cooldown} ngày</td>
                     <td className="px-4 py-3">
                       <button
                         className={buttonStyles.primary}
@@ -275,11 +288,11 @@ function ServiceReminderRules() {
           </table>
         </div>
 
-        {!filteredServices.length && (
-          <div className="p-4">
-            <EmptyState title="Không có kết quả" description="Không tìm thấy dịch vụ phù hợp" />
+        {!filteredServices.length ? (
+          <div className="app-panel-body">
+            <EmptyState title="Không có kết quả" description="Không tìm thấy dịch vụ phù hợp với nội dung tìm kiếm." />
           </div>
-        )}
+        ) : null}
       </div>
 
       {isEditOpen && (
@@ -304,7 +317,7 @@ function ServiceReminderRules() {
               <input
                 value={form.reminder_days_input}
                 onChange={(e) => setForm((f) => ({ ...f, reminder_days_input: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                className="app-input"
                 placeholder="30,60,90"
               />
               <div className="text-xs text-gray-500 mt-1">Nhập dạng: 30,60,90</div>
@@ -316,7 +329,7 @@ function ServiceReminderRules() {
                 <input
                   value={form.send_time}
                   onChange={(e) => setForm((f) => ({ ...f, send_time: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="app-input"
                   placeholder="08:00"
                 />
               </div>
@@ -327,7 +340,7 @@ function ServiceReminderRules() {
                   min={0}
                   value={form.cooldown_days}
                   onChange={(e) => setForm((f) => ({ ...f, cooldown_days: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="app-input"
                 />
               </div>
             </div>
@@ -337,7 +350,7 @@ function ServiceReminderRules() {
               <input
                 value={form.title_template}
                 onChange={(e) => setForm((f) => ({ ...f, title_template: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                className="app-input"
               />
             </div>
 
@@ -346,7 +359,7 @@ function ServiceReminderRules() {
               <textarea
                 value={form.body_template}
                 onChange={(e) => setForm((f) => ({ ...f, body_template: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                className="app-textarea"
                 rows={4}
               />
             </div>
@@ -354,8 +367,8 @@ function ServiceReminderRules() {
             <div className="p-3 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700">
               <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">Xem trước</div>
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-medium">{renderTemplate(form.title_template, mockPreviewData) || '—'}</div>
-                <div>{renderTemplate(form.body_template, mockPreviewData) || '—'}</div>
+                <div className="font-medium">{renderTemplate(form.title_template, mockPreviewData) || 'â€”'}</div>
+                <div>{renderTemplate(form.body_template, mockPreviewData) || 'â€”'}</div>
               </div>
             </div>
 
@@ -379,3 +392,5 @@ function ServiceReminderRules() {
 }
 
 export default memo(ServiceReminderRules);
+
+

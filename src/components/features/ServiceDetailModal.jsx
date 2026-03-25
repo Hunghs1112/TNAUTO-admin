@@ -225,7 +225,6 @@ export default function ServiceDetailModal({
       
       // If category changed, notify ServiceCategories page to refresh
       if (categoryChanged) {
-        console.log('[ServiceDetailModal] Category changed, dispatching serviceCategoryChanged event');
         // Store timestamp in sessionStorage for late listeners
         sessionStorage.setItem('serviceCategoryChanged', Date.now().toString());
         window.dispatchEvent(new CustomEvent('serviceCategoryChanged'));
@@ -454,4 +453,3 @@ export default function ServiceDetailModal({
     </>
   );
 }
-

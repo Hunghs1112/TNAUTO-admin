@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 export default function Modal({
   isOpen,
@@ -21,7 +22,7 @@ export default function Modal({
     full: 'mx-4 max-w-full',
   };
 
-  return (
+  const modalContent = (
     <div className="animate-fade-in fixed inset-0 z-50 overflow-y-auto bg-black/55 p-3 backdrop-blur-sm sm:flex sm:items-center sm:justify-center sm:p-4">
       <div className={`app-panel my-4 flex max-h-[calc(100vh-1.5rem)] w-full flex-col sm:my-0 sm:max-h-[90vh] ${sizeClasses[size]} ${className}`}>
         {title || showCloseButton ? (
@@ -39,5 +40,10 @@ export default function Modal({
       </div>
     </div>
   );
-}
 
+  if (typeof document === 'undefined') {
+    return modalContent;
+  }
+
+  return createPortal(modalContent, document.body);
+}

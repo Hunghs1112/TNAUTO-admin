@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../services/api';
 import FormField from './FormField';
 
@@ -144,7 +145,7 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
     onSave(payload);
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 backdrop-blur-sm sm:flex sm:items-center sm:justify-center sm:p-4">
       <div className="app-panel my-4 flex max-h-[calc(100vh-1.5rem)] w-full max-w-2xl flex-col sm:my-0 sm:max-h-[90vh]">
         <div className="app-panel-header shrink-0">
@@ -216,5 +217,10 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
       </div>
     </div>
   );
-}
 
+  if (typeof document === 'undefined') {
+    return modalContent;
+  }
+
+  return createPortal(modalContent, document.body);
+}

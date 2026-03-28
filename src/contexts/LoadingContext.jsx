@@ -11,6 +11,7 @@ const LoadingContext = createContext();
 export function LoadingProvider({ children }) {
   const [loadingStates, setLoadingStates] = useState({});
   const [globalLoading, setGlobalLoading] = useState(false);
+  const [globalLoadingMessage, setGlobalLoadingMessage] = useState('Đang xử lý...');
 
   // Set loading state for a specific key
   const setLoading = useCallback((key, isLoading, message = '') => {
@@ -37,6 +38,7 @@ export function LoadingProvider({ children }) {
   const clearAllLoading = useCallback(() => {
     setLoadingStates({});
     setGlobalLoading(false);
+    setGlobalLoadingMessage('Đang xử lý...');
   }, []);
 
   // Clear specific loading state
@@ -51,6 +53,7 @@ export function LoadingProvider({ children }) {
   // Global loading controls
   const setGlobalLoadingState = useCallback((isLoading, message = 'Đang xử lý...') => {
     setGlobalLoading(isLoading);
+    setGlobalLoadingMessage(message || 'Đang xử lý...');
     if (isLoading) {
       setLoadingStates({});
     }
@@ -64,6 +67,7 @@ export function LoadingProvider({ children }) {
     
     // Global loading states
     globalLoading,
+    globalLoadingMessage,
     setGlobalLoadingState,
     
     // Utility functions

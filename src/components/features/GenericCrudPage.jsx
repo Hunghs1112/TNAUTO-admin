@@ -37,6 +37,7 @@ function GenericCrudPage({
   columns,
   fieldsForModal,
   title,
+  description,
   options = {},
   customActions,
   showPagination = false,
@@ -46,6 +47,7 @@ function GenericCrudPage({
   hideTitle = false,
   showActions = true,
   showDelete = true,
+  deleteConfig = null,
   onRowClick = null,
   onView = null,
   onEdit = null,
@@ -54,6 +56,7 @@ function GenericCrudPage({
   refreshTrigger = null,
   disableCreate = false,
   categoryChangeEventName,
+  createButtonText = 'Thêm mới',
 }) {
   const { transformData = (data) => data, onError = () => {} } = options;
 
@@ -209,16 +212,18 @@ function GenericCrudPage({
       {renderPageHeader ? (
         <PageHeader
           title={title}
+          description={description}
           badge={isInitialLoading ? 'Đang tải' : `${badgeCount} mục`}
           onRefresh={handleRefresh}
           onCreate={disableCreate ? undefined : handleCreate}
+          createButtonText={createButtonText}
         />
       ) : null}
 
       <GenericTable
         data={isInitialLoading ? [] : allData}
         columns={columns}
-        onEdit={onEdit || handleRefresh}
+        onEdit={onEdit || undefined}
         onDelete={handleDelete}
         onView={onView || undefined}
         title={title}
@@ -235,6 +240,7 @@ function GenericCrudPage({
         isRefreshing={isRefreshing}
         showActions={showActions}
         showDelete={showDelete}
+        deleteConfig={deleteConfig}
         showSearch={showSearch}
         searchPlaceholder={searchPlaceholder}
         hideTitle={renderPageHeader ? true : hideTitle}

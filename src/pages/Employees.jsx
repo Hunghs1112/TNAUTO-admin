@@ -11,6 +11,7 @@ function Employees() {
       columns={employeesConfig.columns}
       fieldsForModal={employeesConfig.fieldsForModal}
       title={employeesConfig.title}
+      description="Nhân viên được hiển thị và quản lý trong đúng gara của phiên đăng nhập hiện tại."
       showPagination={true}
       limit={20}
     />

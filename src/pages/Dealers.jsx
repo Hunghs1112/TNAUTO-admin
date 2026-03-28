@@ -10,6 +10,7 @@ function Dealers() {
       columns={dealersConfig.columns}
       fieldsForModal={dealersConfig.fieldsForModal}
       title={dealersConfig.title}
+      description="Đại lý trong danh sách này chỉ thuộc gara hiện tại. Tạo, sửa và xóa đều được backend tự scope theo token gara."
       options={{}}
       showPagination={true}
       limit={20}

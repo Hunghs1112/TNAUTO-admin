@@ -2,12 +2,16 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Bell,
+  Building2,
   Car,
   ChevronDown,
   FileText,
   FolderOpen,
+  LogOut,
+  MapPin,
   Menu,
   Package,
+  Radio,
   Repeat,
   Settings,
   Shield,
@@ -16,6 +20,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const menuItems = [
   { id: 'customers', label: 'Khách hàng', icon: Users, path: '/customers' },
@@ -26,9 +31,10 @@ const menuItems = [
   { id: 'service-categories', label: 'Danh mục dịch vụ', icon: FolderOpen, path: '/service-categories' },
   { id: 'categories', label: 'Danh mục sản phẩm', icon: FolderOpen, path: '/categories' },
   { id: 'products', label: 'Sản phẩm', icon: Package, path: '/products' },
-  { id: 'dealer-catalog', label: 'Danh mục sản phẩm đại lí', icon: Store, path: '/dealer-catalog' },
+  { id: 'dealer-catalog', label: 'Danh mục sản phẩm đại lý', icon: Store, path: '/dealer-catalog' },
   { id: 'service-orders', label: 'Đơn dịch vụ', icon: FileText, path: '/service-orders' },
   { id: 'notifications', label: 'Thông báo', icon: Bell, path: '/notifications' },
+  { id: 'push-notifications', label: 'Push Notification', icon: Radio, path: '/push-notifications' },
   { id: 'service-reminder-rules', label: 'Quy tắc nhắc dịch vụ', icon: Repeat, path: '/service-reminder-rules' },
   { id: 'warranties', label: 'Bảo hành', icon: Shield, path: '/warranties' },
   { id: 'dealer-warranties', label: 'Bảo hành đại lý', icon: Shield, path: '/dealer-warranties' },
@@ -48,9 +54,44 @@ function getPageTitle(pathname) {
   return 'Trang quản trị';
 }
 
+function GarageIdentity({ garage }) {
+  if (!garage) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-900/50">
+          {garage.avatar_url ? (
+            <img src={garage.avatar_url} alt={garage.name || garage.code || 'Garage'} className="h-full w-full object-cover" />
+          ) : (
+            <Building2 className="h-7 w-7 text-slate-400" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-bold text-white">{garage.name || 'Gara hiện tại'}</div>
+          <div className="mt-1 inline-flex rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-200">
+            {garage.code || 'NO-CODE'}
+          </div>
+
+          {garage.address ? (
+            <div className="mt-2 flex items-start gap-2 text-xs leading-5 text-slate-300">
+              <MapPin size={14} className="mt-0.5 shrink-0 text-slate-500" />
+              <span>{garage.address}</span>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { garage, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const currentPath = location.pathname;
@@ -65,6 +106,12 @@ function Sidebar() {
     [navigate]
   );
 
+  const handleLogout = useCallback(() => {
+    logout('manual');
+    setIsMenuOpen(false);
+    navigate('/login', { replace: true });
+  }, [logout, navigate]);
+
   const toggleMenu = useCallback(() => {
     setIsMenuOpen((prev) => !prev);
   }, []);
@@ -72,15 +119,19 @@ function Sidebar() {
   return (
     <>
       <aside
-        className="hidden h-screen w-72 shrink-0 border-r border-slate-800/50 lg:flex lg:flex-col"
+        className="hidden h-screen w-80 shrink-0 border-r border-slate-800/50 lg:flex lg:flex-col"
         style={{ background: 'var(--gradient-sidebar)' }}
       >
         <div className="border-b border-slate-800/50 bg-slate-900/30 px-6 py-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">TNAUTO Admin</p>
-          <h2 className="mt-3 text-xl font-bold text-white">Bảng điều khiển</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">TNAUTO Multi-Gara</p>
+          <h2 className="mt-3 text-xl font-bold text-white">Bảng điều khiển gara</h2>
           <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
             <span>{pageTitle}</span>
+          </div>
+
+          <div className="mt-5">
+            <GarageIdentity garage={garage} />
           </div>
         </div>
 
@@ -106,6 +157,17 @@ function Sidebar() {
             );
           })}
         </nav>
+
+        <div className="border-t border-slate-800/50 p-4">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Đăng xuất / đổi gara</span>
+          </button>
+        </div>
       </aside>
 
       <nav
@@ -118,7 +180,7 @@ function Sidebar() {
               <h1 className="truncate text-lg font-bold text-white">{pageTitle}</h1>
               <div className="mt-1 flex items-center gap-2 text-xs text-slate-300">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                <span>TNAUTO Admin</span>
+                <span className="truncate">{garage?.name || garage?.code || 'Phiên gara hiện tại'}</span>
               </div>
             </div>
 
@@ -137,7 +199,11 @@ function Sidebar() {
         {isMenuOpen ? (
           <>
             <div className="fixed inset-0 top-[73px] z-40 bg-black/50" onClick={() => setIsMenuOpen(false)} />
-            <div className="absolute left-0 right-0 top-full z-50 max-h-[calc(100vh-73px)] overflow-y-auto border-b border-slate-800/50 bg-slate-950 px-2 py-2 shadow-xl">
+            <div className="absolute left-0 right-0 top-full z-50 max-h-[calc(100vh-73px)] overflow-y-auto border-b border-slate-800/50 bg-slate-950 px-3 py-3 shadow-xl">
+              <div className="mb-3">
+                <GarageIdentity garage={garage} />
+              </div>
+
               <div className="space-y-1">
                 {items.map((item) => {
                   const isActive = currentPath === item.path || (currentPath === '/' && item.path === '/customers');
@@ -158,6 +224,15 @@ function Sidebar() {
                   );
                 })}
               </div>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Đăng xuất / đổi gara</span>
+              </button>
             </div>
           </>
         ) : null}

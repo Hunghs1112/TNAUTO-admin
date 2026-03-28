@@ -15,10 +15,18 @@ function Customers() {
         columns={customersConfig.columns}
         fieldsForModal={customersConfig.fieldsForModal}
         title={customersConfig.title}
+        description="Danh sách này chỉ gồm các khách hàng đã liên kết với gara đang đăng nhập. Mỗi khách có thể có nhiều xe riêng trong phần chi tiết."
         showPagination={true}
         limit={20}
-        showDelete={false}
         disableCreate={false}
+        createButtonText="Thêm khách hàng"
+        deleteConfig={{
+          actionLabel: 'Gỡ khỏi gara',
+          confirmTitle: 'Gỡ khách khỏi gara',
+          confirmDescription: 'Khách hàng sẽ bị gỡ khỏi gara hiện tại, không xóa khỏi toàn hệ thống.',
+          confirmButtonLabel: 'Gỡ khỏi gara',
+          successMessage: 'Đã gỡ khách hàng khỏi gara hiện tại.',
+        }}
         onView={(item) => {
           setSelectedCustomer(item || null);
           setIsDetailOpen(true);
@@ -32,6 +40,9 @@ function Customers() {
       <CustomerDetailModal
         isOpen={isDetailOpen}
         customer={selectedCustomer}
+        onCustomerChange={(nextCustomer) => {
+          setSelectedCustomer(nextCustomer || null);
+        }}
         onClose={() => {
           setIsDetailOpen(false);
           setSelectedCustomer(null);

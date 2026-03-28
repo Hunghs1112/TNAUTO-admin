@@ -1,31 +1,42 @@
 const STATUS_LABELS = {
-  pending: 'Chờ xử lý',
-  received: 'Đã tiếp nhận',
-  in_progress: 'Đang xử lý',
-  ready_for_pickup: 'Sẵn sàng bàn giao',
-  completed: 'Hoàn thành',
-  cancelled: 'Đã hủy',
+  pending: 'Cho xu ly',
+  received: 'Da tiep nhan',
+  in_progress: 'Dang xu ly',
+  ready_for_pickup: 'San sang ban giao',
+  completed: 'Hoan thanh',
+  cancelled: 'Da huy',
 };
 
 const ADMIN_STATUS_OPTIONS = [
-  { value: 'received', label: 'Đã tiếp nhận' },
-  { value: 'in_progress', label: 'Đang xử lý' },
-  { value: 'ready_for_pickup', label: 'Sẵn sàng bàn giao' },
-  { value: 'completed', label: 'Hoàn thành' },
-  { value: 'cancelled', label: 'Đã hủy' },
+  { value: 'received', label: 'Da tiep nhan' },
+  { value: 'in_progress', label: 'Dang xu ly' },
+  { value: 'ready_for_pickup', label: 'San sang ban giao' },
+  { value: 'completed', label: 'Hoan thanh' },
+  { value: 'cancelled', label: 'Da huy' },
 ];
+
+const CLOSED_ORDER_STATUSES = new Set(['completed', 'cancelled']);
+const ADMIN_ASSIGNABLE_ORDER_STATUSES = new Set(['received', 'in_progress', 'ready_for_pickup']);
 
 export function isOrderWaitingForClaim(order) {
   return Boolean(order && order.status === 'received' && !order.employee_id);
 }
 
+export function isServiceOrderClosed(order) {
+  return Boolean(order?.status && CLOSED_ORDER_STATUSES.has(order.status));
+}
+
+export function canAdminAssignServiceOrder(order) {
+  return Boolean(order?.status && ADMIN_ASSIGNABLE_ORDER_STATUSES.has(order.status));
+}
+
 export function getServiceOrderStatusLabel(order) {
   if (!order?.status) {
-    return 'Không xác định';
+    return 'Khong xac dinh';
   }
 
   if (isOrderWaitingForClaim(order)) {
-    return 'Chờ nhận';
+    return 'Cho nhan';
   }
 
   return STATUS_LABELS[order.status] || order.status;
@@ -45,14 +56,14 @@ export function getServiceOrderAssigneeLabel(order) {
   }
 
   if (order.employee_id) {
-    return `Nhân viên #${order.employee_id}`;
+    return `Nhan vien #${order.employee_id}`;
   }
 
   if (isOrderWaitingForClaim(order)) {
-    return 'Chờ nhân viên nhận';
+    return 'Cho nhan vien nhan';
   }
 
-  return 'Chưa giao';
+  return 'Chua giao';
 }
 
 export function getServiceOrderFlowHint(order) {
@@ -61,26 +72,70 @@ export function getServiceOrderFlowHint(order) {
   }
 
   if (isOrderWaitingForClaim(order)) {
-    return 'Đơn này đang mở cho toàn bộ nhân viên trên app tự nhận. Admin vẫn có thể giao thủ công ngay tại đây.';
+    return 'Don nay dang mo cho toan bo nhan vien tren app tu nhan. Admin van co the giao thu cong ngay tai day.';
   }
 
   if (order.status === 'in_progress' && order.employee_id) {
-    return 'Đơn đang có nhân viên phụ trách xử lý.';
+    return 'Don dang co nhan vien phu trach xu ly.';
   }
 
   if (order.status === 'ready_for_pickup') {
-    return 'Đơn đã xử lý xong và đang chờ bàn giao cho khách.';
+    return 'Don da xu ly xong va dang cho ban giao cho khach.';
   }
 
   if (order.status === 'completed') {
-    return 'Đơn đã hoàn thành toàn bộ quy trình.';
+    return 'Don da hoan thanh toan bo quy trinh.';
   }
 
   if (order.status === 'cancelled') {
-    return 'Đơn đã bị hủy và không còn nằm trong luồng xử lý.';
+    return 'Don da bi huy va khong con nam trong luong xu ly.';
   }
 
   return '';
+}
+
+export function getServiceOrderAssignmentHint(order) {
+  if (!order) {
+    return '';
+  }
+
+  if (isServiceOrderClosed(order)) {
+    return 'Don da ket thuc nen khong the giao hoac chuyen nhan vien.';
+  }
+
+  if (isOrderWaitingForClaim(order)) {
+    return 'Admin co the giao thu cong tai day. Sau khi giao, don se khong con hien trong danh sach cho nhan tren app.';
+  }
+
+  if (order.employee_id && canAdminAssignServiceOrder(order)) {
+    return 'Co the chuyen don sang nhan vien khac khi can dieu phoi lai.';
+  }
+
+  if (canAdminAssignServiceOrder(order)) {
+    return 'Don dang mo va co the giao cho nhan vien phu trach.';
+  }
+
+  return '';
+}
+
+export function getServiceOrderAssignSuccessMessage(result, fallbackToReassign = false) {
+  const action = result?.action;
+  const source = result?.source;
+  const message = result?.message;
+
+  if (action === 'already_assigned_to_same_employee') {
+    return message || 'Don da o dung nhan vien nay roi.';
+  }
+
+  if (action === 'reassigned' || source === 'web_reassign' || fallbackToReassign) {
+    return message || 'Da chuyen nguoi xu ly thanh cong.';
+  }
+
+  if (action === 'assigned' || source === 'web_assign') {
+    return message || 'Da giao viec thanh cong.';
+  }
+
+  return message || 'Da cap nhat nhan vien phu trach thanh cong.';
 }
 
 export function getAdminServiceOrderStatusOptions(order) {
@@ -97,10 +152,9 @@ export function getAdminServiceOrderStatusOptions(order) {
 
   return ADMIN_STATUS_OPTIONS.map((option) => {
     if (option.value === 'received' && waitingForClaim) {
-      return { ...option, label: 'Chờ nhân viên nhận' };
+      return { ...option, label: 'Cho nhan vien nhan' };
     }
 
     return option;
   }).filter((option) => allowedStatuses.has(option.value));
 }
-

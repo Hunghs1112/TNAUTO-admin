@@ -1,12 +1,28 @@
 import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
+import { clearAuthSession, getAuthToken } from './authStorage';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://103.200.20.253:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
+});
+
+api.interceptors.request.use((config) => {
+  const nextConfig = { ...config };
+  const nextHeaders = nextConfig.headers || {};
+
+  if (!nextConfig.skipAuth) {
+    const token = getAuthToken();
+    if (token && !nextHeaders.Authorization) {
+      nextHeaders.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  nextConfig.headers = nextHeaders;
+  return nextConfig;
 });
 
 api.interceptors.response.use(
@@ -24,6 +40,10 @@ api.interceptors.response.use(
     };
   },
   (error) => {
+    if (error.response?.status === 401 && !error.config?.skipAuthFailureHandler) {
+      clearAuthSession('unauthorized');
+    }
+
     const message =
       error.response?.data?.error ||
       error.response?.data?.message ||
@@ -40,6 +60,19 @@ api.interceptors.response.use(
     });
   }
 );
+
+export const authAPI = {
+  loginGarage: (data) =>
+    api.post('/auth/garage/login', data, {
+      skipAuth: true,
+      skipAuthFailureHandler: true,
+    }),
+  resolveGarageByCode: (code) =>
+    api.get(`/garages/by-code/${encodeURIComponent(code)}`, {
+      skipAuth: true,
+      skipAuthFailureHandler: true,
+    }),
+};
 
 export const dealersAPI = createCrudAPI(api, '/dealers', {
   getAll: (params = {}) => api.get('/dealers', { params }),
@@ -74,6 +107,7 @@ export const customersAPI = createCrudAPI(api, '/customers', {
   getDriverLicense: (id) => api.get(`/customers/${id}/driver-license`),
   updateDriverLicense: (id, data) => api.put(`/customers/${id}/driver-license`, data),
   getVehicles: (id) => api.get('/vehicles', { params: { customer_id: id } }),
+  addVehicle: (id, data) => api.post(`/customers/${id}/vehicles`, data),
 });
 
 export const employeesAPI = createCrudAPI(api, '/employees', {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import FormModal from '../form/FormModal';
 import { TableSkeleton } from '../ui/SkeletonLoader';
@@ -57,6 +57,7 @@ export default function GenericTable({
   isRefreshing = false,
   showActions = true,
   showDelete = true,
+  deleteConfig = null,
   showSearch = false,
   searchPlaceholder = 'Tìm kiếm...',
   hideTitle = false,
@@ -79,6 +80,12 @@ export default function GenericTable({
   const [isEdit, setIsEdit] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const { success: showSuccess, error: showError } = useToast();
+  const deleteActionLabel = deleteConfig?.actionLabel || 'Xóa';
+  const deleteSuccessMessage = deleteConfig?.successMessage || 'Xóa thành công.';
+  const deleteConfirmTitle = deleteConfig?.confirmTitle || 'Xác nhận xóa';
+  const deleteConfirmDescription =
+    deleteConfig?.confirmDescription || 'Bạn có chắc chắn muốn xóa mục này không? Hành động này không thể hoàn tác.';
+  const deleteConfirmButtonLabel = deleteConfig?.confirmButtonLabel || deleteActionLabel;
 
   const categoryChangeEvent = useMemo(
     () => resolveCategoryChangeEvent(title, categoryChangeEventName),
@@ -176,6 +183,20 @@ export default function GenericTable({
     [onView]
   );
 
+  const handleEdit = useCallback(
+    (item) => {
+      if (onEdit) {
+        onEdit(item);
+        return;
+      }
+
+      setSelectedItem(item);
+      setIsEdit(true);
+      setShowModal(true);
+    },
+    [onEdit]
+  );
+
   const handleSelectAll = useCallback(
     (checked) => {
       if (!checked) {
@@ -256,7 +277,7 @@ export default function GenericTable({
         setIsEdit(false);
         refreshAfterSave();
       } catch (error) {
-        showError(error?.message || 'Không thể lưu dữ liệu. Vui lòng thử lại.');
+      showError(error?.message || 'Không thể xóa dữ liệu. Vui lòng thử lại.');
       }
     },
     [api, dispatchCategoryEvent, idKey, isEdit, refreshAfterSave, selectedItem, showError, showSuccess]
@@ -271,12 +292,12 @@ export default function GenericTable({
       await api.delete(confirmDeleteId);
       onDelete?.(confirmDeleteId);
       setConfirmDeleteId(null);
-      showSuccess('Xóa thành công.');
+      showSuccess(deleteSuccessMessage);
       onRefresh?.();
     } catch (error) {
-      showError(error?.message || 'Không thể xóa dữ liệu. Vui lòng thử lại.');
+      showError(error?.message || 'Kh?ng th? x?a d? li?u. Vui l?ng th? l?i.');
     }
-  }, [api, confirmDeleteId, onDelete, onRefresh, showError, showSuccess]);
+  }, [api, confirmDeleteId, deleteSuccessMessage, onDelete, onRefresh, showError, showSuccess]);
 
   const handleBulkDelete = useCallback(async () => {
     if (!selectedRows.size) {
@@ -484,17 +505,31 @@ export default function GenericTable({
                     {showActions ? (
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleView(item);
-                            }}
-                            className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
-                            title="Xem chi tiết"
-                          >
-                            <Eye size={16} />
-                          </button>
+                          {onView ? (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleView(item);
+                              }}
+                              className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                              title="Xem chi tiết"
+                            >
+                              <Eye size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleEdit(item);
+                              }}
+                              className="rounded-lg p-2 text-amber-600 transition-colors hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                              title="Sửa"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          )}
 
                           {showDelete ? (
                             <button
@@ -504,7 +539,7 @@ export default function GenericTable({
                                 setConfirmDeleteId(item[idKey]);
                               }}
                               className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
-                              title="Xóa"
+                              title={deleteActionLabel}
                             >
                               <Trash2 size={16} />
                             </button>
@@ -572,13 +607,13 @@ export default function GenericTable({
                   <Trash2 size={22} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Xác nhận xóa</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">Hành động này không thể hoàn tác.</p>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{deleteConfirmTitle}</h3>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">Vui lòng xác nhận trước khi tiếp tục.</p>
                 </div>
               </div>
 
               <p className="mb-6 text-sm leading-6 text-slate-700 dark:text-slate-200">
-                Bạn có chắc chắn muốn xóa mục này không?
+                {deleteConfirmDescription}
               </p>
 
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -586,7 +621,7 @@ export default function GenericTable({
                   Hủy
                 </button>
                 <button type="button" onClick={confirmDeleteAction} className="btn-gradient-error flex-1">
-                  Xóa
+                  {deleteConfirmButtonLabel}
                 </button>
               </div>
             </div>

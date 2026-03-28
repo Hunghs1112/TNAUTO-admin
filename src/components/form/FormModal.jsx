@@ -97,7 +97,9 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
         const entries = await Promise.all(
           fieldsWithApi.map(async (field) => {
             try {
-              const response = await api.get(field.apiEndpoint);
+              const response = await api.get(field.apiEndpoint, {
+                params: field.apiParams || undefined,
+              });
               const items = normalizeArrayResponse(response.data);
 
               return [
@@ -193,6 +195,7 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
                     min={field.min}
                     max={field.max}
                     rows={field.rows}
+                    searchable={field.searchable}
                     disabled={field.disabled || (field.apiEndpoint && loadingOptions)}
                     multiple={field.multiple}
                     maxFiles={field.maxFiles}

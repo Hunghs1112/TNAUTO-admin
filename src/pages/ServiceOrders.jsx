@@ -17,7 +17,7 @@ function ServiceOrders() {
     <div className="app-page">
       <PageHeader
         title="Đơn dịch vụ"
-        description="Theo dõi đơn chờ nhân viên nhận, đơn đã được web giao và toàn bộ tiến độ xử lý trong cùng một giao diện thống nhất."
+        description="Theo dõi đơn dịch vụ trong gara hiện tại, từ lúc tạo đơn đến khi giao nhân viên và hoàn tất xử lý. Backend tự scope theo token nên web không cần gửi garage_id."
         onRefresh={handleRefresh}
         onCreate={handleCreate}
         createButtonText="Tạo đơn mới"

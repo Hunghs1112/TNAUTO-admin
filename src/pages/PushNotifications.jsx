@@ -108,7 +108,7 @@ function PushNotifications() {
       console.error('Send push error:', err);
       alert('Lỗi khi gửi push: ' + (err.response?.data?.message || err.message));
     }
-  };
+  }, [pushModal]);
 
   return (
     <div className="p-6">

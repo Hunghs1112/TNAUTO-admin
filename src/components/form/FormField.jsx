@@ -21,6 +21,7 @@ export default function FormField({
   max,
   rows = 3,
   className = '',
+  searchable = false,
   disabled = false,
   // ImageUploader specific props
   multiple = false,
@@ -30,6 +31,7 @@ export default function FormField({
   allowLinkUpload = true
 }) {
   const baseInputClass = 'app-input';
+  const [selectSearch, setSelectSearch] = React.useState('');
   
   // Normalize value to ensure it's always defined (not undefined)
   // For number inputs, use empty string if undefined (React will handle it)
@@ -39,24 +41,49 @@ export default function FormField({
 
   const renderInput = () => {
     switch (type) {
-      case 'select':
+      case 'select': {
+        const normalizedSearch = String(selectSearch || '').trim().toLowerCase();
+        const filteredOptions = searchable && normalizedSearch
+          ? options.filter((option) => String(option.label || '').toLowerCase().includes(normalizedSearch))
+          : options;
+
         return (
-          <select
-            name={name}
-            value={normalizedValue}
-            onChange={onChange}
-            required={required}
-            disabled={disabled}
-            className={`${baseInputClass} ${className}`}
-          >
-            <option value="">-- Chọn {label.toLowerCase()} --</option>
-            {options.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-2">
+            {searchable ? (
+              <input
+                type="text"
+                value={selectSearch}
+                onChange={(event) => setSelectSearch(event.target.value)}
+                placeholder={placeholder || `Tìm ${label.toLowerCase()}...`}
+                disabled={disabled}
+                className={`${baseInputClass} ${className}`}
+              />
+            ) : null}
+
+            <select
+              name={name}
+              value={normalizedValue}
+              onChange={onChange}
+              required={required}
+              disabled={disabled}
+              className={`${baseInputClass} ${className}`}
+            >
+              <option value="">-- Chọn {label.toLowerCase()} --</option>
+              {filteredOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            {searchable && normalizedSearch && filteredOptions.length === 0 ? (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Không tìm thấy kết quả phù hợp.
+              </p>
+            ) : null}
+          </div>
         );
+      }
       
       case 'textarea':
         return (

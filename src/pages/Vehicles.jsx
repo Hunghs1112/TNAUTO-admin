@@ -58,6 +58,7 @@ function Vehicles() {
         columns={vehiclesConfig.columns}
         fieldsForModal={vehiclesConfig.fieldsForModal}
         title={vehiclesConfig.title}
+        description="Mỗi khách hàng có thể có nhiều xe. Danh sách này phản ánh các xe gắn với khách thuộc phạm vi gara hiện tại."
         showPagination={true}
         limit={20}
         showSearch={true}

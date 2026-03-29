@@ -10,6 +10,19 @@ const api = axios.create({
   timeout: 30000,
 });
 
+async function requestWithFallback(primaryRequest, fallbackRequest) {
+  try {
+    return await primaryRequest();
+  } catch (error) {
+    const status = error?.response?.status;
+    if (fallbackRequest && [404, 405, 501].includes(status)) {
+      return fallbackRequest();
+    }
+
+    throw error;
+  }
+}
+
 api.interceptors.request.use((config) => {
   const nextConfig = { ...config };
   const nextHeaders = nextConfig.headers || {};
@@ -106,7 +119,13 @@ export const customersAPI = createCrudAPI(api, '/customers', {
   },
   getDriverLicense: (id) => api.get(`/customers/${id}/driver-license`),
   updateDriverLicense: (id, data) => api.put(`/customers/${id}/driver-license`, data),
-  getVehicles: (id) => api.get('/vehicles', { params: { customer_id: id } }),
+  getVehiclesForGarage: ({ phone, garageCode }) =>
+    api.get('/customers/vehicles', {
+      params: {
+        phone,
+        garage_code: garageCode,
+      },
+    }),
   addVehicle: (id, data) => api.post(`/customers/${id}/vehicles`, data),
 });
 
@@ -201,14 +220,12 @@ export const categoriesAPI = createCrudAPI(api, '/categories', {
 });
 
 export const vehiclesAPI = createCrudAPI(api, '/vehicles', {
-  getAll: (params = {}) => {
-    const hasCustomerId = params && params.customer_id != null && String(params.customer_id).length > 0;
-    if (hasCustomerId) {
-      return api.get('/vehicles', { params });
-    }
-
-    return api.get('/vehicles/admin/all', { params });
-  },
+  getAll: (params = {}) => api.get('/vehicles/admin/all', { params }),
+  getById: (id) =>
+    requestWithFallback(
+      () => api.get(`/vehicles/admin/${id}`),
+      () => api.get(`/vehicles/${id}`)
+    ),
   update: (id, data) => api.put(`/vehicles/admin/${id}`, data),
   delete: (id) => api.delete(`/vehicles/admin/${id}`),
   getStats: () => api.get('/vehicles/admin/stats'),
@@ -288,13 +305,33 @@ export const notificationsAPI = {
   getUnreadCount: (params) => api.get('/notifications/unread-count', { params }),
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
   markAllAsRead: (data) => api.put('/notifications/read-all', data),
-  delete: (id) => api.delete(`/notifications/${id}`),
-  getAll: (params) => api.get('/notifications/admin/all', { params }),
-  send: (data) => api.post('/notifications/send', data),
-  getStats: () => api.get('/notifications/admin/stats'),
-  getAdminLogs: (params) => api.get('/admin/notifications', { params }),
-  getCustomers: () => api.get('/customers'),
-  getEmployees: () => api.get('/employees'),
+  delete: (id) =>
+    requestWithFallback(
+      () => api.delete(`/admin/notifications/${id}`),
+      () => api.delete(`/notifications/${id}`)
+    ),
+  getAll: (params) =>
+    requestWithFallback(
+      () => api.get('/admin/notifications', { params }),
+      () => api.get('/notifications/admin/all', { params })
+    ),
+  send: (data) =>
+    requestWithFallback(
+      () => api.post('/admin/notifications', data),
+      () => api.post('/notifications/send', data)
+    ),
+  getStats: () =>
+    requestWithFallback(
+      () => api.get('/admin/notifications/stats'),
+      () => api.get('/notifications/admin/stats')
+    ),
+  getAdminLogs: (params) =>
+    requestWithFallback(
+      () => api.get('/admin/notifications', { params }),
+      () => api.get('/notifications/admin/all', { params })
+    ),
+  getCustomers: () => api.get('/customers', { params: { limit: 1000 } }),
+  getEmployees: () => api.get('/employees', { params: { limit: 1000 } }),
 };
 
 export const fcmTokensAPI = {
@@ -315,7 +352,10 @@ export const serviceReminderConfigsAPI = {
 };
 
 export const adminNotificationsAPI = {
-  getAll: (params) => api.get('/admin/notifications', { params }),
+  getAll: (params) => notificationsAPI.getAll(params),
+  delete: (id) => notificationsAPI.delete(id),
+  send: (data) => notificationsAPI.send(data),
+  getStats: () => notificationsAPI.getStats(),
 };
 
 export const pushNotificationsAPI = {

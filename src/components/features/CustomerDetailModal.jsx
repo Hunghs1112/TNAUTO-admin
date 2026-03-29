@@ -10,6 +10,7 @@ import { formatDate } from '../../utils/format';
 import { buttonStyles } from '../../styles/colors';
 import VehicleDetailModal from './VehicleDetailModal';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 function normalizeArrayResponse(res) {
   const raw = res?.data;
@@ -24,6 +25,12 @@ function normalizeObjectResponse(res) {
   if (raw?.data && typeof raw.data === 'object' && !Array.isArray(raw.data)) return raw.data;
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;
   return null;
+}
+
+function extractEmbeddedVehicles(customer) {
+  if (Array.isArray(customer?.vehicles)) return customer.vehicles;
+  if (Array.isArray(customer?.customer_vehicles)) return customer.customer_vehicles;
+  return [];
 }
 
 function normalizeLicensePlate(value) {
@@ -183,7 +190,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
   const [customerDetail, setCustomerDetail] = useState(customer || null);
   const hasLoadedContentRef = useRef(Boolean(customer));
 
-  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
 
@@ -197,6 +204,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
   });
 
   const { success, error } = useToast();
+  const { garage } = useAuth();
   const customerId = customer?.id;
 
   const resetForm = useCallback((currentCustomer, currentDriverLicense) => {
@@ -218,15 +226,29 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
       setIsInitialLoading(true);
     }
     try {
-      const [customerRes, dlRes, vehRes] = await Promise.all([
+      const [customerRes, dlRes] = await Promise.all([
         customersAPI.getById(customerId).catch(() => null),
         customersAPI.getDriverLicense(customerId).catch(() => null),
-        customersAPI.getVehicles(customerId).catch(() => null),
       ]);
 
       const nextCustomer = customerRes ? normalizeObjectResponse(customerRes) : customer;
       const nextDriverLicense = dlRes ? normalizeObjectResponse(dlRes) : null;
-      const nextVehicles = vehRes ? normalizeArrayResponse(vehRes) : [];
+      const customerPhone = nextCustomer?.phone || customer?.phone || '';
+      const garageCode = garage?.code || '';
+
+      let nextVehicles = extractEmbeddedVehicles(nextCustomer);
+      if (customerPhone && garageCode) {
+        const vehiclesResponse = await customersAPI
+          .getVehiclesForGarage({
+            phone: customerPhone,
+            garageCode,
+          })
+          .catch(() => null);
+
+        if (vehiclesResponse) {
+          nextVehicles = normalizeArrayResponse(vehiclesResponse);
+        }
+      }
 
       setCustomerDetail(nextCustomer);
       setDriverLicense(nextDriverLicense);
@@ -238,7 +260,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
       setIsInitialLoading(false);
       setIsRefreshing(false);
     }
-  }, [customer, customerId, isOpen, onCustomerChange, resetForm]);
+  }, [customer, customerId, garage?.code, isOpen, onCustomerChange, resetForm]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -249,6 +271,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
       setIsRefreshing(false);
       setIsEditing(false);
       setSaving(false);
+      setSelectedVehicle(null);
       setCustomerDetail(customer || null);
       resetForm(customer || null, null);
       setIsAddVehicleOpen(false);
@@ -303,8 +326,8 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
     }
   };
 
-  const handleEditVehicle = (vId) => {
-    setSelectedVehicleId(vId);
+  const handleEditVehicle = (nextVehicle) => {
+    setSelectedVehicle(nextVehicle || null);
     setIsVehicleModalOpen(true);
   };
 
@@ -489,7 +512,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
                     {vehicles.map((v) => (
                       <div
                         key={v.id || v.license_plate}
-                        onClick={() => handleEditVehicle(v.id)}
+                        onClick={() => handleEditVehicle(v)}
                         className="group relative cursor-pointer rounded-xl border border-gray-200 bg-white p-3 transition-all hover:border-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500"
                       >
                         <div className="flex items-center gap-3">
@@ -533,8 +556,11 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
 
       <VehicleDetailModal
         isOpen={isVehicleModalOpen}
-        vehicleId={selectedVehicleId}
-        onClose={() => setIsVehicleModalOpen(false)}
+        vehicle={selectedVehicle}
+        onClose={() => {
+          setIsVehicleModalOpen(false);
+          setSelectedVehicle(null);
+        }}
         onRefresh={fetchExtra}
       />
     </>

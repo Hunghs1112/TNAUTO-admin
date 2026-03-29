@@ -15,7 +15,6 @@ import GarageLogin from './pages/GarageLogin';
 import Notifications from './pages/Notifications';
 import Offers from './pages/Offers';
 import Products from './pages/Products';
-import PushNotifications from './pages/PushNotifications';
 import ServiceCategories from './pages/ServiceCategories';
 import ServiceOrders from './pages/ServiceOrders';
 import ServiceReminderRules from './pages/ServiceReminderRules';
@@ -49,7 +48,7 @@ function AppRoutes() {
           <Route path="/dealer-catalog" element={<DealerCatalog />} />
           <Route path="/service-orders" element={<ServiceOrders />} />
           <Route path="/notifications" element={<Notifications />} />
-          <Route path="/push-notifications" element={<PushNotifications />} />
+          <Route path="/push-notifications" element={<Navigate to="/notifications" replace />} />
           <Route path="/service-reminder-rules" element={<ServiceReminderRules />} />
           <Route path="/warranties" element={<Warranties />} />
           <Route path="/dealer-warranties" element={<DealerWarranties />} />

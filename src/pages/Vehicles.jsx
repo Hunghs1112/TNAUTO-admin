@@ -1,12 +1,12 @@
 // src/pages/Vehicles.jsx
 import { memo, useCallback, useMemo, useState } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
-import { vehiclesAPI } from '../services/api';
-import { vehiclesConfig } from '../config/entityConfigs.jsx';
 import VehicleDetailModal from '../components/features/VehicleDetailModal';
+import { vehiclesConfig } from '../config/entityConfigs.jsx';
+import { vehiclesAPI } from '../services/api';
 
 function Vehicles() {
-  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -23,7 +23,7 @@ function Vehicles() {
       return {
         ...vehicle,
         model: modelValue || '-',
-        customer_name: vehicle.customer_name || (vehicle.customer && vehicle.customer.name) || null,
+        customer_name: vehicle.customer_name || vehicle.customer?.name || null,
       };
     });
   }, []);
@@ -41,14 +41,16 @@ function Vehicles() {
   );
 
   const openVehicle = useCallback((item) => {
-    const id = item?.id;
-    if (!id) return;
-    setSelectedVehicleId(id);
+    if (!item?.id) {
+      return;
+    }
+
+    setSelectedVehicle(item);
     setIsDetailOpen(true);
   }, []);
 
   const handleRefresh = useCallback(() => {
-    setRefreshKey((k) => k + 1);
+    setRefreshKey((current) => current + 1);
   }, []);
 
   return (
@@ -58,11 +60,12 @@ function Vehicles() {
         columns={vehiclesConfig.columns}
         fieldsForModal={vehiclesConfig.fieldsForModal}
         title={vehiclesConfig.title}
-        description="Mỗi khách hàng có thể có nhiều xe. Danh sách này phản ánh các xe gắn với khách thuộc phạm vi gara hiện tại."
+        description="Danh sach nay chi hien thi xe thuoc gara hien tai. Them xe moi nen thuc hien tu chi tiet khach hang de di dung customer vehicle flow."
         showPagination={true}
         limit={20}
         showSearch={true}
-        searchPlaceholder="Tìm biển số, mẫu xe, tên KH..."
+        searchPlaceholder="Tim bien so, mau xe, ten KH..."
+        disableCreate={true}
         options={options}
         refreshTrigger={refreshKey}
         onView={openVehicle}
@@ -72,10 +75,10 @@ function Vehicles() {
 
       <VehicleDetailModal
         isOpen={isDetailOpen}
-        vehicleId={selectedVehicleId}
+        vehicle={selectedVehicle}
         onClose={() => {
           setIsDetailOpen(false);
-          setSelectedVehicleId(null);
+          setSelectedVehicle(null);
         }}
         onRefresh={handleRefresh}
       />

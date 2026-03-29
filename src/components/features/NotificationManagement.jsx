@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Filter, Send } from 'lucide-react';
-import { adminNotificationsAPI, notificationsAPI } from '../../services/api';
+import { notificationsAPI } from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 import { buttonStyles } from '../../styles/colors';
 import { formatDate, truncateText } from '../../utils/format';
@@ -181,7 +181,7 @@ export default function NotificationManagement() {
         }
       });
 
-      const response = await adminNotificationsAPI.getAll(params);
+      const response = await notificationsAPI.getAll(params);
       const nextItems = normalizeListResponse(response);
       const pagination = response.data?.pagination;
       const nextTotal = pagination?.total ?? response.data?.count ?? response.data?.total ?? nextItems.length;

@@ -1,8 +1,8 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
 import { clearAuthSession, getAuthToken } from './authStorage';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://103.200.20.253:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://tnauto-backend-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -373,3 +373,4 @@ export const systemAPI = {
 };
 
 export default api;
+

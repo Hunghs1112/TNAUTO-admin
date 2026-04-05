@@ -46,16 +46,16 @@ function ServiceReminderRules() {
     enabled: true,
     reminder_days_input: '30,60,90',
     send_time: '08:00',
-    title_template: 'Nháº¯c dá»‹ch vá»¥',
-    body_template: 'ChÃ o {customer_name} áº¡, Ä‘Ã£ {days_after} ngÃ y tá»« láº§n {service_name} gáº§n nháº¥t...',
+    title_template: 'Nhắc dịch vụ',
+    body_template: 'Chào {customer_name} ạ, đã {days_after} ngày từ lần {service_name} gần nhất...',
     cooldown_days: 7,
   });
   const { success, error } = useToast();
 
   const mockPreviewData = useMemo(
     () => ({
-      customer_name: 'Anh/Chá»‹',
-      service_name: editService?.name || editService?.service_name || 'Dá»‹ch vá»¥',
+      customer_name: 'Anh/Chị',
+      service_name: editService?.name || editService?.service_name || 'Dịch vụ',
       days_after: 30,
       order_id: 1234,
     }),
@@ -115,10 +115,10 @@ function ServiceReminderRules() {
       enabled: cfg?.enabled ?? true,
       reminder_days_input: normalizedDays.length ? normalizedDays.join(',') : '30,60,90',
       send_time: cfg?.send_time || '08:00',
-      title_template: cfg?.title_template || 'Nháº¯c dá»‹ch vá»¥',
+      title_template: cfg?.title_template || 'Nhắc dịch vụ',
       body_template:
         cfg?.body_template ||
-        'ChÃ o {customer_name} áº¡, Ä‘Ã£ {days_after} ngÃ y tá»« láº§n {service_name} gáº§n nháº¥t...',
+        'Chào {customer_name} ạ, đã {days_after} ngày từ lần {service_name} gần nhất...',
       cooldown_days: cfg?.cooldown_days ?? 7,
     });
     setIsEditOpen(true);
@@ -367,8 +367,8 @@ function ServiceReminderRules() {
             <div className="p-3 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700">
               <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">Xem trước</div>
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-medium">{renderTemplate(form.title_template, mockPreviewData) || 'â€”'}</div>
-                <div>{renderTemplate(form.body_template, mockPreviewData) || 'â€”'}</div>
+                <div className="font-medium">{renderTemplate(form.title_template, mockPreviewData) || '—'}</div>
+                <div>{renderTemplate(form.body_template, mockPreviewData) || '—'}</div>
               </div>
             </div>
 
@@ -392,5 +392,4 @@ function ServiceReminderRules() {
 }
 
 export default memo(ServiceReminderRules);
-
 

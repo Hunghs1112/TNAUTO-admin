@@ -2,7 +2,7 @@
 import { createCrudAPI } from './apiFactory';
 import { clearAuthSession, getAuthToken } from './authStorage';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://tnauto-backend-production.up.railway.app/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const api = axios.create({
   baseURL: API_BASE,

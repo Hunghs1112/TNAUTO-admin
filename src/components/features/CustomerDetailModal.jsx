@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import useDetailFetchGuard from '../../hooks/useDetailFetchGuard';
 import { Car, CreditCard, User, Save, Pencil, X as XIcon, Settings, Plus } from 'lucide-react';
 import Modal from '../ui/Modal';
 import TabView from '../ui/TabView';
@@ -179,7 +180,7 @@ function AddVehicleModal({ isOpen, customer, onClose, onSuccess }) {
   );
 }
 
-function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
+function CustomerDetailModal({ isOpen, customer, onClose }) {
   const [activeTab, setActiveTab] = useState('basic');
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -189,6 +190,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
   const [saving, setSaving] = useState(false);
   const [customerDetail, setCustomerDetail] = useState(customer || null);
   const hasLoadedContentRef = useRef(Boolean(customer));
+  const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
@@ -218,8 +220,15 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
     });
   }, []);
 
-  const fetchExtra = useCallback(async () => {
+  const fetchExtra = useCallback(async ({ force = false } = {}) => {
     if (!isOpen || !customerId) return;
+
+    const fetchKey = `${customerId}:${garage?.code || ''}`;
+
+    if (shouldSkipFetch(fetchKey, force)) return;
+
+    beginFetch();
+
     if (hasLoadedContentRef.current || customer) {
       setIsRefreshing(true);
     } else {
@@ -254,13 +263,16 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
       setDriverLicense(nextDriverLicense);
       setVehicles(nextVehicles);
       resetForm(nextCustomer, nextDriverLicense);
-      onCustomerChange?.(nextCustomer);
       hasLoadedContentRef.current = true;
+      completeFetch(fetchKey);
+    } catch (fetchError) {
+      failFetch();
+      console.error('Fetch customer detail error:', fetchError);
     } finally {
       setIsInitialLoading(false);
       setIsRefreshing(false);
     }
-  }, [customer, customerId, garage?.code, isOpen, onCustomerChange, resetForm]);
+  }, [customer, customerId, garage?.code, isOpen, resetForm]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -276,6 +288,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
       resetForm(customer || null, null);
       setIsAddVehicleOpen(false);
       hasLoadedContentRef.current = false;
+      resetFetchGuard();
       return;
     }
 
@@ -316,7 +329,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
       }
 
       setIsEditing(false);
-      await fetchExtra();
+      await fetchExtra({ force: true });
       success('Đã cập nhật thông tin khách hàng và GPLX.');
     } catch (err) {
       console.error('Update error:', err);
@@ -358,39 +371,40 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
             ) : null}
             <div className="flex items-center justify-between gap-3">
               <TabView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-              {activeTab === 'basic' ? (
-                <div className="flex items-center gap-2">
-                  {!isEditing ? (
-                    <button onClick={() => setIsEditing(true)} className={buttonStyles.secondary}>
-                      <Pencil size={18} />
-                      Sửa
-                    </button>
-                  ) : (
-                    <>
-                      <button onClick={handleSaveAll} disabled={saving} className={buttonStyles.primary}>
-                        <Save size={18} />
-                        {saving ? 'Đang lưu...' : 'Lưu'}
+              <div className="flex items-center gap-2">
+                {activeTab === 'basic' ? (
+                  <>
+                    {!isEditing ? (
+                      <button onClick={() => setIsEditing(true)} className={buttonStyles.secondary}>
+                        <Pencil size={18} />
+                        Sửa
                       </button>
-                      <button
-                        onClick={() => {
-                          setIsEditing(false);
-                          resetForm(currentCustomer, driverLicense);
-                        }}
-                        disabled={saving}
-                        className={buttonStyles.secondary}
-                      >
-                        <XIcon size={18} />
-                        Hủy
-                      </button>
-                    </>
-                  )}
-                </div>
-              ) : (
+                    ) : (
+                      <>
+                        <button onClick={handleSaveAll} disabled={saving} className={buttonStyles.primary}>
+                          <Save size={18} />
+                          {saving ? 'Đang lưu...' : 'Lưu'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsEditing(false);
+                            resetForm(currentCustomer, driverLicense);
+                          }}
+                          disabled={saving}
+                          className={buttonStyles.secondary}
+                        >
+                          <XIcon size={18} />
+                          Hủy
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : null}
                 <button type="button" onClick={() => setIsAddVehicleOpen(true)} className={buttonStyles.primary}>
                   <Plus size={18} />
                   Thêm xe
                 </button>
-              )}
+              </div>
             </div>
 
             {activeTab === 'basic' && (
@@ -550,7 +564,7 @@ function CustomerDetailModal({ isOpen, customer, onClose, onCustomerChange }) {
         customer={currentCustomer}
         onClose={() => setIsAddVehicleOpen(false)}
         onSuccess={async () => {
-          await fetchExtra();
+          await fetchExtra({ force: true });
         }}
       />
 

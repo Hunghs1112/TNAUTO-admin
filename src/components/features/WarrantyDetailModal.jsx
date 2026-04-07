@@ -6,6 +6,7 @@ import { formatDate } from '../../utils/format';
 import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
 import { Edit2, Save, X, XCircle } from 'lucide-react';
+import useDetailFetchGuard from '../../hooks/useDetailFetchGuard';
 
 export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSaved }) {
   const [selectedWarranty, setSelectedWarranty] = useState(null);
@@ -25,6 +26,7 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
     customer_id: []
   });
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   const { startLoading, stopLoading, loading } = useLoadingKey('warranties-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
@@ -36,6 +38,7 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
       setSelectedWarranty(null);
       setServiceInfo(null);
       setIsEditMode(false);
+      resetFetchGuard();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, warrantyId]);
@@ -61,7 +64,10 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
     loadEmployeesMap();
   }, [isOpen]);
 
-  const fetchWarrantyDetails = async (id) => {
+  const fetchWarrantyDetails = async (id, { force = false } = {}) => {
+    if (shouldSkipFetch(id, force)) return;
+
+    beginFetch();
     startLoading('Đang tải chi tiết bảo hành...');
     try {
       const res = await warrantiesAPI.getById(id);
@@ -80,11 +86,13 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
       } else {
         setServiceInfo(null);
       }
+      completeFetch(id);
     } catch (err) {
       console.error('Fetch warranty details error:', err);
       error('Không thể tải chi tiết bảo hành: ' + (err.response?.data?.message || err.message));
       setSelectedWarranty(null);
       setServiceInfo(null);
+      failFetch();
       onClose && onClose();
     } finally {
       stopLoading();
@@ -243,7 +251,7 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
                       
                       success('Cập nhật bảo hành thành công!');
                       setIsEditMode(false);
-                      await fetchWarrantyDetails(selectedWarranty.id);
+                      await fetchWarrantyDetails(selectedWarranty.id, { force: true });
                       onSaved && onSaved();
                     } catch (err) {
                       console.error('Update warranty error:', err);
@@ -372,4 +380,3 @@ export default function WarrantyDetailModal({ isOpen, warrantyId, onClose, onSav
     </div>
   );
 }
-

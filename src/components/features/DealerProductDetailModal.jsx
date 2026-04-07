@@ -10,6 +10,7 @@ import ProductVideo from '../video/ProductVideo';
 import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
 import { dealerProductsConfig } from '../../config/entityConfigs';
+import useDetailFetchGuard from '../../hooks/useDetailFetchGuard';
 
 function normalizeArrayResponse(response) {
   const raw = response?.data;
@@ -32,6 +33,7 @@ export default function DealerProductDetailModal({
   const [formData, setFormData] = useState({});
   const [fieldOptions, setFieldOptions] = useState({});
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   const {
     startLoading: startDetailLoading,
@@ -49,6 +51,7 @@ export default function DealerProductDetailModal({
       setShowImageUploader(false);
       setIsEditMode(false);
       setFormData({});
+      resetFetchGuard();
     }
   }, [isOpen, productId]);
 
@@ -90,7 +93,10 @@ export default function DealerProductDetailModal({
     }
   }, [selectedProduct, isEditMode]);
 
-  const fetchProductDetails = async (id) => {
+  const fetchProductDetails = async (id, { force = false } = {}) => {
+    if (shouldSkipFetch(id, force)) return;
+
+    beginFetch();
     startDetailLoading('Đang tải chi tiết sản phẩm dealer...');
     try {
       const productRes = await dealerProductsAPI.getById(id);
@@ -110,11 +116,13 @@ export default function DealerProductDetailModal({
         : [];
 
       setProductImages(validImages);
+      completeFetch(id);
     } catch (err) {
       console.error('Fetch dealer product details/images error:', err);
       error('Không thể tải chi tiết sản phẩm dealer: ' + err.message);
       setSelectedProduct(null);
       setProductImages([]);
+      failFetch();
       onClose();
     } finally {
       stopDetailLoading();
@@ -163,7 +171,7 @@ export default function DealerProductDetailModal({
       }
 
       success(`Thêm thành công ${validUrls.length} ảnh!`);
-      await fetchProductDetails(selectedProduct.id);
+      await fetchProductDetails(selectedProduct.id, { force: true });
       setShowImageUploader(false);
       onRefresh && onRefresh();
     } catch (err) {
@@ -206,7 +214,7 @@ export default function DealerProductDetailModal({
       }
 
       success('Xóa ảnh thành công!');
-      await fetchProductDetails(selectedProduct.id);
+      await fetchProductDetails(selectedProduct.id, { force: true });
       onRefresh && onRefresh();
     } catch (err) {
       console.error('Delete dealer image error:', err);
@@ -239,7 +247,7 @@ export default function DealerProductDetailModal({
       }
 
       success('Đặt ảnh chính thành công!');
-      await fetchProductDetails(selectedProduct.id);
+      await fetchProductDetails(selectedProduct.id, { force: true });
       onRefresh && onRefresh();
     } catch (err) {
       console.error('Set dealer primary image error:', err);
@@ -274,7 +282,7 @@ export default function DealerProductDetailModal({
       });
 
       success('Cập nhật sản phẩm dealer thành công!');
-      await fetchProductDetails(selectedProduct.id);
+      await fetchProductDetails(selectedProduct.id, { force: true });
       setIsEditMode(false);
       onRefresh && onRefresh();
     } catch (err) {

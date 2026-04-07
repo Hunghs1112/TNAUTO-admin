@@ -60,12 +60,13 @@ function Vehicles() {
         columns={vehiclesConfig.columns}
         fieldsForModal={vehiclesConfig.fieldsForModal}
         title={vehiclesConfig.title}
-        description="Danh sach nay chi hien thi xe thuoc gara hien tai. Them xe moi nen thuc hien tu chi tiet khach hang de di dung customer vehicle flow."
+        description="Danh sach nay chi hien thi xe thuoc gara hien tai. Ban co the them xe truc tiep tai day hoac trong chi tiet khach hang."
         showPagination={true}
         limit={20}
         showSearch={true}
         searchPlaceholder="Tim bien so, mau xe, ten KH..."
-        disableCreate={true}
+        disableCreate={false}
+        createButtonText="Thêm xe"
         options={options}
         refreshTrigger={refreshKey}
         onView={openVehicle}

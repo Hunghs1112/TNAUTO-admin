@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -62,11 +63,20 @@ body,
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
   background: var(--app-bg);
   color: rgb(15 23 42);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 .dark body {

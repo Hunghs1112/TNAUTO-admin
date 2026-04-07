@@ -166,7 +166,23 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-              {fields.map((field) => {
+              {fields.map((field, index) => {
+                if (field.type === 'section') {
+                  return (
+                    <div key={field.name || field.label || `section-${index}`} className={index > 0 ? 'pt-3' : undefined}>
+                      {index > 0 ? <div className="mb-4 border-t border-slate-200 dark:border-slate-800" /> : null}
+                      <div className="space-y-1">
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                          {field.label}
+                        </div>
+                        {field.description ? (
+                          <p className="text-sm text-slate-500 dark:text-slate-300">{field.description}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                }
+
                 const options = field.apiEndpoint ? fieldOptions[field.name] || [] : field.options || [];
 
                 let displayValue = formData[field.name];

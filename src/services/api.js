@@ -1,14 +1,37 @@
 ﻿import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
-import { clearAuthSession, getAuthToken } from './authStorage';
+import { clearAuthSession, getAuthToken, getStoredGarageContext } from './authStorage';
+
+import { buildVehiclePayload } from '../utils/vehicleDocuments';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://103.200.20.253:5000/api';
+const API_ROOT = API_BASE.replace(/\/api\/?$/, '');
+const GARAGE_SCOPED_PREFIXES = [
+  '/services',
+  '/service-categories',
+  '/products',
+  '/categories',
+  '/offers',
+  '/dealer/products',
+  '/dealer/categories',
+  '/vehicles',
+];
 
-const api = axios.create({
-  baseURL: API_BASE,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 30000,
-});
+function createApiClient(baseURL) {
+  return axios.create({
+    ...(baseURL ? { baseURL } : {}),
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 30000,
+  });
+}
+
+const api = createApiClient(API_BASE);
+const rootApi = createApiClient(API_ROOT);
+const SERVICES_CACHE_TTL_MS = 3000;
+let servicesListCache = {
+  expiresAt: 0,
+  items: null,
+};
 
 async function requestWithFallback(primaryRequest, fallbackRequest) {
   try {
@@ -23,56 +46,277 @@ async function requestWithFallback(primaryRequest, fallbackRequest) {
   }
 }
 
-api.interceptors.request.use((config) => {
-  const nextConfig = { ...config };
-  const nextHeaders = nextConfig.headers || {};
-
-  if (!nextConfig.skipAuth) {
-    const token = getAuthToken();
-    if (token && !nextHeaders.Authorization) {
-      nextHeaders.Authorization = `Bearer ${token}`;
-    }
+function extractRequestPath(url = '') {
+  if (!url) {
+    return '';
   }
 
-  nextConfig.headers = nextHeaders;
-  return nextConfig;
-});
+  try {
+    if (/^https?:\/\//i.test(url)) {
+      return new URL(url).pathname.replace(/^\/api/, '');
+    }
+  } catch {
+    // Ignore invalid URLs and keep the relative path.
+  }
 
-api.interceptors.response.use(
-  (response) => {
-    if (response.data && response.data.success !== undefined) {
-      return response;
+  return String(url).replace(/^\/api/, '');
+}
+
+function shouldAttachGarageScope(url) {
+  const path = extractRequestPath(url);
+  return GARAGE_SCOPED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
+
+function appendGarageScope(config) {
+  if (config?.skipGarageScope || !shouldAttachGarageScope(config?.url)) {
+    return config;
+  }
+
+  const garage = getStoredGarageContext();
+  if (garage.id === null && !garage.code) {
+    return config;
+  }
+
+  const nextParams = { ...(config.params || {}) };
+  if (nextParams.garage_id !== undefined || nextParams.garage_code !== undefined) {
+    return config;
+  }
+
+  return {
+    ...config,
+    params: {
+      ...nextParams,
+      ...(garage.id !== null ? { garage_id: garage.id } : {}),
+      ...(garage.code ? { garage_code: garage.code } : {}),
+    },
+  };
+}
+
+function extractListItems(response) {
+  const raw = response?.data;
+
+  if (Array.isArray(raw?.data)) {
+    return raw.data;
+  }
+
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+
+  return [];
+}
+
+function extractPaginationMeta(response, fallbackPage = 1, fallbackLimit = 50, fallbackTotal = 0) {
+  const raw = response?.data || {};
+  const pagination = raw.pagination || {};
+  const totalItems = Number(raw.total ?? pagination.totalItems ?? fallbackTotal ?? 0) || 0;
+  const pageSize = Number(raw.limit ?? pagination.pageSize ?? fallbackLimit ?? 50) || fallbackLimit || 50;
+  const totalPages =
+    Number(raw.totalPages ?? pagination.totalPages ?? Math.max(1, Math.ceil(totalItems / Math.max(pageSize, 1)))) || 1;
+  const currentPage = Number(raw.page ?? pagination.currentPage ?? fallbackPage ?? 1) || 1;
+
+  return {
+    totalItems,
+    pageSize: Math.max(1, pageSize),
+    totalPages: Math.max(1, totalPages),
+    currentPage: Math.max(1, currentPage),
+  };
+}
+
+function normalizeSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+    .trim();
+}
+
+function collectSearchableStrings(value, bucket = []) {
+  if (value === null || value === undefined) {
+    return bucket;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((entry) => collectSearchableStrings(entry, bucket));
+    return bucket;
+  }
+
+  if (typeof value === 'object') {
+    Object.values(value).forEach((entry) => collectSearchableStrings(entry, bucket));
+    return bucket;
+  }
+
+  bucket.push(String(value));
+  return bucket;
+}
+
+function matchesServiceSearch(service, searchTerm) {
+  const normalizedTerm = normalizeSearchText(searchTerm);
+  if (!normalizedTerm) {
+    return true;
+  }
+
+  const searchable = collectSearchableStrings({
+    id: service?.id,
+    name: service?.name,
+    supplier_name: service?.supplier_name,
+    description: service?.description,
+    category_name: service?.category_name,
+  });
+
+  return searchable.some((entry) => normalizeSearchText(entry).includes(normalizedTerm));
+}
+
+function sortServicesByNewest(services) {
+  return [...services].sort((left, right) => {
+    const leftTime = left?.created_at ? new Date(left.created_at).getTime() : 0;
+    const rightTime = right?.created_at ? new Date(right.created_at).getTime() : 0;
+
+    if (rightTime !== leftTime) {
+      return rightTime - leftTime;
     }
 
-    return {
-      ...response,
-      data: {
-        success: true,
-        data: response.data,
+    return (Number(right?.id) || 0) - (Number(left?.id) || 0);
+  });
+}
+
+function buildPaginatedResponse(items, params = {}) {
+  const paginate = params?.paginate === true || params?.paginate === 'true';
+  const requestedLimit = Number(params?.limit) || 10;
+  const pageSize = Math.max(1, requestedLimit);
+  const totalItems = items.length;
+  const totalPages = paginate ? Math.max(1, Math.ceil(totalItems / pageSize)) : 1;
+  const requestedPage = Math.max(1, Number(params?.page) || 1);
+  const currentPage = paginate ? Math.min(requestedPage, totalPages) : 1;
+  const startIndex = paginate ? (currentPage - 1) * pageSize : 0;
+  const pageItems = paginate ? items.slice(startIndex, startIndex + pageSize) : items;
+
+  return {
+    data: {
+      success: true,
+      data: pageItems,
+      total: totalItems,
+      page: currentPage,
+      limit: pageSize,
+      totalPages,
+      pagination: {
+        isPaginated: paginate,
+        currentPage,
+        pageSize,
+        totalItems,
+        totalPages,
+        hasNextPage: paginate ? currentPage < totalPages : false,
+        hasPreviousPage: paginate ? currentPage > 1 : false,
       },
+    },
+  };
+}
+
+function invalidateServicesCache() {
+  servicesListCache = {
+    expiresAt: 0,
+    items: null,
+  };
+}
+
+async function fetchAllServices({ force = false } = {}) {
+  if (!force && servicesListCache.items && servicesListCache.expiresAt > Date.now()) {
+    return servicesListCache.items;
+  }
+
+  const pageSize = 50;
+  const firstResponse = await api.get('/services', {
+    params: {
+      page: 1,
+      limit: pageSize,
+      paginate: true,
+    },
+  });
+
+  const firstItems = extractListItems(firstResponse);
+  const meta = extractPaginationMeta(firstResponse, 1, pageSize, firstItems.length);
+
+  if (meta.totalPages <= 1) {
+    servicesListCache = {
+      expiresAt: Date.now() + SERVICES_CACHE_TTL_MS,
+      items: firstItems,
     };
-  },
-  (error) => {
-    if (error.response?.status === 401 && !error.config?.skipAuthFailureHandler) {
-      clearAuthSession('unauthorized');
+    return firstItems;
+  }
+
+  const responses = await Promise.all(
+    Array.from({ length: meta.totalPages - 1 }, (_, index) =>
+      api.get('/services', {
+        params: {
+          page: index + 2,
+          limit: pageSize,
+          paginate: true,
+        },
+      })
+    )
+  );
+
+  const items = responses.reduce((allItems, response) => allItems.concat(extractListItems(response)), firstItems);
+  servicesListCache = {
+    expiresAt: Date.now() + SERVICES_CACHE_TTL_MS,
+    items,
+  };
+  return items;
+}
+
+[api, rootApi].forEach((client) => {
+  client.interceptors.request.use((config) => {
+    const nextConfig = appendGarageScope({ ...config });
+    const nextHeaders = nextConfig.headers || {};
+
+    if (!nextConfig.skipAuth) {
+      const token = getAuthToken();
+      if (token && !nextHeaders.Authorization) {
+        nextHeaders.Authorization = `Bearer ${token}`;
+      }
     }
 
-    const message =
-      error.response?.data?.error ||
-      error.response?.data?.message ||
-      error.message ||
-      'Có lỗi xảy ra';
+    nextConfig.headers = nextHeaders;
+    return nextConfig;
+  });
 
-    return Promise.reject({
-      ...error,
-      message,
-      status: error.response?.status,
-      code: error.code,
-      isNetworkError: error.code === 'ERR_NETWORK' || error.message?.includes('Network Error'),
-      isCorsError: error.response?.status === 0 || (error.code === 'ERR_NETWORK' && !error.response),
-    });
-  }
-);
+  client.interceptors.response.use(
+    (response) => {
+      if (response.data && response.data.success !== undefined) {
+        return response;
+      }
+
+      return {
+        ...response,
+        data: {
+          success: true,
+          data: response.data,
+        },
+      };
+    },
+    (error) => {
+      if (error.response?.status === 401 && !error.config?.skipAuthFailureHandler) {
+        clearAuthSession('unauthorized');
+      }
+
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        'Có lỗi xảy ra';
+
+      return Promise.reject({
+        ...error,
+        message,
+        status: error.response?.status,
+        code: error.code,
+        isNetworkError: error.code === 'ERR_NETWORK' || error.message?.includes('Network Error'),
+        isCorsError: error.response?.status === 0 || (error.code === 'ERR_NETWORK' && !error.response),
+      });
+    }
+  );
+});
 
 export const authAPI = {
   loginGarage: (data) =>
@@ -117,7 +361,17 @@ export const customersAPI = createCrudAPI(api, '/customers', {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  getDriverLicense: (id) => api.get(`/customers/${id}/driver-license`),
+  getDriverLicense: async (id) => {
+    try {
+      return await api.get(`/customers/${id}/driver-license`);
+    } catch (requestError) {
+      if (requestError?.status === 404) {
+        return null;
+      }
+
+      throw requestError;
+    }
+  },
   updateDriverLicense: (id, data) => api.put(`/customers/${id}/driver-license`, data),
   getVehiclesForGarage: ({ phone, garageCode }) =>
     api.get('/customers/vehicles', {
@@ -146,9 +400,26 @@ export const employeesAPI = createCrudAPI(api, '/employees', {
 });
 
 export const servicesAPI = createCrudAPI(api, '/services', {
-  create: (data) => api.post('/services/admin', data),
-  update: (id, data) => api.put(`/services/admin/${id}`, data),
-  delete: (id) => api.delete(`/services/admin/${id}`),
+  getAll: async (params = {}) => {
+    const services = await fetchAllServices();
+    const filteredServices = sortServicesByNewest(services).filter((service) => matchesServiceSearch(service, params.search));
+    return buildPaginatedResponse(filteredServices, params);
+  },
+  create: async (data) => {
+    const response = await api.post('/services/admin', data);
+    invalidateServicesCache();
+    return response;
+  },
+  update: async (id, data) => {
+    const response = await api.put(`/services/admin/${id}`, data);
+    invalidateServicesCache();
+    return response;
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/services/admin/${id}`);
+    invalidateServicesCache();
+    return response;
+  },
   getStats: () => api.get('/services/admin/stats'),
   uploadImage: (id, file) => {
     const formData = new FormData();
@@ -160,6 +431,11 @@ export const servicesAPI = createCrudAPI(api, '/services', {
 });
 
 export const productsAPI = createCrudAPI(api, '/products', {
+  getAll: (params = {}) =>
+    requestWithFallback(
+      () => api.get('/products', { params }),
+      () => api.get('/products/admin', { params })
+    ),
   create: (data) => api.post('/products/admin', data),
   update: (id, data) => api.put(`/products/admin/${id}`, data),
   delete: (id) => api.delete(`/products/admin/${id}`),
@@ -191,6 +467,11 @@ export const dealerProductsAPI = createCrudAPI(api, '/dealer/products', {
 });
 
 export const serviceCategoriesAPI = createCrudAPI(api, '/service-categories', {
+  getAll: (params = {}) =>
+    requestWithFallback(
+      () => api.get('/service-categories', { params }),
+      () => api.get('/service-categories/admin', { params })
+    ),
   create: (data) => api.post('/service-categories/admin', data),
   update: (id, data) => api.put(`/service-categories/admin/${id}`, data),
   delete: (id) => api.delete(`/service-categories/admin/${id}`),
@@ -205,7 +486,11 @@ export const serviceCategoriesAPI = createCrudAPI(api, '/service-categories', {
 });
 
 export const categoriesAPI = createCrudAPI(api, '/categories', {
-  getAll: (params = {}) => api.get('/categories', { params }),
+  getAll: (params = {}) =>
+    requestWithFallback(
+      () => api.get('/categories', { params }),
+      () => api.get('/categories/admin', { params })
+    ),
   create: (data) => api.post('/categories/admin', data),
   update: (id, data) => api.put(`/categories/admin/${id}`, data),
   delete: (id) => api.delete(`/categories/admin/${id}`),
@@ -223,10 +508,11 @@ export const vehiclesAPI = createCrudAPI(api, '/vehicles', {
   getAll: (params = {}) => api.get('/vehicles/admin/all', { params }),
   getById: (id) =>
     requestWithFallback(
-      () => api.get(`/vehicles/admin/${id}`),
-      () => api.get(`/vehicles/${id}`)
+      () => api.get(`/vehicles/${id}`),
+      () => api.get(`/vehicles/admin/${id}`)
     ),
-  update: (id, data) => api.put(`/vehicles/admin/${id}`, data),
+  create: (data) => api.post('/vehicles', buildVehiclePayload(data)),
+  update: (id, data) => api.put(`/vehicles/admin/${id}`, buildVehiclePayload(data)),
   delete: (id) => api.delete(`/vehicles/admin/${id}`),
   getStats: () => api.get('/vehicles/admin/stats'),
   uploadImage: (id, file) => {
@@ -236,7 +522,7 @@ export const vehiclesAPI = createCrudAPI(api, '/vehicles', {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  searchByPlate: (plate) => api.get('/vehicles/search', { params: { plate } }),
+  searchByPlate: (plate) => api.get('/vehicles/search', { params: { license_plate: plate } }),
   getInspection: (vehicleId) => api.get(`/vehicles/${vehicleId}/inspection`),
   updateInspection: (vehicleId, data) => api.put(`/vehicles/${vehicleId}/inspection`, data),
   deleteInspection: (vehicleId) => api.delete(`/vehicles/${vehicleId}/inspection`),
@@ -251,6 +537,11 @@ export const serviceOrdersAPI = createCrudAPI(api, '/service-orders', {
 });
 
 export const offersAPI = createCrudAPI(api, '/offers', {
+  getAll: (params = {}) =>
+    requestWithFallback(
+      () => api.get('/offers', { params }),
+      () => api.get('/offers/admin', { params })
+    ),
   create: (data) => api.post('/offers/admin', data),
   update: (id, data) => api.put(`/offers/admin/${id}`, data),
   delete: (id) => api.delete(`/offers/admin/${id}`),
@@ -317,13 +608,13 @@ export const notificationsAPI = {
     ),
   send: (data) =>
     requestWithFallback(
-      () => api.post('/admin/notifications', data),
-      () => api.post('/notifications/send', data)
+      () => api.post('/notifications/send', data),
+      () => api.post('/admin/notifications', data)
     ),
   getStats: () =>
     requestWithFallback(
-      () => api.get('/admin/notifications/stats'),
-      () => api.get('/notifications/admin/stats')
+      () => api.get('/notifications/admin/stats'),
+      () => api.get('/admin/notifications/stats')
     ),
   getAdminLogs: (params) =>
     requestWithFallback(
@@ -368,8 +659,8 @@ export const pushNotificationsAPI = {
 };
 
 export const systemAPI = {
-  health: () => api.get('/health'),
-  docs: () => api.get('/api-docs'),
+  health: () => rootApi.get('/health'),
+  docs: () => rootApi.get('/api-docs'),
 };
 
 export default api;

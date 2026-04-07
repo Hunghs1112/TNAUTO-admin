@@ -1,9 +1,41 @@
-// src/pages/Vehicles.jsx
 import { memo, useCallback, useMemo, useState } from 'react';
 import GenericCrudPage from '../components/features/GenericCrudPage';
 import VehicleDetailModal from '../components/features/VehicleDetailModal';
 import { vehiclesConfig } from '../config/entityConfigs.jsx';
 import { vehiclesAPI } from '../services/api';
+import { normalizeVehicleResponse } from '../utils/vehicleDocuments';
+
+const vehicleFormFields = [
+  {
+    name: 'customer_id',
+    label: 'Khách hàng',
+    type: 'select',
+    required: true,
+    searchable: true,
+    apiEndpoint: '/customers',
+    apiParams: { limit: 1000 },
+    valueKey: 'id',
+    labelKey: 'name',
+    labelFormat: (item) => `${item.name || 'Khách hàng'}${item.phone ? ` - ${item.phone}` : ''}`,
+    placeholder: 'Tìm theo tên hoặc số điện thoại',
+  },
+  { name: 'license_plate', label: 'Biển số xe', type: 'text', required: true },
+  { name: 'model', label: 'Mẫu xe', type: 'text' },
+  { name: 'image_url', label: 'Hình ảnh xe', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
+  { name: 'registration_section', label: 'Đăng ký xe', type: 'section' },
+  { name: 'registration_number', label: 'Số đăng ký', type: 'text' },
+  { name: 'registration_owner_name', label: 'Chủ xe', type: 'text' },
+  { name: 'registration_issued_date', label: 'Ngày cấp', type: 'date' },
+  { name: 'inspection_section', label: 'Đăng kiểm', type: 'section' },
+  { name: 'inspection_certificate_no', label: 'Số chứng nhận đăng kiểm', type: 'text' },
+  { name: 'inspection_last_date', label: 'Ngày đăng kiểm gần nhất', type: 'date' },
+  { name: 'inspection_expiry_date', label: 'Ngày hết hạn đăng kiểm', type: 'date' },
+  { name: 'insurance_section', label: 'Bảo hiểm', type: 'section' },
+  { name: 'insurance_provider', label: 'Đơn vị bảo hiểm', type: 'text' },
+  { name: 'insurance_policy_no', label: 'Số hợp đồng / policy', type: 'text' },
+  { name: 'insurance_start_date', label: 'Ngày bắt đầu bảo hiểm', type: 'date' },
+  { name: 'insurance_expiry_date', label: 'Ngày hết hạn bảo hiểm', type: 'date' },
+];
 
 function Vehicles() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -11,21 +43,7 @@ function Vehicles() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const transformData = useCallback((data) => {
-    return data.map((vehicle) => {
-      const modelValue =
-        vehicle.model ||
-        vehicle.vehicle_model ||
-        vehicle.car_model ||
-        vehicle.model_name ||
-        vehicle.vehicle_type ||
-        null;
-
-      return {
-        ...vehicle,
-        model: modelValue || '-',
-        customer_name: vehicle.customer_name || vehicle.customer?.name || null,
-      };
-    });
+    return data.map((vehicle) => normalizeVehicleResponse(vehicle));
   }, []);
 
   const handleError = useCallback((error) => {
@@ -58,13 +76,12 @@ function Vehicles() {
       <GenericCrudPage
         api={vehiclesAPI}
         columns={vehiclesConfig.columns}
-        fieldsForModal={vehiclesConfig.fieldsForModal}
+        fieldsForModal={vehicleFormFields}
         title={vehiclesConfig.title}
-        description="Danh sach nay chi hien thi xe thuoc gara hien tai. Ban co the them xe truc tiep tai day hoac trong chi tiet khach hang."
         showPagination={true}
         limit={20}
         showSearch={true}
-        searchPlaceholder="Tim bien so, mau xe, ten KH..."
+        searchPlaceholder="Tìm biển số, mẫu xe, tên khách hàng..."
         disableCreate={false}
         createButtonText="Thêm xe"
         options={options}

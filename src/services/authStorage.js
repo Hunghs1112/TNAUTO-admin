@@ -5,6 +5,22 @@ function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 }
 
+function normalizeGarage(rawGarage, rawSession = {}) {
+  const source = rawGarage && typeof rawGarage === 'object' ? rawGarage : {};
+  const id = source.id ?? source.garage_id ?? rawSession.garageId ?? rawSession.garage_id ?? null;
+  const code = source.code ?? source.garage_code ?? rawSession.garageCode ?? rawSession.garage_code ?? null;
+
+  if (!Object.keys(source).length && id === null && !code) {
+    return null;
+  }
+
+  return {
+    ...source,
+    id,
+    code,
+  };
+}
+
 export function isAuthSessionExpired(session) {
   if (!session?.expiresAt) {
     return true;
@@ -19,14 +35,18 @@ export function isAuthSessionExpired(session) {
 }
 
 function normalizeSession(raw) {
-  if (!raw?.token || !raw?.garage) {
+  const garage = normalizeGarage(raw?.garage, raw);
+
+  if (!raw?.token || !garage) {
     return null;
   }
 
   const session = {
     token: raw.token,
     expiresAt: raw.expiresAt || raw.expires_at || null,
-    garage: raw.garage,
+    garage,
+    garageId: garage.id ?? null,
+    garageCode: garage.code ?? null,
     sessionVersion: raw.sessionVersion || Date.now(),
   };
 
@@ -69,6 +89,17 @@ export function getStoredAuthSession() {
 
 export function getAuthToken() {
   return getStoredAuthSession()?.token || null;
+}
+
+export function getStoredGarageContext() {
+  const session = getStoredAuthSession();
+  const garage = session?.garage || null;
+
+  return {
+    garage,
+    id: session?.garageId ?? garage?.id ?? null,
+    code: session?.garageCode ?? garage?.code ?? null,
+  };
 }
 
 function clearGarageScopedBrowserState({ preserveAuth = false } = {}) {

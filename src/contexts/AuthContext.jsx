@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authAPI } from '../services/api';
 import {
@@ -39,10 +40,18 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (credentials) => {
     const response = await authAPI.loginGarage(credentials);
     const payload = response?.data || {};
+    const rawGarage = payload.data && typeof payload.data === 'object' ? payload.data : {};
+    const garage = {
+      ...rawGarage,
+      id: rawGarage.id ?? payload.garage_id ?? payload.garageId ?? null,
+      code: rawGarage.code ?? payload.garage_code ?? payload.garageCode ?? credentials?.garage_code ?? null,
+    };
     const nextSession = setStoredAuthSession({
       token: payload.token,
       expiresAt: payload.expires_at,
-      garage: payload.data || null,
+      garage,
+      garageId: garage.id,
+      garageCode: garage.code,
     });
 
     setSession(nextSession);

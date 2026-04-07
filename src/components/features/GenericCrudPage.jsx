@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import PageHeader from '../layout/PageHeader';
 import GenericTable from '../table/Table';
+import { useToast } from '../../contexts/ToastContext';
 
 function extractListData(response) {
   const raw = response?.data;
@@ -58,7 +59,8 @@ function GenericCrudPage({
   categoryChangeEventName,
   createButtonText = 'Thêm mới',
 }) {
-  const { transformData = (data) => data, onError = () => {} } = options;
+  const { transformData = (data) => data, onError } = options;
+  const { error: showError } = useToast();
 
   const [allData, setAllData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -127,7 +129,12 @@ function GenericCrudPage({
           setCurrentPage(1);
         }
       } catch (error) {
-        onErrorRef.current(error);
+        if (typeof onErrorRef.current === 'function') {
+          onErrorRef.current(error);
+        } else {
+          showError(error?.message || 'Không thể tải dữ liệu. Vui lòng thử lại.');
+        }
+
         setAllData([]);
         setTotalItems(0);
         setTotalPages(1);
@@ -145,7 +152,7 @@ function GenericCrudPage({
         }
       }
     },
-    [currentPage, limit, searchTerm, showPagination]
+    [currentPage, limit, searchTerm, showError, showPagination]
   );
 
   useEffect(() => {

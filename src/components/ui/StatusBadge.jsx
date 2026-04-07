@@ -53,6 +53,28 @@ const STATUS_CONFIGS = {
     ready_for_pickup: ORDER_STATUS_CONFIG.ready_for_pickup,
     completed: ORDER_STATUS_CONFIG.completed,
   },
+  vehicle_document: {
+    valid: {
+      color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      label: 'Hợp lệ',
+    },
+    expiring: {
+      color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+      label: 'Sắp hết hạn',
+    },
+    expired: {
+      color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      label: 'Hết hạn',
+    },
+    null: {
+      color: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+      label: 'Chưa cập nhật',
+    },
+    '': {
+      color: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+      label: 'Chưa cập nhật',
+    },
+  },
 };
 
 export default function StatusBadge({ status, type = 'default', labelOverride = null }) {
@@ -75,4 +97,3 @@ export default function StatusBadge({ status, type = 'default', labelOverride = 
     </span>
   );
 }
-

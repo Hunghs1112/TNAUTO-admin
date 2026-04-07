@@ -371,39 +371,40 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
             ) : null}
             <div className="flex items-center justify-between gap-3">
               <TabView tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-              {activeTab === 'basic' ? (
-                <div className="flex items-center gap-2">
-                  {!isEditing ? (
-                    <button onClick={() => setIsEditing(true)} className={buttonStyles.secondary}>
-                      <Pencil size={18} />
-                      Sửa
-                    </button>
-                  ) : (
-                    <>
-                      <button onClick={handleSaveAll} disabled={saving} className={buttonStyles.primary}>
-                        <Save size={18} />
-                        {saving ? 'Đang lưu...' : 'Lưu'}
+              <div className="flex items-center gap-2">
+                {activeTab === 'basic' ? (
+                  <>
+                    {!isEditing ? (
+                      <button onClick={() => setIsEditing(true)} className={buttonStyles.secondary}>
+                        <Pencil size={18} />
+                        Sửa
                       </button>
-                      <button
-                        onClick={() => {
-                          setIsEditing(false);
-                          resetForm(currentCustomer, driverLicense);
-                        }}
-                        disabled={saving}
-                        className={buttonStyles.secondary}
-                      >
-                        <XIcon size={18} />
-                        Hủy
-                      </button>
-                    </>
-                  )}
-                </div>
-              ) : (
+                    ) : (
+                      <>
+                        <button onClick={handleSaveAll} disabled={saving} className={buttonStyles.primary}>
+                          <Save size={18} />
+                          {saving ? 'Đang lưu...' : 'Lưu'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsEditing(false);
+                            resetForm(currentCustomer, driverLicense);
+                          }}
+                          disabled={saving}
+                          className={buttonStyles.secondary}
+                        >
+                          <XIcon size={18} />
+                          Hủy
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : null}
                 <button type="button" onClick={() => setIsAddVehicleOpen(true)} className={buttonStyles.primary}>
                   <Plus size={18} />
                   Thêm xe
                 </button>
-              )}
+              </div>
             </div>
 
             {activeTab === 'basic' && (

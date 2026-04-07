@@ -8,6 +8,7 @@ function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+
   return (
     <>
       <GenericCrudPage
@@ -40,9 +41,6 @@ function Customers() {
       <CustomerDetailModal
         isOpen={isDetailOpen}
         customer={selectedCustomer}
-        onCustomerChange={(nextCustomer) => {
-          setSelectedCustomer(nextCustomer || null);
-        }}
         onClose={() => {
           setIsDetailOpen(false);
           setSelectedCustomer(null);

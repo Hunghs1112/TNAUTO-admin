@@ -10,6 +10,7 @@ import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
 import { servicesConfig } from '../../config/entityConfigs';
 import { X, Edit2, Save, XCircle } from 'lucide-react';
+import useDetailFetchGuard from '../../hooks/useDetailFetchGuard';
 
 /**
  * Service Detail Modal Component
@@ -26,6 +27,7 @@ export default function ServiceDetailModal({
   const [formData, setFormData] = useState({});
   const [fieldOptions, setFieldOptions] = useState({});
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   const { startLoading: startDetailLoading, stopLoading: stopDetailLoading, loading: loadingDetail } = useLoadingKey('service-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
@@ -38,6 +40,7 @@ export default function ServiceDetailModal({
       setSelectedService(null);
       setIsEditMode(false);
       setFormData({});
+      resetFetchGuard();
     }
   }, [isOpen, serviceId]);
 
@@ -113,16 +116,21 @@ export default function ServiceDetailModal({
     }
   }, [selectedService, isEditMode]);
 
-  const fetchServiceDetails = async (id) => {
+  const fetchServiceDetails = async (id, { force = false } = {}) => {
+    if (shouldSkipFetch(id, force)) return;
+
+    beginFetch();
     startDetailLoading('Đang tải chi tiết dịch vụ...');
     try {
       const serviceRes = await servicesAPI.getById(id);
       const serviceData = serviceRes.data.data || serviceRes.data;
       setSelectedService(serviceData || null);
+      completeFetch(id);
     } catch (err) {
       console.error('Fetch service details error:', err);
       error('Không thể tải chi tiết dịch vụ: ' + (err.response?.data?.message || err.message));
       setSelectedService(null);
+      failFetch();
       onClose();
     } finally {
       stopDetailLoading();
@@ -151,7 +159,7 @@ export default function ServiceDetailModal({
       success('Cập nhật ảnh thành công!');
       
       // Refresh service data
-      await fetchServiceDetails(selectedService.id);
+      await fetchServiceDetails(selectedService.id, { force: true });
       onRefresh && onRefresh();
     } catch (err) {
       console.error('Update image error:', err);
@@ -175,7 +183,7 @@ export default function ServiceDetailModal({
       
       // Refresh service data
       if (selectedService) {
-        await fetchServiceDetails(selectedService.id);
+        await fetchServiceDetails(selectedService.id, { force: true });
       }
       onRefresh && onRefresh();
     } catch (err) {
@@ -219,7 +227,7 @@ export default function ServiceDetailModal({
       success('Cập nhật dịch vụ thành công!');
       
       // Refresh service data
-      await fetchServiceDetails(selectedService.id);
+      await fetchServiceDetails(selectedService.id, { force: true });
       setIsEditMode(false);
       onRefresh && onRefresh();
       

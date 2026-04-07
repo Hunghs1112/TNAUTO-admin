@@ -19,6 +19,7 @@ import ImageGrid from '../image/ImageGrid';
 import ImageUploader from '../image/ImageUploader';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import StatusBadge from '../ui/StatusBadge';
+import useDetailFetchGuard from '../../hooks/useDetailFetchGuard';
 
 function formatYYYYMMDD(date) {
   const parsedDate = new Date(date);
@@ -42,6 +43,7 @@ export default function ServiceOrderDetailModal({
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderImages, setOrderImages] = useState([]);
   const [showImageUploader, setShowImageUploader] = useState(false);
+  const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   const {
     startLoading: startDetailLoading,
@@ -68,9 +70,13 @@ export default function ServiceOrderDetailModal({
     setSelectedOrder(null);
     setOrderImages([]);
     setShowImageUploader(false);
+    resetFetchGuard();
   }, [isOpen, orderId]);
 
-  const fetchOrderDetails = async (id) => {
+  const fetchOrderDetails = async (id, { force = false } = {}) => {
+    if (shouldSkipFetch(id, force)) return;
+
+    beginFetch();
     startDetailLoading('Dang tai chi tiet don dich vu...');
 
     try {
@@ -91,10 +97,12 @@ export default function ServiceOrderDetailModal({
         : [];
 
       setOrderImages(validImages);
+      completeFetch(id);
     } catch (fetchError) {
       error(`Khong the tai chi tiet don dich vu: ${getErrorMessage(fetchError, 'Loi khong xac dinh')}`);
       setSelectedOrder(null);
       setOrderImages([]);
+      failFetch();
       onClose();
     } finally {
       stopDetailLoading();
@@ -128,7 +136,7 @@ export default function ServiceOrderDetailModal({
         });
       }
 
-      await fetchOrderDetails(selectedOrder.id);
+      await fetchOrderDetails(selectedOrder.id, { force: true });
       setShowImageUploader(false);
       onRefresh?.();
       success(`Da them ${validUrls.length} anh cho don dich vu.`);
@@ -159,7 +167,7 @@ export default function ServiceOrderDetailModal({
       }
 
       if (selectedOrder) {
-        await fetchOrderDetails(selectedOrder.id);
+        await fetchOrderDetails(selectedOrder.id, { force: true });
       }
 
       onRefresh?.();
@@ -200,14 +208,14 @@ export default function ServiceOrderDetailModal({
           delivery_date: deliveryDate,
         });
 
-        await fetchOrderDetails(selectedOrder.id);
+        await fetchOrderDetails(selectedOrder.id, { force: true });
         onRefresh?.();
         success(response?.data?.message || 'Hoan thanh don dich vu thanh cong.');
         return;
       }
 
       await serviceOrdersAPI.updateStatus(selectedOrder.id, { status: newStatus });
-      await fetchOrderDetails(selectedOrder.id);
+      await fetchOrderDetails(selectedOrder.id, { force: true });
       onRefresh?.();
       success('Cap nhat trang thai thanh cong.');
     } catch (statusError) {
@@ -235,7 +243,7 @@ export default function ServiceOrderDetailModal({
       const response = await serviceOrdersAPI.assign(selectedOrder.id, { employee_id: Number(employeeId) });
       const assignResult = response?.data?.data || response?.data || {};
 
-      await fetchOrderDetails(selectedOrder.id);
+      await fetchOrderDetails(selectedOrder.id, { force: true });
       onRefresh?.();
 
       const successMessage = getServiceOrderAssignSuccessMessage(

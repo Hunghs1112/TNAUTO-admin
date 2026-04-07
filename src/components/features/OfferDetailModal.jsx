@@ -10,6 +10,7 @@ import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
 import { offersConfig } from '../../config/entityConfigs';
 import { Plus, X, Edit2, Save, XCircle } from 'lucide-react';
+import useDetailFetchGuard from '../../hooks/useDetailFetchGuard';
 
 /**
  * Offer Detail Modal Component
@@ -28,6 +29,7 @@ export default function OfferDetailModal({
   const [formData, setFormData] = useState({});
   const [fieldOptions, setFieldOptions] = useState({});
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   const { startLoading: startDetailLoading, stopLoading: stopDetailLoading, loading: loadingDetail } = useLoadingKey('offer-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
@@ -42,6 +44,7 @@ export default function OfferDetailModal({
       setShowImageUploader(false);
       setIsEditMode(false);
       setFormData({});
+      resetFetchGuard();
     }
   }, [isOpen, offerId]);
 
@@ -113,7 +116,10 @@ export default function OfferDetailModal({
     }
   }, [selectedOffer, isEditMode]);
 
-  const fetchOfferDetails = async (id) => {
+  const fetchOfferDetails = async (id, { force = false } = {}) => {
+    if (shouldSkipFetch(id, force)) return;
+
+    beginFetch();
     startDetailLoading('Đang tải chi tiết ưu đãi...');
     try {
       const offerRes = await offersAPI.getById(id);
@@ -162,11 +168,13 @@ export default function OfferDetailModal({
           setOfferImages([]);
         }
       }
+      completeFetch(id);
     } catch (err) {
       console.error('Fetch offer details/images error:', err);
       error('Không thể tải chi tiết ưu đãi: ' + (err.response?.data?.message || err.message));
       setSelectedOffer(null);
       setOfferImages([]);
+      failFetch();
       onClose();
     } finally {
       stopDetailLoading();
@@ -222,7 +230,7 @@ export default function OfferDetailModal({
       success(`Thêm thành công ${validUrls.length} ảnh!`);
       
       // Refresh danh sách ảnh và thông tin ưu đãi
-      await fetchOfferDetails(selectedOffer.id);
+      await fetchOfferDetails(selectedOffer.id, { force: true });
       setShowImageUploader(false);
       onRefresh && onRefresh();
     } catch (err) {
@@ -288,7 +296,7 @@ export default function OfferDetailModal({
       
       // Refresh danh sách ảnh
       if (selectedOffer) {
-        await fetchOfferDetails(selectedOffer.id);
+        await fetchOfferDetails(selectedOffer.id, { force: true });
       }
       onRefresh && onRefresh();
     } catch (err) {
@@ -340,7 +348,7 @@ export default function OfferDetailModal({
       }
       
       success('Đặt ảnh chính thành công!');
-      await fetchOfferDetails(selectedOffer.id);
+      await fetchOfferDetails(selectedOffer.id, { force: true });
       onRefresh && onRefresh();
     } catch (err) {
       console.error('Set primary image error:', err);
@@ -376,7 +384,7 @@ export default function OfferDetailModal({
       success('Cập nhật ưu đãi thành công!');
       
       // Refresh offer data
-      await fetchOfferDetails(selectedOffer.id);
+      await fetchOfferDetails(selectedOffer.id, { force: true });
       setIsEditMode(false);
       onRefresh && onRefresh();
     } catch (err) {
@@ -571,5 +579,4 @@ export default function OfferDetailModal({
     </>
   );
 }
-
 

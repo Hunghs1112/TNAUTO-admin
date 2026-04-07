@@ -11,6 +11,7 @@ import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
 import { productsConfig } from '../../config/entityConfigs';
 import { Plus, X, Edit2, Save, XCircle } from 'lucide-react';
+import useDetailFetchGuard from '../../hooks/useDetailFetchGuard';
 
 /**
  * Product Detail Modal Component
@@ -29,6 +30,7 @@ export default function ProductDetailModal({
   const [formData, setFormData] = useState({});
   const [fieldOptions, setFieldOptions] = useState({});
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   const { startLoading: startDetailLoading, stopLoading: stopDetailLoading, loading: loadingDetail } = useLoadingKey('product-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
@@ -43,6 +45,7 @@ export default function ProductDetailModal({
       setShowImageUploader(false);
       setIsEditMode(false);
       setFormData({});
+      resetFetchGuard();
     }
   }, [isOpen, productId]);
 
@@ -115,7 +118,10 @@ export default function ProductDetailModal({
     }
   }, [selectedProduct, isEditMode]);
 
-  const fetchProductDetails = async (id) => {
+  const fetchProductDetails = async (id, { force = false } = {}) => {
+    if (shouldSkipFetch(id, force)) return;
+
+    beginFetch();
     startDetailLoading('Đang tải chi tiết sản phẩm...');
     try {
       const productRes = await productsAPI.getById(id);
@@ -138,11 +144,13 @@ export default function ProductDetailModal({
             .filter(img => img.image_url)
         : [];
       setProductImages(validImages);
+      completeFetch(id);
     } catch (err) {
       console.error('Fetch product details/images error:', err);
       error('Không thể tải chi tiết sản phẩm: ' + (err.response?.data?.message || err.message));
       setSelectedProduct(null);
       setProductImages([]);
+      failFetch();
       onClose();
     } finally {
       stopDetailLoading();
@@ -198,7 +206,7 @@ export default function ProductDetailModal({
       success(`Thêm thành công ${validUrls.length} ảnh!`);
       
       // Refresh danh sách ảnh và thông tin sản phẩm
-      await fetchProductDetails(selectedProduct.id);
+      await fetchProductDetails(selectedProduct.id, { force: true });
       setShowImageUploader(false);
       onRefresh && onRefresh();
     } catch (err) {
@@ -254,7 +262,7 @@ export default function ProductDetailModal({
       
       // Refresh danh sách ảnh
       if (selectedProduct) {
-        await fetchProductDetails(selectedProduct.id);
+        await fetchProductDetails(selectedProduct.id, { force: true });
       }
       onRefresh && onRefresh();
     } catch (err) {
@@ -298,7 +306,7 @@ export default function ProductDetailModal({
       }
       
       success('Đặt ảnh chính thành công!');
-      await fetchProductDetails(selectedProduct.id);
+      await fetchProductDetails(selectedProduct.id, { force: true });
       onRefresh && onRefresh();
     } catch (err) {
       console.error('Set primary image error:', err);
@@ -341,7 +349,7 @@ export default function ProductDetailModal({
       success('Cập nhật sản phẩm thành công!');
       
       // Refresh product data
-      await fetchProductDetails(selectedProduct.id);
+      await fetchProductDetails(selectedProduct.id, { force: true });
       setIsEditMode(false);
       onRefresh && onRefresh();
       
@@ -604,4 +612,3 @@ export default function ProductDetailModal({
     </>
   );
 }
-

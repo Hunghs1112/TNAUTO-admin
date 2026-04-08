@@ -36,6 +36,21 @@ function normalizeSearchValue(value) {
   return String(value);
 }
 
+function normalizeSearchText(value) {
+  return normalizeSearchValue(value)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function extractSearchTokens(value) {
+  return normalizeSearchText(value)
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
 export default function GenericTable({
   data = [],
   columns,
@@ -94,12 +109,13 @@ export default function GenericTable({
 
   const filteredData = useMemo(() => {
     let nextData = [...data];
-    const normalizedSearchTerm = searchTerm.toLowerCase();
+    const searchTokens = extractSearchTokens(searchTerm);
 
-    if (normalizedSearchTerm && !serverSideSearch) {
-      nextData = nextData.filter((item) =>
-        columns.some((column) => normalizeSearchValue(item[column.key]).toLowerCase().includes(normalizedSearchTerm))
-      );
+    if (searchTokens.length > 0 && !serverSideSearch) {
+      nextData = nextData.filter((item) => {
+        const searchableText = normalizeSearchText(columns.map((column) => item[column.key]).join(' '));
+        return searchTokens.every((token) => searchableText.includes(token));
+      });
     }
 
     if (enableSort && sortConfig.key) {

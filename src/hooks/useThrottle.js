@@ -1,5 +1,5 @@
 // src/hooks/useThrottle.js
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 
 /**
  * Custom hook để throttle function call

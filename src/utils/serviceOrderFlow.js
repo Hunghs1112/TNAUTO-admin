@@ -1,18 +1,18 @@
 const STATUS_LABELS = {
-  pending: 'Cho xu ly',
-  received: 'Da tiep nhan',
-  in_progress: 'Dang xu ly',
-  ready_for_pickup: 'San sang ban giao',
-  completed: 'Hoan thanh',
-  cancelled: 'Da huy',
+  pending: 'Chờ xử lý',
+  received: 'Đã tiếp nhận',
+  in_progress: 'Đang xử lý',
+  ready_for_pickup: 'Sẵn sàng bàn giao',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy',
 };
 
 const ADMIN_STATUS_OPTIONS = [
-  { value: 'received', label: 'Da tiep nhan' },
-  { value: 'in_progress', label: 'Dang xu ly' },
-  { value: 'ready_for_pickup', label: 'San sang ban giao' },
-  { value: 'completed', label: 'Hoan thanh' },
-  { value: 'cancelled', label: 'Da huy' },
+  { value: 'received', label: 'Đã tiếp nhận' },
+  { value: 'in_progress', label: 'Đang xử lý' },
+  { value: 'ready_for_pickup', label: 'Sẵn sàng bàn giao' },
+  { value: 'completed', label: 'Hoàn thành' },
+  { value: 'cancelled', label: 'Đã hủy' },
 ];
 
 const CLOSED_ORDER_STATUSES = new Set(['completed', 'cancelled']);
@@ -32,11 +32,11 @@ export function canAdminAssignServiceOrder(order) {
 
 export function getServiceOrderStatusLabel(order) {
   if (!order?.status) {
-    return 'Khong xac dinh';
+    return 'Không xác định';
   }
 
   if (isOrderWaitingForClaim(order)) {
-    return 'Cho nhan';
+    return 'Chờ nhận';
   }
 
   return STATUS_LABELS[order.status] || order.status;
@@ -56,14 +56,14 @@ export function getServiceOrderAssigneeLabel(order) {
   }
 
   if (order.employee_id) {
-    return `Nhan vien #${order.employee_id}`;
+    return `Nhân viên #${order.employee_id}`;
   }
 
   if (isOrderWaitingForClaim(order)) {
-    return 'Cho nhan vien nhan';
+    return 'Chờ nhân viên nhận';
   }
 
-  return 'Chua giao';
+  return 'Chưa giao';
 }
 
 export function getServiceOrderFlowHint(order) {
@@ -72,23 +72,23 @@ export function getServiceOrderFlowHint(order) {
   }
 
   if (isOrderWaitingForClaim(order)) {
-    return 'Don nay dang mo cho toan bo nhan vien tren app tu nhan. Admin van co the giao thu cong ngay tai day.';
+    return 'Đơn này đang mở cho toàn bộ nhân viên trên app tự nhận. Admin vẫn có thể giao thủ công ngay tại đây.';
   }
 
   if (order.status === 'in_progress' && order.employee_id) {
-    return 'Don dang co nhan vien phu trach xu ly.';
+    return 'Đơn đang có nhân viên phụ trách xử lý.';
   }
 
   if (order.status === 'ready_for_pickup') {
-    return 'Don da xu ly xong va dang cho ban giao cho khach.';
+    return 'Đơn đã xử lý xong và đang chờ bàn giao cho khách.';
   }
 
   if (order.status === 'completed') {
-    return 'Don da hoan thanh toan bo quy trinh.';
+    return 'Đơn đã hoàn thành toàn bộ quy trình.';
   }
 
   if (order.status === 'cancelled') {
-    return 'Don da bi huy va khong con nam trong luong xu ly.';
+    return 'Đơn đã bị hủy và không còn nằm trong luồng xử lý.';
   }
 
   return '';
@@ -100,19 +100,19 @@ export function getServiceOrderAssignmentHint(order) {
   }
 
   if (isServiceOrderClosed(order)) {
-    return 'Don da ket thuc nen khong the giao hoac chuyen nhan vien.';
+    return 'Đơn đã kết thúc nên không thể giao hoặc chuyển nhân viên.';
   }
 
   if (isOrderWaitingForClaim(order)) {
-    return 'Admin co the giao thu cong tai day. Sau khi giao, don se khong con hien trong danh sach cho nhan tren app.';
+    return 'Admin có thể giao thủ công tại đây. Sau khi giao, đơn sẽ không còn hiện trong danh sách chờ nhận trên app.';
   }
 
   if (order.employee_id && canAdminAssignServiceOrder(order)) {
-    return 'Co the chuyen don sang nhan vien khac khi can dieu phoi lai.';
+    return 'Có thể chuyển đơn sang nhân viên khác khi cần điều phối lại.';
   }
 
   if (canAdminAssignServiceOrder(order)) {
-    return 'Don dang mo va co the giao cho nhan vien phu trach.';
+    return 'Đơn đang mở và có thể giao cho nhân viên phụ trách.';
   }
 
   return '';
@@ -124,18 +124,18 @@ export function getServiceOrderAssignSuccessMessage(result, fallbackToReassign =
   const message = result?.message;
 
   if (action === 'already_assigned_to_same_employee') {
-    return message || 'Don da o dung nhan vien nay roi.';
+    return message || 'Đơn đã ở đúng nhân viên này rồi.';
   }
 
   if (action === 'reassigned' || source === 'web_reassign' || fallbackToReassign) {
-    return message || 'Da chuyen nguoi xu ly thanh cong.';
+    return message || 'Đã chuyển người xử lý thành công.';
   }
 
   if (action === 'assigned' || source === 'web_assign') {
-    return message || 'Da giao viec thanh cong.';
+    return message || 'Đã giao việc thành công.';
   }
 
-  return message || 'Da cap nhat nhan vien phu trach thanh cong.';
+  return message || 'Đã cập nhật nhân viên phụ trách thành công.';
 }
 
 export function getAdminServiceOrderStatusOptions(order) {
@@ -152,7 +152,7 @@ export function getAdminServiceOrderStatusOptions(order) {
 
   return ADMIN_STATUS_OPTIONS.map((option) => {
     if (option.value === 'received' && waitingForClaim) {
-      return { ...option, label: 'Cho nhan vien nhan' };
+      return { ...option, label: 'Chờ nhân viên nhận' };
     }
 
     return option;

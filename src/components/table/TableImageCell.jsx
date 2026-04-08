@@ -1,28 +1,24 @@
 // src/components/table/TableImageCell.jsx
-import { useState, useMemo } from 'react';
-import { Eye, X, Image as ImageIcon, ZoomIn } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { X, Image as ImageIcon, ZoomIn } from 'lucide-react';
 import { normalizeImageUrl } from '../../utils/format';
+import OptimizedImage from '../image/OptimizedImage';
 
 /**
- * Component hiển thị ảnh trong table với preview và lightbox
- * Supports single or multiple images
+ * Table image cell with thumbnail previews and lightbox.
  */
-export default function TableImageCell({ 
-  images, 
+export default function TableImageCell({
+  images,
   alt = 'Image',
   maxDisplay = 3,
-  size = 'md' // sm, md, lg
+  size = 'md',
 }) {
   const [showLightbox, setShowLightbox] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Normalize to array and normalize URLs
   const imageArray = useMemo(() => {
-    const arr = Array.isArray(images) 
-      ? images.filter(img => img) 
-      : images ? [images] : [];
-    // Normalize all image URLs
-    return arr.map(img => normalizeImageUrl(img) || img);
+    const source = Array.isArray(images) ? images.filter(Boolean) : images ? [images] : [];
+    return source.map((item) => normalizeImageUrl(item) || item);
   }, [images]);
 
   if (imageArray.length === 0) {
@@ -35,13 +31,19 @@ export default function TableImageCell({
   }
 
   const sizeClasses = {
-    sm: 'w-10 h-10',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16'
+    sm: 'h-10 w-10',
+    md: 'h-12 w-12',
+    lg: 'h-16 w-16',
   };
 
   const displayImages = imageArray.slice(0, maxDisplay);
   const remainingCount = imageArray.length - maxDisplay;
+
+  const fallbackNode = (
+    <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-300 dark:bg-slate-700 dark:text-slate-500">
+      <ImageIcon size={18} />
+    </div>
+  );
 
   const openLightbox = (index) => {
     setCurrentImageIndex(index);
@@ -58,120 +60,113 @@ export default function TableImageCell({
 
   return (
     <>
-      {/* Thumbnails */}
       <div className="flex items-center gap-1.5">
         {displayImages.map((img, index) => (
           <div
             key={index}
             onClick={() => openLightbox(index)}
-            className={`${sizeClasses[size]} rounded-lg overflow-hidden border-2 border-gray-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer group relative transition-all hover:shadow-lg bg-gray-50 dark:bg-slate-700`}
+            className={`${sizeClasses[size]} group relative cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 bg-gray-50 transition-all hover:border-blue-400 hover:shadow-lg dark:border-slate-600 dark:bg-slate-700 dark:hover:border-blue-500`}
           >
-            <img
+            <OptimizedImage
               src={img}
               alt={`${alt} ${index + 1}`}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 bg-white dark:bg-slate-800"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                const parent = e.target.parentElement;
-                parent.classList.add('bg-gray-100', 'dark:bg-slate-700', 'flex', 'items-center', 'justify-center');
-                parent.innerHTML = '<svg class="w-6 h-6 text-gray-300 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-              }}
+              className="h-full w-full bg-white object-cover transition-transform duration-300 group-hover:scale-110 dark:bg-slate-800"
+              containerClassName="h-full w-full"
+              placeholder={fallbackNode}
+              fallback={fallbackNode}
             />
-            {/* Zoom icon on hover */}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 dark:group-hover:bg-opacity-50 flex items-center justify-center transition-all">
-              <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={18} />
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-all group-hover:bg-opacity-30 dark:group-hover:bg-opacity-50">
+              <ZoomIn className="text-white opacity-0 transition-opacity group-hover:opacity-100" size={18} />
             </div>
           </div>
         ))}
-        
-        {/* Remaining count badge */}
-        {remainingCount > 0 && (
+
+        {remainingCount > 0 ? (
           <button
             onClick={() => openLightbox(maxDisplay)}
-            className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all font-semibold text-xs border-2 border-blue-300 dark:border-blue-700"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-blue-300 bg-blue-100 text-xs font-semibold text-blue-700 transition-all hover:bg-blue-200 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
           >
             +{remainingCount}
           </button>
-        )}
+        ) : null}
       </div>
 
-      {/* Lightbox */}
-      {showLightbox && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-4"
+      {showLightbox ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 p-4"
           onClick={() => setShowLightbox(false)}
         >
-          <div className="relative w-full max-w-6xl" onClick={(e) => e.stopPropagation()}>
-            {/* Close button */}
+          <div className="relative w-full max-w-6xl" onClick={(event) => event.stopPropagation()}>
             <button
               onClick={() => setShowLightbox(false)}
-              className="absolute -top-14 right-0 text-white hover:text-gray-300 transition-colors bg-white bg-opacity-10 rounded-full p-2 hover:bg-opacity-20"
+              className="absolute -top-14 right-0 rounded-full bg-white bg-opacity-10 p-2 text-white transition-colors hover:bg-opacity-20 hover:text-gray-300"
             >
               <X size={28} />
             </button>
 
-            {/* Image counter */}
-            <div className="absolute -top-14 left-0 text-white bg-white bg-opacity-10 px-4 py-2 rounded-lg">
+            <div className="absolute -top-14 left-0 rounded-lg bg-white bg-opacity-10 px-4 py-2 text-white">
               <span className="font-semibold">{currentImageIndex + 1}</span> / {imageArray.length}
             </div>
 
-            {/* Main image */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-2xl">
+            <div className="overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-slate-800">
               <img
                 src={imageArray[currentImageIndex]}
                 alt={`${alt} ${currentImageIndex + 1}`}
-                className="w-full max-h-[80vh] object-contain bg-white dark:bg-slate-800"
+                className="max-h-[80vh] w-full bg-white object-contain dark:bg-slate-800"
+                loading="eager"
+                fetchPriority="high"
               />
             </div>
 
-            {/* Navigation buttons */}
-            {imageArray.length > 1 && (
+            {imageArray.length > 1 ? (
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-3 shadow-lg transition-all"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white bg-opacity-80 p-3 text-gray-800 shadow-lg transition-all hover:bg-opacity-100"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 rounded-full p-3 shadow-lg transition-all"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white bg-opacity-80 p-3 text-gray-800 shadow-lg transition-all hover:bg-opacity-100"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </>
-            )}
+            ) : null}
 
-            {/* Thumbnail strip */}
-            {imageArray.length > 1 && (
-              <div className="mt-4 flex gap-2 justify-center overflow-x-auto pb-2">
+            {imageArray.length > 1 ? (
+              <div className="mt-4 flex justify-center gap-2 overflow-x-auto pb-2">
                 {imageArray.map((img, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all bg-gray-50 dark:bg-slate-700 ${
-                      index === currentImageIndex 
-                        ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600' 
-                        : 'border-gray-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 opacity-60 hover:opacity-100'
+                    className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all dark:bg-slate-700 ${
+                      index === currentImageIndex
+                        ? 'border-blue-500 ring-2 ring-blue-300 dark:border-blue-400 dark:ring-blue-600'
+                        : 'border-gray-300 opacity-60 hover:border-blue-400 hover:opacity-100 dark:border-slate-600 dark:hover:border-blue-500'
                     }`}
                   >
-                    <img
+                    <OptimizedImage
                       src={img}
                       alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
+                      containerClassName="h-full w-full"
+                      placeholder={fallbackNode}
+                      fallback={fallbackNode}
+                      priority={index === currentImageIndex}
                     />
                   </button>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
-

@@ -1,139 +1,122 @@
 // src/components/image/ImageGrid.jsx
 import { useState } from 'react';
-import { Trash2, Star } from 'lucide-react';
+import { Trash2, Star, Image as ImageIcon } from 'lucide-react';
 import { normalizeImageUrl, isValidImageUrl } from '../../utils/format';
 import EmptyState from '../ui/EmptyState';
 import ImageLightbox from './ImageLightbox';
+import OptimizedImage from './OptimizedImage';
 
 /**
  * Image Grid Component
- * Tái sử dụng cho ProductDetailModal và ServiceOrderDetailModal
- * 
- * @param {Array} images - Array of image objects with { id, image_url, is_primary? }
- * @param {Function} onDelete - Callback when delete image
- * @param {Function} onSetPrimary - Optional callback when set primary image
- * @param {string} emptyTitle - Title for empty state
- * @param {string} emptyDescription - Description for empty state
+ * Reused by product, offer, and order detail modals.
  */
-export default function ImageGrid({ 
-  images = [], 
-  onDelete, 
+export default function ImageGrid({
+  images = [],
+  onDelete,
   onSetPrimary,
-  emptyTitle = "Chưa có hình ảnh",
-  emptyDescription = "Chưa có hình ảnh nào"
+  emptyTitle = 'Chưa có hình ảnh',
+  emptyDescription = 'Chưa có hình ảnh nào',
 }) {
   const [lightboxImage, setLightboxImage] = useState(null);
 
-  const validImages = images.filter(img => 
-    img.image_url && isValidImageUrl(img.image_url)
-  );
+  const validImages = images.filter((img) => img.image_url && isValidImageUrl(img.image_url));
 
   if (validImages.length === 0) {
     return (
       <>
-        <EmptyState 
-          title={emptyTitle}
-          description={emptyDescription}
-        />
-        {lightboxImage && (
-          <ImageLightbox 
-            imageUrl={lightboxImage} 
-            onClose={() => setLightboxImage(null)} 
-          />
-        )}
+        <EmptyState title={emptyTitle} description={emptyDescription} />
+        {lightboxImage ? <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} /> : null}
       </>
     );
   }
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {validImages.map((img) => {
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {validImages.map((img, index) => {
           const imageUrl = normalizeImageUrl(img.image_url) || img.image_url;
-          if (!imageUrl) return null;
-          
+          if (!imageUrl) {
+            return null;
+          }
+
           const isPrimary = img.is_primary === 1 || img.is_primary === true;
-          
+          const imageFallback = (
+            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400 dark:bg-slate-700 dark:text-slate-500">
+              <ImageIcon size={24} />
+            </div>
+          );
+
           return (
-            <div 
-              key={img.id} 
-              className={`group relative aspect-square rounded-lg overflow-hidden border-2 transition-all bg-gray-100 dark:bg-slate-800 ${
-                isPrimary 
-                  ? 'border-yellow-400 dark:border-yellow-500 ring-2 ring-yellow-200 dark:ring-yellow-800' 
-                  : 'border-gray-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500'
+            <div
+              key={img.id}
+              className={`group relative aspect-square overflow-hidden rounded-lg border-2 bg-gray-100 transition-all dark:bg-slate-800 ${
+                isPrimary
+                  ? 'border-yellow-400 ring-2 ring-yellow-200 dark:border-yellow-500 dark:ring-yellow-800'
+                  : 'border-gray-200 dark:border-slate-600 dark:hover:border-blue-500 hover:border-blue-400'
               }`}
             >
-              {/* Primary Badge */}
-              {isPrimary && (
-                <div className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg z-30">
+              {isPrimary ? (
+                <div className="absolute left-1 top-1 z-30 flex items-center gap-1 rounded-full bg-yellow-400 px-2 py-1 text-xs font-bold text-yellow-900 shadow-lg">
                   <Star size={12} fill="currentColor" />
                   Ảnh chính
                 </div>
-              )}
-              
-              <img
+              ) : null}
+
+              <OptimizedImage
                 src={imageUrl}
                 alt="Hình ảnh"
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer relative z-10"
-                loading="lazy"
+                className="relative z-10 h-full w-full cursor-pointer object-cover transition-transform duration-300 group-hover:scale-110"
+                containerClassName="h-full w-full"
+                placeholder={imageFallback}
+                fallback={imageFallback}
+                priority={isPrimary || index === 0}
+                rootMargin="120px"
                 onClick={() => setLightboxImage(imageUrl)}
-                onError={(e) => { 
-                  const target = e.currentTarget;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.classList.add('flex', 'items-center', 'justify-center', 'bg-gray-100', 'dark:bg-slate-700');
-                    parent.innerHTML = '<svg class="w-12 h-12 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-                  }
-                }}
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 dark:group-hover:bg-black/50 transition-all flex items-center justify-center gap-2 pointer-events-none z-20">
+
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center gap-2 bg-black/0 transition-all group-hover:bg-black/30 dark:group-hover:bg-black/50">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={(event) => {
+                    event.stopPropagation();
                     setLightboxImage(imageUrl);
                   }}
-                  className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
+                  className="pointer-events-auto rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-blue-600 opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100 dark:bg-slate-700 dark:text-blue-400"
                 >
                   Xem lớn
                 </button>
-                {onSetPrimary && !isPrimary && (
+
+                {onSetPrimary && !isPrimary ? (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={(event) => {
+                      event.stopPropagation();
                       onSetPrimary(img.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 px-2 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
+                    className="pointer-events-auto rounded-lg bg-white px-2 py-1.5 text-xs font-medium text-amber-600 opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100 dark:bg-slate-700 dark:text-amber-400"
                     title="Đặt làm ảnh chính"
                   >
                     <Star size={14} />
                   </button>
-                )}
-                {onDelete && (
+                ) : null}
+
+                {onDelete ? (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={(event) => {
+                      event.stopPropagation();
                       onDelete(img.id, img.image_url);
                     }}
-                    className="opacity-0 group-hover:opacity-100 bg-white dark:bg-slate-700 text-red-600 dark:text-red-400 px-2 py-1.5 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all hover:scale-105 pointer-events-auto"
+                    className="pointer-events-auto rounded-lg bg-white px-2 py-1.5 text-xs font-medium text-red-600 opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100 dark:bg-slate-700 dark:text-red-400"
                     title="Xóa ảnh"
                   >
                     <Trash2 size={14} />
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           );
         })}
       </div>
-      
-      {lightboxImage && (
-        <ImageLightbox 
-          imageUrl={lightboxImage} 
-          onClose={() => setLightboxImage(null)} 
-        />
-      )}
+
+      {lightboxImage ? <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} /> : null}
     </>
   );
 }
-

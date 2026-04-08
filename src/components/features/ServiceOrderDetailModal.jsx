@@ -49,7 +49,7 @@ export default function ServiceOrderDetailModal({
     startLoading: startDetailLoading,
     stopLoading: stopDetailLoading,
     loading: loadingDetail,
-  } = useLoadingKey('service-orders-detail', 'Dang tai chi tiet...');
+  } = useLoadingKey('service-orders-detail', 'Đang tải chi tiết...');
   const { success, error } = useToast();
 
   const waitingForClaim = useMemo(() => isOrderWaitingForClaim(selectedOrder), [selectedOrder]);
@@ -77,7 +77,7 @@ export default function ServiceOrderDetailModal({
     if (shouldSkipFetch(id, force)) return;
 
     beginFetch();
-    startDetailLoading('Dang tai chi tiet don dich vu...');
+    startDetailLoading('Đang tải chi tiết đơn dịch vụ...');
 
     try {
       const orderResponse = await serviceOrdersAPI.getById(id);
@@ -99,7 +99,7 @@ export default function ServiceOrderDetailModal({
       setOrderImages(validImages);
       completeFetch(id);
     } catch (fetchError) {
-      error(`Khong the tai chi tiet don dich vu: ${getErrorMessage(fetchError, 'Loi khong xac dinh')}`);
+      error(`Không thể tải chi tiết đơn dịch vụ: ${getErrorMessage(fetchError, 'Lỗi không xác định')}`);
       setSelectedOrder(null);
       setOrderImages([]);
       failFetch();
@@ -111,11 +111,11 @@ export default function ServiceOrderDetailModal({
 
   const handleImageUpload = async (imageUrls) => {
     if (!selectedOrder) {
-      error('Vui long chon don dich vu');
+      error('Vui lòng chọn đơn dịch vụ');
       return;
     }
 
-    startDetailLoading('Dang tai anh len...');
+    startDetailLoading('Đang tải ảnh lên...');
 
     try {
       const urls = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
@@ -124,7 +124,7 @@ export default function ServiceOrderDetailModal({
       );
 
       if (!validUrls.length) {
-        error('Khong nhan duoc URL anh hop le de luu cho don dich vu.');
+        error('Không nhận được URL ảnh hợp lệ để lưu cho đơn dịch vụ.');
         return;
       }
 
@@ -141,18 +141,18 @@ export default function ServiceOrderDetailModal({
       onRefresh?.();
       success(`Da them ${validUrls.length} anh cho don dich vu.`);
     } catch (uploadError) {
-      error(`Luu thong tin anh that bai: ${getErrorMessage(uploadError, 'Loi khong xac dinh')}`);
+      error(`Lưu thông tin ảnh thất bại: ${getErrorMessage(uploadError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
   };
 
   const handleDeleteImage = async (imageId, imageUrl) => {
-    if (!window.confirm('Ban co chac muon xoa hinh anh nay?')) {
+    if (!window.confirm('Bạn có chắc muốn xóa hình ảnh này?')) {
       return;
     }
 
-    startDetailLoading('Dang xoa anh...');
+    startDetailLoading('Đang xóa ảnh...');
 
     try {
       await serviceOrderImagesAPI.delete(imageId);
@@ -162,7 +162,7 @@ export default function ServiceOrderDetailModal({
         try {
           await uploadAPI.delete(uploadedFileName);
         } catch {
-          // Bo qua neu file vat ly da khong con tren server.
+          // Bỏ qua nếu file vật lý đã không còn trên server.
         }
       }
 
@@ -171,9 +171,9 @@ export default function ServiceOrderDetailModal({
       }
 
       onRefresh?.();
-      success('Da xoa anh cua don dich vu.');
+      success('Đã xóa ảnh của đơn dịch vụ.');
     } catch (deleteError) {
-      error(`Xoa anh that bai: ${getErrorMessage(deleteError, 'Loi khong xac dinh')}`);
+      error(`Xóa ảnh thất bại: ${getErrorMessage(deleteError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
@@ -185,12 +185,12 @@ export default function ServiceOrderDetailModal({
     }
 
     if (!selectedOrder.employee_id && ['in_progress', 'ready_for_pickup', 'completed'].includes(newStatus)) {
-      error('Vui long giao viec cho nhan vien truoc khi chuyen don sang trang thai xu ly.');
+      error('Vui lòng giao việc cho nhân viên trước khi chuyển đơn sang trạng thái xử lý.');
       return;
     }
 
     startDetailLoading(
-      newStatus === 'completed' ? 'Dang hoan thanh don dich vu...' : 'Dang cap nhat trang thai...'
+      newStatus === 'completed' ? 'Đang hoàn thành đơn dịch vụ...' : 'Đang cập nhật trạng thái...'
     );
 
     try {
@@ -200,7 +200,7 @@ export default function ServiceOrderDetailModal({
           : null;
 
         if (!deliveryDate) {
-          error('Thieu ngay giao. Vui long cap nhat ngay giao truoc khi hoan thanh don.');
+          error('Thiếu ngày giao. Vui lòng cập nhật ngày giao trước khi hoàn thành đơn.');
           return;
         }
 
@@ -210,16 +210,16 @@ export default function ServiceOrderDetailModal({
 
         await fetchOrderDetails(selectedOrder.id, { force: true });
         onRefresh?.();
-        success(response?.data?.message || 'Hoan thanh don dich vu thanh cong.');
+        success(response?.data?.message || 'Hoàn thành đơn dịch vụ thành công.');
         return;
       }
 
       await serviceOrdersAPI.updateStatus(selectedOrder.id, { status: newStatus });
       await fetchOrderDetails(selectedOrder.id, { force: true });
       onRefresh?.();
-      success('Cap nhat trang thai thanh cong.');
+      success('Cập nhật trạng thái thành công.');
     } catch (statusError) {
-      error(`Cap nhat trang thai that bai: ${getErrorMessage(statusError, 'Loi khong xac dinh')}`);
+      error(`Cập nhật trạng thái thất bại: ${getErrorMessage(statusError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
@@ -231,13 +231,13 @@ export default function ServiceOrderDetailModal({
     }
 
     if (!canAssignEmployee) {
-      error('Chi co the giao hoac chuyen nhan vien cho don con mo.');
+      error('Chỉ có thể giao hoặc chuyển nhân viên cho đơn còn mở.');
       return;
     }
 
     const wasWaitingForClaim = isOrderWaitingForClaim(selectedOrder);
     const hadAssignedEmployee = Boolean(selectedOrder.employee_id);
-    startDetailLoading('Dang giao viec...');
+    startDetailLoading('Đang giao việc...');
 
     try {
       const response = await serviceOrdersAPI.assign(selectedOrder.id, { employee_id: Number(employeeId) });
@@ -253,11 +253,11 @@ export default function ServiceOrderDetailModal({
 
       success(
         wasWaitingForClaim && assignResult.action !== 'already_assigned_to_same_employee'
-          ? `${successMessage} Don se roi khoi danh sach cho nhan tren app.`
+          ? `${successMessage} Đơn sẽ rời khỏi danh sách chờ nhận trên app.`
           : successMessage
       );
     } catch (assignError) {
-      error(`Giao viec that bai: ${getErrorMessage(assignError, 'Loi khong xac dinh')}`);
+      error(`Giao việc thất bại: ${getErrorMessage(assignError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
@@ -268,19 +268,19 @@ export default function ServiceOrderDetailModal({
       return;
     }
 
-    if (!window.confirm('Ban co chac muon xoa don dich vu nay?')) {
+    if (!window.confirm('Bạn có chắc muốn xóa đơn dịch vụ này?')) {
       return;
     }
 
-    startDetailLoading('Dang xoa don dich vu...');
+    startDetailLoading('Đang xóa đơn dịch vụ...');
 
     try {
       await serviceOrdersAPI.delete(selectedOrder.id);
-      success('Da xoa don dich vu.');
+      success('Đã xóa đơn dịch vụ.');
       onRefresh?.();
       onClose();
     } catch (deleteError) {
-      error(`Xoa don that bai: ${getErrorMessage(deleteError, 'Loi khong xac dinh')}`);
+      error(`Xóa đơn thất bại: ${getErrorMessage(deleteError, 'Lỗi không xác định')}`);
     } finally {
       stopDetailLoading();
     }
@@ -297,7 +297,7 @@ export default function ServiceOrderDetailModal({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold text-gray-900 transition-colors duration-300 dark:text-gray-100 sm:text-xl">
-                {selectedOrder ? `Chi tiet don dich vu #${selectedOrder.id}` : 'Dang tai...'}
+                {selectedOrder ? `Chi tiết đơn dịch vụ #${selectedOrder.id}` : 'Đang tải...'}
               </h3>
               {selectedOrder ? (
                 <div className="mt-2">
@@ -314,7 +314,7 @@ export default function ServiceOrderDetailModal({
               type="button"
               onClick={onClose}
               className="rounded-lg p-2 text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-gray-600 active:scale-95 dark:text-gray-500 dark:hover:bg-slate-700 dark:hover:text-gray-300"
-              aria-label="Dong"
+              aria-label="Đóng"
             >
               <X size={20} />
             </button>
@@ -323,7 +323,7 @@ export default function ServiceOrderDetailModal({
 
         {loadingDetail ? (
           <div className="flex flex-1 items-center justify-center p-8">
-            <LoadingSpinner size="lg" message="Dang tai thong tin don dich vu..." />
+            <LoadingSpinner size="lg" message="Đang tải thông tin đơn dịch vụ..." />
           </div>
         ) : null}
 
@@ -343,11 +343,11 @@ export default function ServiceOrderDetailModal({
 
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
               <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
-                Thong tin don dich vu
+                Thông tin đơn dịch vụ
               </h4>
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Khach hang:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Khách hàng:</span>{' '}
                   <span className="text-gray-900 dark:text-gray-100">{selectedOrder.customer_name || '-'}</span>
                 </div>
                 <div>
@@ -355,17 +355,17 @@ export default function ServiceOrderDetailModal({
                   <span className="text-gray-900 dark:text-gray-100">{selectedOrder.receiver_phone || '-'}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Dich vu:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Dịch vụ:</span>{' '}
                   <span className="text-gray-900 dark:text-gray-100">{selectedOrder.service_name || '-'}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Nha cung cap:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Nhà cung cấp:</span>{' '}
                   <span className="text-gray-900 dark:text-gray-100">
                     {selectedOrder.service_supplier_name || selectedOrder.supplier_name || '-'}
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Nhan vien:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Nhân viên:</span>{' '}
                   <span
                     className={
                       waitingForClaim
@@ -377,7 +377,7 @@ export default function ServiceOrderDetailModal({
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Trang thai don:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Trạng thái đơn:</span>{' '}
                   <StatusBadge
                     status={selectedOrder.status}
                     type="order"
@@ -385,7 +385,7 @@ export default function ServiceOrderDetailModal({
                   />
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngay nhan:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày nhận:</span>{' '}
                   <span className="text-gray-900 dark:text-gray-100">
                     {selectedOrder.receive_date
                       ? new Date(selectedOrder.receive_date).toLocaleDateString('vi-VN')
@@ -393,7 +393,7 @@ export default function ServiceOrderDetailModal({
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngay giao:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày giao:</span>{' '}
                   <span className="text-gray-900 dark:text-gray-100">
                     {selectedOrder.delivery_date
                       ? new Date(selectedOrder.delivery_date).toLocaleDateString('vi-VN')
@@ -401,7 +401,7 @@ export default function ServiceOrderDetailModal({
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngay tao:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày tạo:</span>{' '}
                   <span className="text-gray-900 dark:text-gray-100">{formatDate(selectedOrder.created_at)}</span>
                 </div>
                 {selectedOrder.address ? (
@@ -412,7 +412,7 @@ export default function ServiceOrderDetailModal({
                 ) : null}
                 {selectedOrder.note ? (
                   <div className="sm:col-span-2">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Ghi chu:</span>{' '}
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Ghi chú:</span>{' '}
                     <span className="text-gray-900 dark:text-gray-100">{selectedOrder.note}</span>
                   </div>
                 ) : null}
@@ -441,7 +441,7 @@ export default function ServiceOrderDetailModal({
                   <div className="grid flex-1 grid-cols-1 gap-2 text-sm text-gray-900 dark:text-gray-100">
                     {selectedOrder.license_plate ? (
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Bien so xe:</span>{' '}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Biển số xe:</span>{' '}
                         <span className="rounded bg-yellow-400 px-3 py-1 font-bold text-black dark:bg-yellow-500 dark:text-gray-900">
                           {selectedOrder.license_plate}
                         </span>
@@ -449,7 +449,7 @@ export default function ServiceOrderDetailModal({
                     ) : null}
                     {selectedOrder.vehicle_model ? (
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Mau xe:</span>{' '}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Mẫu xe:</span>{' '}
                         {selectedOrder.vehicle_model}
                       </div>
                     ) : null}
@@ -472,7 +472,7 @@ export default function ServiceOrderDetailModal({
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Trang thai don
+                    Trạng thái đơn
                   </label>
                   <select
                     value={selectedOrder.status || ''}
@@ -487,14 +487,14 @@ export default function ServiceOrderDetailModal({
                   </select>
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                     {waitingForClaim
-                      ? 'Don chi nen chuyen sang xu ly sau khi co nhan vien nhan hoac duoc admin giao thu cong.'
-                      : 'Trang thai nay se dong bo voi app nhan vien va cac thong bao lien quan.'}
+                      ? 'Đơn chỉ nên chuyển sang xử lý sau khi có nhân viên nhận hoặc được admin giao thủ công.'
+                      : 'Trạng thái này sẽ đồng bộ với app nhân viên và các thông báo liên quan.'}
                   </p>
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Nhan vien phu trach
+                    Nhân viên phụ trách
                   </label>
                   <select
                     value={selectedOrder.employee_id || ''}
@@ -503,7 +503,7 @@ export default function ServiceOrderDetailModal({
                     className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm transition-all duration-200 hover:shadow-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 focus:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 dark:focus:border-blue-400"
                   >
                     <option value="">
-                      {waitingForClaim ? 'Chon nhan vien de giao thu cong' : 'Chua giao'}
+                      {waitingForClaim ? 'Chọn nhân viên để giao thủ công' : 'Chưa giao'}
                     </option>
                     {employees.map((employee) => (
                       <option key={employee.id} value={employee.id}>
@@ -521,7 +521,7 @@ export default function ServiceOrderDetailModal({
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h4 className="text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
-                  Hinh anh don dich vu ({orderImages.length})
+                  Hình ảnh đơn dịch vụ ({orderImages.length})
                 </h4>
                 <button
                   type="button"
@@ -529,7 +529,7 @@ export default function ServiceOrderDetailModal({
                   className="btn-gradient-primary flex items-center gap-1 px-3 py-1.5 text-sm font-medium"
                 >
                   <Plus size={16} />
-                  {showImageUploader ? 'Dong' : 'Them anh'}
+                  {showImageUploader ? 'Đóng' : 'Thêm ảnh'}
                 </button>
               </div>
 
@@ -549,8 +549,8 @@ export default function ServiceOrderDetailModal({
               <ImageGrid
                 images={orderImages}
                 onDelete={handleDeleteImage}
-                emptyTitle="Chua co hinh anh"
-                emptyDescription="Don dich vu nay chua co hinh anh nao."
+                emptyTitle="Chưa có hình ảnh"
+                emptyDescription="Đơn dịch vụ này chưa có hình ảnh nào."
               />
             </div>
           </div>
@@ -566,7 +566,7 @@ export default function ServiceOrderDetailModal({
                   className="btn-gradient-error flex items-center gap-2 px-4 py-2 text-sm font-medium"
                 >
                   <Trash2 size={16} />
-                  Xoa
+                  Xóa
                 </button>
               </div>
 
@@ -576,7 +576,7 @@ export default function ServiceOrderDetailModal({
                 className="flex items-center gap-2 rounded-xl bg-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-300 hover:shadow-md active:scale-[0.98] dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600"
               >
                 <X size={16} />
-                Dong
+                Đóng
               </button>
             </div>
           </div>

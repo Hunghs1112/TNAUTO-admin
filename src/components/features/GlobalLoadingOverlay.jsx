@@ -6,8 +6,8 @@ const SHOW_DELAY_MS = 150;
 const MIN_VISIBLE_MS = 220;
 
 /**
- * Overlay loading toan cuc.
- * Khong theo doi loading cuc bo trong modal/detail de tranh nhay giao dien.
+ * Overlay loading toàn cục.
+ * Không theo dõi loading cục bộ trong modal/detail để tránh nhảy giao diện.
  */
 export default function GlobalLoadingOverlay() {
   const { globalLoading, globalLoadingMessage } = useLoading();

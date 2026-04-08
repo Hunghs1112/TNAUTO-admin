@@ -30,6 +30,50 @@ const notificationStatusMap = {
   canceled: 'Đã hủy',
 };
 
+
+function normalizeDateFilterBoundary(value, boundary) {
+  const input = String(value || '').trim();
+  if (!input) return '';
+
+  const matchedIso = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (matchedIso) {
+    return boundary === 'start' ? `${input}T00:00:00` : `${input}T23:59:59.999`;
+  }
+
+  const matchedVn = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (matchedVn) {
+    const [, day, month, year] = matchedVn;
+    const isoDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return boundary === 'start' ? `${isoDate}T00:00:00` : `${isoDate}T23:59:59.999`;
+  }
+
+  return input;
+}
+
+function buildNotificationParams(limit, offset, filters) {
+  const params = { limit, offset };
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value === '' || value === null || value === undefined) {
+      return;
+    }
+
+    if (key === 'date_from') {
+      params[key] = normalizeDateFilterBoundary(value, 'start');
+      return;
+    }
+
+    if (key === 'date_to') {
+      params[key] = normalizeDateFilterBoundary(value, 'end');
+      return;
+    }
+
+    params[key] = value;
+  });
+
+  return params;
+}
+
 function normalizeListResponse(response) {
   const raw = response?.data;
   if (Array.isArray(raw?.data)) return raw.data;
@@ -174,12 +218,7 @@ export default function NotificationManagement() {
     setLoading(true);
 
     try {
-      const params = { limit, offset };
-      Object.entries(appliedFilters).forEach(([key, value]) => {
-        if (value !== '' && value !== null && value !== undefined) {
-          params[key] = value;
-        }
-      });
+      const params = buildNotificationParams(limit, offset, appliedFilters);
 
       const response = await notificationsAPI.getAll(params);
       const nextItems = normalizeListResponse(response);

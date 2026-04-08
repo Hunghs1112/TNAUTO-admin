@@ -210,3 +210,23 @@ const [refreshKey, setRefreshKey] = useState(0);
 **Tất cả các thay đổi đã hoàn thành và sẵn sàng sử dụng!**
 
 
+
+---
+
+## Cập nhật Admin Web (Search & Filter)
+
+Backend đã được tối ưu lại phần tìm kiếm và lọc dữ liệu để dữ liệu hiển thị trên Admin Web đầy đủ và ổn định hơn cho các danh sách:
+- Khách hàng
+- Đại lý
+- Nhân viên
+- Xe
+- Nhật ký thông báo
+
+### Nội dung cải tiến
+- **Cải thiện logic search nhiều từ khóa** để giảm tình trạng bỏ sót kết quả khi người dùng nhập nhiều cụm từ.
+- **Chuẩn hóa lọc theo khoảng ngày chính xác hơn** với hỗ trợ nhiều định dạng ngày.
+- **Xử lý mốc `date_to` theo cuối ngày** để không bỏ sót dữ liệu phát sinh trong ngày kết thúc lọc.
+
+### Kết quả
+- Danh sách dữ liệu nhất quán hơn giữa các trang quản trị.
+- Tăng độ ổn định và độ tin cậy của kết quả tìm kiếm/lọc khi vận hành thực tế.

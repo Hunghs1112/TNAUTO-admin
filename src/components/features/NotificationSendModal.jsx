@@ -76,8 +76,8 @@ export default function NotificationSendModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Gửi thông báo" size="lg">
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Loại người nhận <span className="text-red-500">*</span>
+          <label className="mb-1 block text-sm font-semibold text-slate-200">
+            Loại người nhận <span className="text-[#e0a02e]">*</span>
           </label>
           <select
             value={sendForm.recipient_type}
@@ -92,8 +92,8 @@ export default function NotificationSendModal({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Người nhận <span className="text-red-500">*</span>
+          <label className="mb-1 block text-sm font-semibold text-slate-200">
+            Người nhận <span className="text-[#e0a02e]">*</span>
           </label>
           <select
             value={sendForm.recipient_id}
@@ -112,8 +112,8 @@ export default function NotificationSendModal({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Nội dung <span className="text-red-500">*</span>
+          <label className="mb-1 block text-sm font-semibold text-slate-200">
+            Nội dung <span className="text-[#e0a02e]">*</span>
           </label>
           <textarea
             value={sendForm.message}
@@ -125,7 +125,7 @@ export default function NotificationSendModal({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">Hình ảnh</label>
+          <label className="mb-1 block text-sm font-semibold text-slate-200">Hình ảnh</label>
           <ImageUploader
             onUploadSuccess={(value) =>
               setSendForm((prev) => ({ ...prev, image_url: Array.isArray(value) ? value[0] || '' : value || '' }))
@@ -138,13 +138,13 @@ export default function NotificationSendModal({
           />
 
           {sendForm.image_url ? (
-            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-300">Ảnh đang chọn</p>
-              <p className="mt-1 break-all text-sm text-slate-700 dark:text-slate-200">{sendForm.image_url}</p>
+            <div className="mt-3 rounded-2xl border border-slate-700 bg-slate-900/60 p-3">
+              <p className="text-xs font-medium text-slate-400">Ảnh đang chọn</p>
+              <p className="mt-1 break-all text-sm text-slate-200">{sendForm.image_url}</p>
               <button
                 type="button"
                 onClick={() => setSendForm((prev) => ({ ...prev, image_url: '' }))}
-                className="mt-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                className="mt-2 text-sm font-medium text-[#b48242] hover:text-[#eecd7e]"
               >
                 Xóa ảnh
               </button>
@@ -152,7 +152,7 @@ export default function NotificationSendModal({
           ) : null}
         </div>
 
-        <div className="flex flex-col justify-end gap-3 border-t border-slate-200 pt-4 sm:flex-row dark:border-slate-800">
+        <div className="flex flex-col justify-end gap-3 border-t border-slate-700 pt-4 sm:flex-row">
           <button type="button" onClick={handleClose} className={buttonStyles.secondary} disabled={submitting}>
             Hủy
           </button>

@@ -56,29 +56,41 @@ export default function ApiErrorHandler({ error, onRetry, onClose }) {
   };
 
   const errorInfo = getErrorMessage(error);
-  const bgColor = errorInfo.type === 'warning' ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
-  const textColor = errorInfo.type === 'warning' ? 'text-yellow-800' : 'text-red-800';
-  const iconColor = errorInfo.type === 'warning' ? 'text-yellow-500' : 'text-red-500';
+  const tone = errorInfo.type === 'warning'
+    ? {
+        container: 'bg-[#c37b1e]/12 border-[#c37b1e]/30',
+        title: 'text-[#f8ecd6]',
+        text: 'text-[#eecd7e]',
+        icon: 'text-[#eecd7e]',
+        button: 'border-[#c37b1e]/30 text-[#f8ecd6] hover:bg-[#e0a02e]/10',
+      }
+    : {
+        container: 'bg-[#b48242]/12 border-[#b48242]/30',
+        title: 'text-[#f8ecd6]',
+        text: 'text-[#eecd7e]',
+        icon: 'text-[#b48242]',
+        button: 'border-[#b48242]/30 text-[#f8ecd6] hover:bg-[#b48242]/12',
+      };
 
   return (
-    <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg border ${bgColor} shadow-lg`}>
+    <div className={`fixed top-4 right-4 z-50 max-w-md rounded-lg border p-4 shadow-lg backdrop-blur-sm ${tone.container}`}>
       <div className="flex items-start gap-3">
-        <AlertCircle className={`w-5 h-5 ${iconColor} flex-shrink-0 mt-0.5`} />
+        <AlertCircle className={`mt-0.5 h-5 w-5 flex-shrink-0 ${tone.icon}`} />
         <div className="flex-1">
-          <h4 className={`font-semibold ${textColor} mb-1`}>
+          <h4 className={`mb-1 font-semibold ${tone.title}`}>
             {errorInfo.title}
           </h4>
-          <p className={`text-sm ${textColor} mb-3`}>
+          <p className={`mb-3 text-sm ${tone.text}`}>
             {errorInfo.message}
           </p>
           
           {/* Error details for debugging */}
           {process.env.NODE_ENV === 'development' && (
             <details className="mb-3">
-              <summary className={`text-xs ${textColor} cursor-pointer`}>
+              <summary className={`cursor-pointer text-xs ${tone.text}`}>
                 Chi tiết lỗi (Dev)
               </summary>
-              <pre className={`text-xs ${textColor} mt-2 p-2 bg-white bg-opacity-50 rounded overflow-auto`}>
+              <pre className={`mt-2 overflow-auto rounded border border-white/10 bg-slate-950/70 p-2 text-xs ${tone.text}`}>
                 {JSON.stringify({
                   status: error.response?.status,
                   statusText: error.response?.statusText,
@@ -94,7 +106,7 @@ export default function ApiErrorHandler({ error, onRetry, onClose }) {
             {onRetry && (
               <button
                 onClick={onRetry}
-                className={`px-3 py-1 text-xs rounded ${textColor} border ${textColor} hover:bg-white hover:bg-opacity-20`}
+                className={`rounded border px-3 py-1 text-xs transition-colors ${tone.button}`}
               >
                 Thử lại
               </button>
@@ -102,7 +114,7 @@ export default function ApiErrorHandler({ error, onRetry, onClose }) {
             {onClose && (
               <button
                 onClick={onClose}
-                className={`px-3 py-1 text-xs rounded ${textColor} border ${textColor} hover:bg-white hover:bg-opacity-20`}
+                className={`rounded border px-3 py-1 text-xs transition-colors ${tone.button}`}
               >
                 Đóng
               </button>
@@ -111,7 +123,7 @@ export default function ApiErrorHandler({ error, onRetry, onClose }) {
               href="https://github.com/your-repo/issues"
               target="_blank"
               rel="noopener noreferrer"
-              className={`px-3 py-1 text-xs rounded ${textColor} border ${textColor} hover:bg-white hover:bg-opacity-20 flex items-center gap-1`}
+              className={`flex items-center gap-1 rounded border px-3 py-1 text-xs transition-colors ${tone.button}`}
             >
               Báo lỗi
               <ExternalLink size={12} />

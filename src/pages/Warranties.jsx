@@ -99,8 +99,8 @@ function Warranties() {
         <div className="app-panel-body">
           <div className="flex items-center justify-center py-14">
             <div className="text-center">
-              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500" />
-              <p className="text-sm text-slate-500 dark:text-slate-300">Đang tải dữ liệu bảo hành...</p>
+              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-[#1e406b]" />
+              <p className="text-sm text-slate-300">Đang tải dữ liệu bảo hành...</p>
             </div>
           </div>
         </div>

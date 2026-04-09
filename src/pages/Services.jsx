@@ -30,6 +30,7 @@ function Services() {
         columns={servicesConfig.columns}
         fieldsForModal={servicesConfig.fieldsForModal}
         title={servicesConfig.title}
+        description="Quản lý danh mục dịch vụ và thông tin chi tiết từng dịch vụ."
         showPagination={true}
         limit={12}
         refreshTrigger={refreshKey}

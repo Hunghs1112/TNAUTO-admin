@@ -102,7 +102,19 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    return {
+      authReady: true,
+      session: null,
+      token: null,
+      expiresAt: null,
+      garage: null,
+      isAuthenticated: false,
+      sessionVersion: 0,
+      login: async () => {
+        throw new Error('AuthProvider chưa sẵn sàng. Vui lòng tải lại trang.');
+      },
+      logout: () => {},
+    };
   }
   return context;
 }

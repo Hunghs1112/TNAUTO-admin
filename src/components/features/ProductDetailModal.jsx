@@ -376,24 +376,24 @@ export default function ProductDetailModal({
   return (
     <>
       {/* Product Detail Modal */}
-      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
-        <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-gray-200/50 dark:border-slate-700/50 animate-fade-in">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+        <div className="bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-slate-700/50 animate-fade-in">
           {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
+          <div className="p-4 sm:p-6 border-b border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-100 transition-colors duration-300">
                   {selectedProduct ? `Chi tiết sản phẩm #${selectedProduct.id}` : 'Đang tải...'}
                 </h3>
                 {selectedProduct && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-slate-400">
                     {selectedProduct.name}
                   </p>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
+                className="p-2 text-slate-500 hover:text-slate-200 hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
                 aria-label="Đóng"
               >
                 <X size={20} />
@@ -410,11 +410,11 @@ export default function ProductDetailModal({
           
           {/* Content */}
           {!loadingDetail && selectedProduct && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 transition-colors duration-300 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-800 transition-colors duration-300 space-y-4">
               {/* Thông tin sản phẩm - Có thể sửa */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+              <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                  <h4 className="font-semibold text-base sm:text-lg text-slate-300">
                     Thông tin sản phẩm
                   </h4>
                   {!isEditMode && (
@@ -461,20 +461,20 @@ export default function ProductDetailModal({
                 ) : (
                   // Chế độ xem
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Tên:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.name || '-'}</span></div>
-                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Giá:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedProduct.price) : '-'}</span></div>
-                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Danh mục:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.category_name || '-'}</span></div>
+                    <div><span className="font-medium text-slate-300">Tên:</span> <span className="text-slate-100">{selectedProduct.name || '-'}</span></div>
+                    <div><span className="font-medium text-slate-300">Giá:</span> <span className="text-slate-100">{selectedProduct.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedProduct.price) : '-'}</span></div>
+                    <div><span className="font-medium text-slate-300">Danh mục:</span> <span className="text-slate-100">{selectedProduct.category_name || '-'}</span></div>
                     {selectedProduct.description && (
-                      <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Mô tả:</span> <span className="text-gray-900 dark:text-gray-100">{selectedProduct.description}</span></div>
+                      <div className="sm:col-span-2"><span className="font-medium text-slate-300">Mô tả:</span> <span className="text-slate-100">{selectedProduct.description}</span></div>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Video sản phẩm - Section riêng */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+              <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                  <h4 className="font-semibold text-base sm:text-lg text-slate-300">
                     Video sản phẩm
                   </h4>
                   {!isEditMode && (
@@ -502,10 +502,10 @@ export default function ProductDetailModal({
                       }}
                       placeholder="https://www.youtube.com/watch?v=xxxxx hoặc https://youtu.be/xxxxx"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-slate-400">
                       <strong>Hỗ trợ:</strong> YouTube, Vimeo, TikTok, Facebook, Instagram, hoặc direct video URL (.mp4, .webm, .ogg, .mov). Để trống để xóa video.
                     </p>
-                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 space-y-0.5">
+                    <div className="text-xs text-slate-500 mt-1 space-y-0.5">
                       <div>• YouTube: youtube.com/watch?v=... hoặc youtu.be/...</div>
                       <div>• Vimeo: vimeo.com/...</div>
                       <div>• TikTok: tiktok.com/@username/video/...</div>
@@ -514,7 +514,7 @@ export default function ProductDetailModal({
                     </div>
                     {formData.video_url && (
                       <div className="mt-3">
-                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Xem trước:</p>
+                        <p className="text-xs font-medium text-slate-300 mb-2">Xem trước:</p>
                         <ProductVideo videoUrl={formData.video_url} />
                       </div>
                     )}
@@ -524,7 +524,7 @@ export default function ProductDetailModal({
                   selectedProduct.video_url ? (
                     <ProductVideo videoUrl={selectedProduct.video_url} />
                   ) : (
-                    <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+                    <div className="text-center text-slate-400 py-4">
                       Chưa có video nào
                     </div>
                   )
@@ -532,9 +532,9 @@ export default function ProductDetailModal({
               </div>
 
               {/* Hình ảnh - Có thể thêm/xóa/xem/đặt ảnh chính */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+              <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                  <h4 className="font-semibold text-base sm:text-lg text-slate-300">
                     Hình ảnh sản phẩm ({productImages.length})
                   </h4>
                   <button
@@ -548,7 +548,7 @@ export default function ProductDetailModal({
 
                 {/* Image Uploader */}
                 {showImageUploader && (
-                  <div className="mb-4 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-600">
+                  <div className="mb-4 p-3 bg-slate-800 rounded-lg border border-slate-600">
                     <ImageUploader 
                       onUploadSuccess={handleImageUpload}
                       multiple={true}
@@ -574,13 +574,13 @@ export default function ProductDetailModal({
 
           {/* Footer */}
           {!loadingDetail && selectedProduct && (
-            <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800">
+            <div className="p-4 sm:p-6 border-t border-slate-700 flex-shrink-0 bg-slate-800">
               <div className="flex flex-col sm:flex-row gap-2 justify-end">
                 {isEditMode ? (
                   <>
                     <button
                       onClick={handleCancelEdit}
-                      className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                      className="px-4 py-2.5 border border-slate-700 bg-slate-800 text-slate-200 rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
                     >
                       <XCircle size={16} />
                       Hủy
@@ -597,7 +597,7 @@ export default function ProductDetailModal({
                 ) : (
                   <button
                     onClick={onClose}
-                    className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                    className="px-4 py-2.5 border border-slate-700 bg-slate-800 text-slate-200 rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
                   >
                     <X size={16} />
                     Đóng

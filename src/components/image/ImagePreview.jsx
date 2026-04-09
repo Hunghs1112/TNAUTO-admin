@@ -21,10 +21,10 @@ export default function ImagePreview({
 
   const fallbackNode = (
     <div
-      className={`${className} flex items-center justify-center border border-gray-200 bg-gray-100 text-gray-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400`}
+      className={`${className} flex items-center justify-center border border-slate-700 bg-slate-800 text-slate-400`}
       aria-label={fallbackText}
     >
-      <ImageIcon size={16} className="text-gray-300 dark:text-slate-500" />
+      <ImageIcon size={16} className="text-slate-500" />
     </div>
   );
 
@@ -37,8 +37,8 @@ export default function ImagePreview({
       <OptimizedImage
         src={src}
         alt={alt}
-        className={`${className} bg-white object-cover dark:bg-slate-800`}
-        containerClassName="relative overflow-hidden rounded bg-white dark:bg-slate-800"
+        className={`${className} bg-slate-900 object-cover`}
+        containerClassName="relative overflow-hidden rounded bg-slate-900"
         placeholder={fallbackNode}
         fallback={fallbackNode}
       />
@@ -47,11 +47,11 @@ export default function ImagePreview({
 
   return (
     <>
-      <div className="relative group overflow-hidden rounded border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+      <div className="relative group overflow-hidden rounded border border-slate-700 bg-slate-900">
         <OptimizedImage
           src={src}
           alt={alt}
-          className={`${className} bg-white dark:bg-slate-800`}
+          className={`${className} bg-slate-900`}
           placeholder={fallbackNode}
           fallback={fallbackNode}
         />
@@ -66,18 +66,18 @@ export default function ImagePreview({
       </div>
 
       {showPreview ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm dark:bg-black/90">
-          <div className="relative max-h-full max-w-4xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
+          <div className="relative max-h-full max-w-4xl overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl">
             <button
               onClick={() => setShowPreview(false)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white p-2 text-gray-600 shadow-lg transition-colors hover:bg-gray-100 hover:text-gray-800 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600 dark:hover:text-white"
+              className="absolute right-4 top-4 z-10 rounded-full bg-slate-800 p-2 text-slate-300 shadow-lg transition-colors hover:bg-slate-700 hover:text-white"
             >
               <X size={24} />
             </button>
             <img
               src={normalizedSrc}
               alt={alt}
-              className="max-h-full max-w-full object-contain bg-white dark:bg-slate-800"
+              className="max-h-full max-w-full object-contain bg-slate-900"
               loading="eager"
               fetchPriority="high"
             />

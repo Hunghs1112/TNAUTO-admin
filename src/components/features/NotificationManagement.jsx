@@ -176,14 +176,14 @@ export default function NotificationManagement() {
           <span
             className={`rounded-full px-3 py-1 text-xs font-semibold ${
               value === 'sent'
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                ? 'bg-[#8f5f23]/15 text-[#eecd7e]'
                 : value === 'failed'
-                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                ? 'bg-[#b48242]/15 text-[#b48242]'
                 : value === 'scheduled'
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                ? 'bg-[#1e406b]/15 text-[#eecd7e]'
                 : value === 'sending'
-                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                ? 'bg-[#c37b1e]/15 text-[#eecd7e]'
+                : 'bg-slate-700/60 text-slate-300'
             }`}
           >
             {notificationStatusMap[value] || value || '—'}
@@ -316,7 +316,7 @@ export default function NotificationManagement() {
           <div className="app-panel-body">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Từ ngày</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Từ ngày</label>
                 <input
                   type="date"
                   value={filters.date_from}
@@ -325,7 +325,7 @@ export default function NotificationManagement() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Đến ngày</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Đến ngày</label>
                 <input
                   type="date"
                   value={filters.date_to}
@@ -334,7 +334,7 @@ export default function NotificationManagement() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Loại thông báo</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Loại thông báo</label>
                 <select
                   value={filters.type}
                   onChange={(event) => setFilters((prev) => ({ ...prev, type: event.target.value }))}
@@ -350,7 +350,7 @@ export default function NotificationManagement() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Trạng thái</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Trạng thái</label>
                 <select
                   value={filters.status}
                   onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
@@ -365,7 +365,7 @@ export default function NotificationManagement() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Loại người nhận</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Loại người nhận</label>
                 <select
                   value={filters.recipient_type}
                   onChange={(event) => setFilters((prev) => ({ ...prev, recipient_type: event.target.value }))}
@@ -377,7 +377,7 @@ export default function NotificationManagement() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Mã người nhận</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Mã người nhận</label>
                 <input
                   value={filters.recipient_id}
                   onChange={(event) => setFilters((prev) => ({ ...prev, recipient_id: event.target.value }))}
@@ -386,7 +386,7 @@ export default function NotificationManagement() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Loại tham chiếu</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Loại tham chiếu</label>
                 <input
                   value={filters.ref_type}
                   onChange={(event) => setFilters((prev) => ({ ...prev, ref_type: event.target.value }))}
@@ -395,7 +395,7 @@ export default function NotificationManagement() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Mã tham chiếu</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Mã tham chiếu</label>
                 <input
                   value={filters.ref_id}
                   onChange={(event) => setFilters((prev) => ({ ...prev, ref_id: event.target.value }))}
@@ -407,7 +407,7 @@ export default function NotificationManagement() {
 
             <div className="mt-4 flex flex-wrap items-end gap-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">Số dòng</label>
+                <label className="mb-1 block text-xs font-semibold text-slate-300">Số dòng</label>
                 <select
                   value={limit}
                   onChange={(event) => {
@@ -421,7 +421,7 @@ export default function NotificationManagement() {
                   <option value={100}>100</option>
                 </select>
               </div>
-              <div className="text-sm text-slate-600 dark:text-slate-300">Tổng: {total}</div>
+              <div className="text-sm text-slate-300">Tổng: {total}</div>
               <div className="flex-1" />
               <button type="button" className={buttonStyles.secondary} onClick={handleClearFilters}>
                 Xóa lọc

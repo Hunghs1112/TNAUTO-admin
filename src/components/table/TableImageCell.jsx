@@ -1,4 +1,3 @@
-// src/components/table/TableImageCell.jsx
 import { useMemo, useState } from 'react';
 import { X, Image as ImageIcon, ZoomIn } from 'lucide-react';
 import { normalizeImageUrl } from '../../utils/format';
@@ -23,7 +22,7 @@ export default function TableImageCell({
 
   if (imageArray.length === 0) {
     return (
-      <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
+      <div className="flex items-center gap-2 text-slate-400">
         <ImageIcon size={16} />
         <span className="text-xs">Chưa có ảnh</span>
       </div>
@@ -40,7 +39,7 @@ export default function TableImageCell({
   const remainingCount = imageArray.length - maxDisplay;
 
   const fallbackNode = (
-    <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-300 dark:bg-slate-700 dark:text-slate-500">
+    <div className="flex h-full w-full items-center justify-center bg-slate-800 text-slate-500">
       <ImageIcon size={18} />
     </div>
   );
@@ -65,17 +64,17 @@ export default function TableImageCell({
           <div
             key={index}
             onClick={() => openLightbox(index)}
-            className={`${sizeClasses[size]} group relative cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 bg-gray-50 transition-all hover:border-blue-400 hover:shadow-lg dark:border-slate-600 dark:bg-slate-700 dark:hover:border-blue-500`}
+            className={`${sizeClasses[size]} group relative cursor-pointer overflow-hidden rounded-lg border-2 border-slate-600 bg-slate-800 transition-all hover:border-[#1e406b] hover:shadow-lg`}
           >
             <OptimizedImage
               src={img}
               alt={`${alt} ${index + 1}`}
-              className="h-full w-full bg-white object-cover transition-transform duration-300 group-hover:scale-110 dark:bg-slate-800"
+              className="h-full w-full bg-slate-900 object-cover transition-transform duration-300 group-hover:scale-110"
               containerClassName="h-full w-full"
               placeholder={fallbackNode}
               fallback={fallbackNode}
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-all group-hover:bg-opacity-30 dark:group-hover:bg-opacity-50">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/50">
               <ZoomIn className="text-white opacity-0 transition-opacity group-hover:opacity-100" size={18} />
             </div>
           </div>
@@ -84,7 +83,7 @@ export default function TableImageCell({
         {remainingCount > 0 ? (
           <button
             onClick={() => openLightbox(maxDisplay)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-blue-300 bg-blue-100 text-xs font-semibold text-blue-700 transition-all hover:bg-blue-200 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-[#1e406b]/40 bg-[#1e406b]/12 text-xs font-semibold text-[#eecd7e] transition-all hover:bg-[#1e406b]/20"
           >
             +{remainingCount}
           </button>
@@ -93,26 +92,26 @@ export default function TableImageCell({
 
       {showLightbox ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4"
           onClick={() => setShowLightbox(false)}
         >
           <div className="relative w-full max-w-6xl" onClick={(event) => event.stopPropagation()}>
             <button
               onClick={() => setShowLightbox(false)}
-              className="absolute -top-14 right-0 rounded-full bg-white bg-opacity-10 p-2 text-white transition-colors hover:bg-opacity-20 hover:text-gray-300"
+              className="absolute -top-14 right-0 rounded-full border border-slate-700 bg-slate-900/85 p-2 text-slate-100 transition-colors hover:bg-slate-800"
             >
               <X size={28} />
             </button>
 
-            <div className="absolute -top-14 left-0 rounded-lg bg-white bg-opacity-10 px-4 py-2 text-white">
+            <div className="absolute -top-14 left-0 rounded-lg border border-slate-700 bg-slate-900/85 px-4 py-2 text-slate-100">
               <span className="font-semibold">{currentImageIndex + 1}</span> / {imageArray.length}
             </div>
 
-            <div className="overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-slate-800">
+            <div className="overflow-hidden rounded-xl bg-slate-900 shadow-2xl">
               <img
                 src={imageArray[currentImageIndex]}
                 alt={`${alt} ${currentImageIndex + 1}`}
-                className="max-h-[80vh] w-full bg-white object-contain dark:bg-slate-800"
+                className="max-h-[80vh] w-full bg-slate-900 object-contain"
                 loading="eager"
                 fetchPriority="high"
               />
@@ -122,7 +121,7 @@ export default function TableImageCell({
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white bg-opacity-80 p-3 text-gray-800 shadow-lg transition-all hover:bg-opacity-100"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-slate-900/90 p-3 text-slate-100 shadow-lg transition-all hover:bg-slate-800"
                 >
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -130,7 +129,7 @@ export default function TableImageCell({
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white bg-opacity-80 p-3 text-gray-800 shadow-lg transition-all hover:bg-opacity-100"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-slate-900/90 p-3 text-slate-100 shadow-lg transition-all hover:bg-slate-800"
                 >
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -145,10 +144,10 @@ export default function TableImageCell({
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 bg-gray-50 transition-all dark:bg-slate-700 ${
+                    className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 bg-slate-800 transition-all ${
                       index === currentImageIndex
-                        ? 'border-blue-500 ring-2 ring-blue-300 dark:border-blue-400 dark:ring-blue-600'
-                        : 'border-gray-300 opacity-60 hover:border-blue-400 hover:opacity-100 dark:border-slate-600 dark:hover:border-blue-500'
+                        ? 'border-[#e0a02e] ring-2 ring-[#1e406b]/40'
+                        : 'border-slate-600 opacity-60 hover:border-[#1e406b] hover:opacity-100'
                     }`}
                   >
                     <OptimizedImage

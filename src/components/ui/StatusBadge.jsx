@@ -1,26 +1,26 @@
 const ORDER_STATUS_CONFIG = {
   pending: {
-    color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+    color: 'bg-[#c37b1e]/15 text-[#eecd7e] ring-1 ring-[#e0a02e]/30',
     label: 'Chờ xử lý',
   },
   received: {
-    color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+    color: 'bg-[#c37b1e]/15 text-[#eecd7e] ring-1 ring-[#e0a02e]/30',
     label: 'Đã tiếp nhận',
   },
   in_progress: {
-    color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+    color: 'bg-[#1e406b]/15 text-[#dfe1e3] ring-1 ring-[#1e406b]/30',
     label: 'Đang xử lý',
   },
   ready_for_pickup: {
-    color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300',
+    color: 'bg-[#1e406b]/15 text-[#dfe1e3] ring-1 ring-[#1e406b]/30',
     label: 'Sẵn sàng bàn giao',
   },
   completed: {
-    color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    color: 'bg-[#8f5f23]/15 text-[#eecd7e] ring-1 ring-[#8f5f23]/30',
     label: 'Hoàn thành',
   },
   cancelled: {
-    color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+    color: 'bg-[#7a797c]/15 text-[#dfe1e3] ring-1 ring-[#7a797c]/30',
     label: 'Đã hủy',
   },
 };
@@ -29,21 +29,21 @@ const STATUS_CONFIGS = {
   order: ORDER_STATUS_CONFIG,
   notification: {
     read: {
-      color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      color: 'bg-[#8f5f23]/15 text-[#eecd7e] ring-1 ring-[#8f5f23]/30',
       label: 'Đã đọc',
     },
     unread: {
-      color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      color: 'bg-[#b48242]/15 text-[#e0a02e] ring-1 ring-[#b48242]/30',
       label: 'Chưa đọc',
     },
   },
   user: {
     customer: {
-      color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+      color: 'bg-[#1e406b]/15 text-[#dfe1e3] ring-1 ring-[#1e406b]/30',
       label: 'Khách hàng',
     },
     employee: {
-      color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      color: 'bg-[#8f5f23]/15 text-[#eecd7e] ring-1 ring-[#8f5f23]/30',
       label: 'Nhân viên',
     },
   },
@@ -55,23 +55,23 @@ const STATUS_CONFIGS = {
   },
   vehicle_document: {
     valid: {
-      color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      color: 'bg-[#8f5f23]/15 text-[#eecd7e] ring-1 ring-[#8f5f23]/30',
       label: 'Hợp lệ',
     },
     expiring: {
-      color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+      color: 'bg-[#c37b1e]/15 text-[#eecd7e] ring-1 ring-[#e0a02e]/30',
       label: 'Sắp hết hạn',
     },
     expired: {
-      color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      color: 'bg-[#b48242]/15 text-[#e0a02e] ring-1 ring-[#b48242]/30',
       label: 'Hết hạn',
     },
     null: {
-      color: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+      color: 'bg-[#7a797c]/15 text-[#dfe1e3] ring-1 ring-[#7a797c]/30',
       label: 'Chưa cập nhật',
     },
     '': {
-      color: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+      color: 'bg-[#7a797c]/15 text-[#dfe1e3] ring-1 ring-[#7a797c]/30',
       label: 'Chưa cập nhật',
     },
   },
@@ -81,13 +81,13 @@ export default function StatusBadge({ status, type = 'default', labelOverride = 
   const configMap =
     STATUS_CONFIGS[type] || {
       [status]: {
-        color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300',
+        color: 'bg-[#7a797c]/15 text-[#dfe1e3] ring-1 ring-[#7a797c]/30',
         label: status,
       },
     };
 
   const config = configMap[status] || {
-    color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300',
+    color: 'bg-[#7a797c]/15 text-[#dfe1e3] ring-1 ring-[#7a797c]/30',
     label: status || 'Không xác định',
   };
 

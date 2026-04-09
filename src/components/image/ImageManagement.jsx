@@ -230,10 +230,10 @@ export default function ImageManagement({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-white rounded-lg shadow overflow-hidden">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-slate-700/80 bg-slate-900 shadow">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex-shrink-0">
-        <h2 className="text-xl sm:text-2xl font-bold mb-3">{label.title}</h2>
+      <div className="flex-shrink-0 border-b border-slate-700 p-4">
+        <h2 className="mb-3 text-xl font-bold text-slate-100 sm:text-2xl">{label.title}</h2>
         
         {/* Entity Selection */}
         <div className="flex flex-col sm:flex-row gap-2">
@@ -241,7 +241,7 @@ export default function ImageManagement({
             <select
               value={selectedEntityId}
               onChange={(e) => setSelectedEntityId(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+              className="w-full appearance-none rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 pr-10 text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1e406b]"
               disabled={entitiesLoading}
             >
               <option value="">
@@ -253,12 +253,12 @@ export default function ImageManagement({
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-slate-500" />
           </div>
           <button
             onClick={() => setShowUploader(!showUploader)}
             disabled={!selectedEntityId}
-            className={`${buttonStyles.success} whitespace-nowrap disabled:bg-gray-300 disabled:cursor-not-allowed`}
+            className={`${buttonStyles.success} whitespace-nowrap disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400`}
           >
             {showUploader ? 'Đóng tải lên' : '+ Tải ảnh lên'}
           </button>
@@ -266,8 +266,8 @@ export default function ImageManagement({
 
         {/* Entity Info */}
         {selectedEntity && (
-          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+          <div className="mt-3 rounded-lg border border-[#1e406b]/20 bg-[#1e406b]/12 p-3">
+            <div className="grid grid-cols-1 gap-2 text-sm text-slate-200 sm:grid-cols-3">
               {(() => {
                 const info = label.getEntityInfo(selectedEntity);
                 return (
@@ -287,7 +287,7 @@ export default function ImageManagement({
 
       {/* Upload Section */}
       {showUploader && selectedEntityId && (
-        <div className="p-4 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+        <div className="flex-shrink-0 border-b border-slate-700 bg-slate-900/70 p-4">
           <ImageUploader 
             onUploadSuccess={handleUploadSuccess}
             multiple={true}
@@ -306,13 +306,13 @@ export default function ImageManagement({
             {images.map((item) => (
               <div 
                 key={item.id} 
-                className={`group relative bg-white rounded-lg overflow-hidden transition-all shadow-sm hover:shadow-md ${
+                className={`group relative overflow-hidden rounded-lg bg-slate-900 shadow-sm transition-all hover:shadow-lg ${
                   supportsPrimary && item.is_primary 
-                    ? 'border-4 border-yellow-400 ring-2 ring-yellow-200' 
-                    : 'border-2 border-gray-200 hover:border-blue-400'
+                    ? 'border-4 border-[#e0a02e] ring-2 ring-[#e0a02e]/30' 
+                    : 'border-2 border-slate-700 hover:border-[#1e406b]'
                 }`}
               >
-                <div className="aspect-square bg-white relative overflow-hidden">
+                <div className="relative aspect-square overflow-hidden bg-slate-900">
                   {/* Hidden img to test load */}
                   <img
                     src={normalizeImageUrl(item.image_url) || item.image_url}
@@ -341,31 +341,31 @@ export default function ImageManagement({
                   <div 
                     className="image-container w-full h-full bg-cover bg-center bg-no-repeat group-hover:scale-110 transition-transform duration-300"
                     style={{ 
-                      backgroundColor: 'white',
+                      backgroundColor: '#0f172a',
                       display: 'none'
                     }}
                   />
                   {/* Fallback icon */}
-                  <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400" style={{display: 'none'}}>
+                  <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-slate-800 text-slate-500" style={{display: 'none'}}>
                     <ImageIcon size={32} />
                   </div>
                 </div>
                 
                 {/* Primary Badge */}
                 {supportsPrimary && item.is_primary === 1 && (
-                  <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+                  <div className="absolute top-2 left-2 bg-[#e0a02e] text-[#112552] px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                     <Star size={12} fill="currentColor" />
                     Ảnh chính
                   </div>
                 )}
                 
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/50">
                   <div className="opacity-0 group-hover:opacity-100 flex gap-2">
                     {supportsPrimary && !item.is_primary && (
                       <button
                         onClick={() => handleSetPrimary(item.id)}
-                        className="bg-white text-amber-600 hover:bg-amber-50 p-2 rounded-full shadow-sm"
+                        className="rounded-full bg-slate-900 p-2 text-[#eecd7e] shadow-sm transition-colors hover:bg-[#c37b1e]/12"
                         title="Đặt làm ảnh chính"
                       >
                         <Star size={18} />
@@ -373,14 +373,14 @@ export default function ImageManagement({
                     )}
                     <button
                       onClick={() => window.open(normalizeImageUrl(item.image_url) || item.image_url, '_blank')}
-                      className="bg-white text-blue-600 hover:bg-blue-50 p-2 rounded-full shadow-sm"
+                      className="rounded-full bg-slate-900 p-2 text-[#eecd7e] shadow-sm transition-colors hover:bg-[#1e406b]/12"
                       title="Xem lớn"
                     >
                       <ImageIcon size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(item.id, item.image_url)}
-                      className="bg-white text-red-600 hover:bg-red-50 p-2 rounded-full shadow-sm"
+                      className="rounded-full bg-slate-900 p-2 text-[#b48242] shadow-sm transition-colors hover:bg-[#b48242]/12"
                       title="Xóa"
                     >
                       <Trash2 size={18} />
@@ -389,17 +389,17 @@ export default function ImageManagement({
                 </div>
 
                 {/* Info */}
-                <div className="p-2 bg-white border-t border-gray-200">
-                  <p className="text-xs text-gray-500 truncate" title={item.image_url}>
+                <div className="border-t border-slate-700 bg-slate-900 p-2">
+                  <p className="truncate text-xs text-slate-400" title={item.image_url}>
                     Mã: {item.id}
                   </p>
                   {item.created_at && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-slate-500">
                       {new Date(item.created_at).toLocaleDateString('vi-VN')}
                     </p>
                   )}
                   {item.status_at_time && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                    <span className="mt-1 inline-block rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
                       {item.status_at_time}
                     </span>
                   )}
@@ -410,7 +410,7 @@ export default function ImageManagement({
         ) : (
           // Chỉ hiển thị khung "chưa có ảnh" khi không đang mở uploader
           !showUploader && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <div className="flex h-full flex-col items-center justify-center text-slate-400">
               <ImageIcon className="w-20 h-20 mb-4" />
               <p className="text-lg font-medium mb-2">
                 {selectedEntityId ? label.noImagesText : label.selectToViewText}

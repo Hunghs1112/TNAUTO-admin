@@ -29,7 +29,7 @@ export default function ActionButtons({
       {showRefresh && onRefresh && (
         <button
           onClick={onRefresh}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors text-sm font-medium"
+          className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-slate-800 hover:text-white"
         >
           <RefreshCw size={18} />
           {refreshLabel}

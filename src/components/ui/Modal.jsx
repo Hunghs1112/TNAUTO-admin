@@ -27,7 +27,7 @@ export default function Modal({
       <div className={`app-panel my-4 flex max-h-[calc(100vh-1.5rem)] w-full flex-col sm:my-0 sm:max-h-[90vh] ${sizeClasses[size]} ${className}`}>
         {title || showCloseButton ? (
           <div className="app-panel-header flex shrink-0 items-center justify-between">
-            {title ? <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{title}</h2> : <div />}
+            {title ? <h2 className="text-2xl font-bold text-slate-100">{title}</h2> : <div />}
             {showCloseButton ? (
               <button type="button" onClick={onClose} className="app-icon-button h-10 w-10" aria-label="Đóng">
                 <X size={18} />

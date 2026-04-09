@@ -90,9 +90,9 @@ function DealerWarranties() {
       key: 'dealer_name',
       label: 'Đại lý',
       render: (value, item) => {
-        if (value) return <span className="font-medium text-indigo-600 dark:text-indigo-400">{value}</span>;
-        if (item?.dealer?.name) return <span className="font-medium text-indigo-600 dark:text-indigo-400">{item.dealer.name}</span>;
-        if (item?.dealer_id) return <span className="text-indigo-400">ĐL ID: {item.dealer_id}</span>;
+        if (value) return <span className="font-medium text-[#dfe1e3]">{value}</span>;
+        if (item?.dealer?.name) return <span className="font-medium text-[#dfe1e3]">{item.dealer.name}</span>;
+        if (item?.dealer_id) return <span className="text-[#dfe1e3]">ĐL ID: {item.dealer_id}</span>;
         return '-';
       },
     },
@@ -102,7 +102,7 @@ function DealerWarranties() {
       render: (value, item) => {
         if (value) return value;
         if (item?.product?.name) return item.product.name;
-        if (item?.product_id) return <span className="text-gray-400">ID: {item.product_id}</span>;
+        if (item?.product_id) return <span className="text-slate-400">ID: {item.product_id}</span>;
         return '-';
       },
     },
@@ -112,8 +112,8 @@ function DealerWarranties() {
       render: (value, item) => {
         if (value) return value;
         if (item?.employee?.name) return item.employee.name;
-        if (item?.employee_id) return <span className="text-gray-400">ID: {item.employee_id}</span>;
-        return <span className="italic text-gray-400">Chưa giao</span>;
+        if (item?.employee_id) return <span className="text-slate-400">ID: {item.employee_id}</span>;
+        return <span className="italic text-slate-400">Chưa giao</span>;
       },
     },
     { key: 'warranty_period', label: 'Thời hạn (tháng)', render: (value) => (value != null ? `${value} tháng` : '-') },
@@ -155,8 +155,8 @@ function DealerWarranties() {
         <div className="app-panel-body">
           <div className="flex items-center justify-center py-14">
             <div className="text-center">
-              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500" />
-              <p className="text-sm text-slate-500 dark:text-slate-300">Đang tải dữ liệu bảo hành đại lý...</p>
+              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-[#1e406b]" />
+              <p className="text-sm text-slate-300">Đang tải dữ liệu bảo hành đại lý...</p>
             </div>
           </div>
         </div>

@@ -288,7 +288,7 @@ export const dealerCategoriesConfig = {
 export const vehiclesConfig = {
   columns: [
     createIdColumn(),
-    { key: 'license_plate', label: 'Biển số xe', render: (val) => val ? <span className="bg-yellow-400 text-black px-2 py-1 rounded font-bold text-sm">{val}</span> : '-' },
+    { key: 'license_plate', label: 'Biển số xe', render: (val) => val ? <span className="bg-[#e0a02e] text-[#112552] px-2 py-1 rounded font-bold text-sm">{val}</span> : '-' },
     { key: 'model', label: 'Mẫu xe', render: (val) => {
       // Display model or show '-' if null/empty
       if (!val || val === 'null' || val === null) return <span className="text-gray-400 italic">Chưa có</span>;
@@ -332,7 +332,7 @@ export const serviceOrdersConfig = {
     createIdColumn(),
     { key: 'customer_name', label: 'Khách hàng', render: (val, item) => <span className="font-medium">{val || (item.customer_id ? `ID: ${item.customer_id}` : '-')}</span> },
     { key: 'service_name', label: 'Dịch vụ', render: (val, item) => val || (item.service_id ? `ID: ${item.service_id}` : '-') },
-    { key: 'license_plate', label: 'Biển số', render: (val) => val ? <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">{val}</span> : '-' },
+    { key: 'license_plate', label: 'Biển số', render: (val) => val ? <span className="bg-[#f8ecd6] text-[#8f5f23] px-2 py-0.5 rounded text-xs font-semibold">{val}</span> : '-' },
     { key: 'receiver_name', label: 'Người nhận', render: (val) => <span className="text-sm">{val || '-'}</span> },
     { key: 'receiver_phone', label: 'SĐT', render: (val) => <span className="text-sm">{val || '-'}</span> },
     {
@@ -343,7 +343,7 @@ export const serviceOrdersConfig = {
         const label = getServiceOrderAssigneeLabel(order);
 
         if (isOrderWaitingForClaim(order)) {
-          return <span className="font-medium text-amber-700 dark:text-amber-300">{label}</span>;
+          return <span className="font-medium text-[#c37b1e] dark:text-[#eecd7e]">{label}</span>;
         }
 
         if (order.employee_id || val || item.employee?.name) {
@@ -430,12 +430,12 @@ export const warrantiesConfig = {
       label: 'Khách hàng/Đại lý', 
       render: (val, item) => {
         // Ưu tiên customer_name, sau đó đến dealer_name
-        if (val) return <span className="font-medium">{val}</span>;
-        if (item.dealer_name) return <span className="font-medium text-indigo-600 dark:text-indigo-400">Đại lý: {item.dealer_name}</span>;
-        if (item.customer?.name) return <span className="font-medium">{item.customer.name}</span>;
-        if (item.dealer?.name) return <span className="font-medium text-indigo-600 dark:text-indigo-400">Đại lý: {item.dealer.name}</span>;
-        if (item.customer_id) return <span className="text-gray-400">KH ID: {item.customer_id}</span>;
-        if (item.dealer_id) return <span className="text-indigo-400">ĐL ID: {item.dealer_id}</span>;
+        if (val) return <span className="font-medium text-slate-100">{val}</span>;
+        if (item.dealer_name) return <span className="font-medium text-[#dfe1e3]">Đại lý: {item.dealer_name}</span>;
+        if (item.customer?.name) return <span className="font-medium text-slate-100">{item.customer.name}</span>;
+        if (item.dealer?.name) return <span className="font-medium text-[#dfe1e3]">Đại lý: {item.dealer.name}</span>;
+        if (item.customer_id) return <span className="text-slate-400">KH ID: {item.customer_id}</span>;
+        if (item.dealer_id) return <span className="text-[#dfe1e3]">ĐL ID: {item.dealer_id}</span>;
         return '-';
       }
     },
@@ -446,7 +446,7 @@ export const warrantiesConfig = {
         // Ưu tiên service_name, nếu không có thì dùng service.name hoặc service_id
         if (val) return val;
         if (item.service?.name) return item.service.name;
-        if (item.service_id) return <span className="text-gray-400">ID: {item.service_id}</span>;
+        if (item.service_id) return <span className="text-slate-400">ID: {item.service_id}</span>;
         return '-';
       }
     },
@@ -457,8 +457,8 @@ export const warrantiesConfig = {
         // Ưu tiên employee_name, nếu không có thì dùng employee.name hoặc employee_id
         if (val) return val;
         if (item.employee?.name) return item.employee.name;
-        if (item.employee_id) return <span className="text-gray-400">ID: {item.employee_id}</span>;
-        return <span className="text-gray-400 italic">Chưa giao</span>;
+        if (item.employee_id) return <span className="text-slate-400">ID: {item.employee_id}</span>;
+        return <span className="text-slate-400 italic">Chưa giao</span>;
       }
     },
     { key: 'warranty_period', label: 'Thời hạn (tháng)', render: (val) => `${val} tháng` },
@@ -504,7 +504,7 @@ export const notificationsConfig = {
     { key: 'recipient_type', label: 'Loại người nhận', render: (val) => <StatusBadge status={val} type="user" /> },
     { key: 'message', label: 'Nội dung', render: (val) => truncateText(val) },
     { key: 'image_url', label: 'Hình ảnh', render: (val) => <ImagePreview src={val} alt="Thông báo" className="w-12 h-12 rounded" showModal={false} directDisplay={true} /> },
-    { key: 'is_read', label: 'Đã đọc', render: (val) => val ? <span className="text-green-600">✓</span> : <span className="text-red-600">✗</span> },
+    { key: 'is_read', label: 'Đã đọc', render: (val) => val ? <span className="text-[#8f5f23]">✓</span> : <span className="text-[#8f5f23]">✗</span> },
     { key: 'created_at', label: 'Ngày tạo', render: (val) => formatDate(val) },
   ],
   fieldsForModal: [
@@ -571,7 +571,7 @@ export const productImagesConfig = {
     { key: 'id', label: 'ID', render: (val) => <span className="font-mono text-xs">{val}</span> },
     { key: 'product_id', label: 'ID Sản phẩm', render: (val) => <span className="font-mono text-xs">{val}</span> },
     { key: 'image_url', label: 'Hình ảnh', render: (val) => <ImagePreview src={val} alt="Hình sản phẩm" className="w-20 h-16 rounded border border-gray-200" showModal={false} directDisplay={true} /> },
-    { key: 'is_primary', label: 'Ảnh chính', render: (val) => val ? <span className="text-green-600 font-semibold">✓</span> : <span className="text-gray-400">-</span> },
+    { key: 'is_primary', label: 'Ảnh chính', render: (val) => val ? <span className="text-[#8f5f23] font-semibold">✓</span> : <span className="text-gray-400">-</span> },
     { key: 'created_at', label: 'Ngày tạo', render: (val) => formatDate(val) },
   ],
   fieldsForModal: [

@@ -254,24 +254,24 @@ export default function ServiceDetailModal({
   return (
     <>
       {/* Service Detail Modal */}
-      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
-        <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-gray-200/50 dark:border-slate-700/50 animate-fade-in">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+        <div className="bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-slate-700/50 animate-fade-in">
           {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
+          <div className="p-4 sm:p-6 border-b border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-100 transition-colors duration-300">
                   {selectedService ? `Chi tiết dịch vụ #${selectedService.id}` : 'Đang tải...'}
                 </h3>
                 {selectedService && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-slate-400">
                     {selectedService.name}
                   </p>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
+                className="p-2 text-slate-500 hover:text-slate-200 hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
                 aria-label="Đóng"
               >
                 <X size={20} />
@@ -288,11 +288,11 @@ export default function ServiceDetailModal({
           
           {/* Content */}
           {!loadingDetail && selectedService && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 transition-colors duration-300 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-800 transition-colors duration-300 space-y-4">
               {/* Thông tin dịch vụ - Có thể sửa */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+              <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                  <h4 className="font-semibold text-base sm:text-lg text-slate-300">
                     Thông tin dịch vụ
                   </h4>
                   {!isEditMode && (
@@ -339,21 +339,21 @@ export default function ServiceDetailModal({
                 ) : (
                   // Chế độ xem
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Tên:</span> <span className="text-gray-900 dark:text-gray-100">{selectedService.name || '-'}</span></div>
-                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Danh mục:</span> <span className="text-gray-900 dark:text-gray-100">{selectedService.category_name || '-'}</span></div>
-                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Thời gian ước tính:</span> <span className="text-gray-900 dark:text-gray-100">{formatTimeDuration(selectedService.estimated_time)}</span></div>
-                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Thời gian bảo hành:</span> <span className="text-gray-900 dark:text-gray-100">{formatWarrantyPeriod(selectedService.warranty_period)}</span></div>
-                    <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Nhà cung cấp:</span> <span className="text-gray-900 dark:text-gray-100">{selectedService.supplier_name || '-'}</span></div>
+                    <div><span className="font-medium text-slate-300">Tên:</span> <span className="text-slate-100">{selectedService.name || '-'}</span></div>
+                    <div><span className="font-medium text-slate-300">Danh mục:</span> <span className="text-slate-100">{selectedService.category_name || '-'}</span></div>
+                    <div className="sm:col-span-2"><span className="font-medium text-slate-300">Thời gian ước tính:</span> <span className="text-slate-100">{formatTimeDuration(selectedService.estimated_time)}</span></div>
+                    <div className="sm:col-span-2"><span className="font-medium text-slate-300">Thời gian bảo hành:</span> <span className="text-slate-100">{formatWarrantyPeriod(selectedService.warranty_period)}</span></div>
+                    <div className="sm:col-span-2"><span className="font-medium text-slate-300">Nhà cung cấp:</span> <span className="text-slate-100">{selectedService.supplier_name || '-'}</span></div>
                     {selectedService.description && (
-                      <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Mô tả:</span> <span className="text-gray-900 dark:text-gray-100">{selectedService.description}</span></div>
+                      <div className="sm:col-span-2"><span className="font-medium text-slate-300">Mô tả:</span> <span className="text-slate-100">{selectedService.description}</span></div>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Hình ảnh - Có thể thêm/xóa/xem */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
-                <h4 className="font-semibold text-base sm:text-lg mb-3 text-gray-700 dark:text-gray-300">
+              <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
+                <h4 className="font-semibold text-base sm:text-lg mb-3 text-slate-300">
                   Hình ảnh dịch vụ
                 </h4>
 
@@ -386,7 +386,7 @@ export default function ServiceDetailModal({
                           <button
                             type="button"
                             onClick={handleDeleteImage}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                            className="absolute top-2 right-2 bg-[#f8ecd6]0 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-[#8f5f23]"
                             title="Xóa ảnh"
                           >
                             <X size={16} />
@@ -404,7 +404,7 @@ export default function ServiceDetailModal({
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <div className="text-center py-8 text-slate-400">
                         <p className="text-sm mb-4">Chưa có hình ảnh</p>
                         <ImageUploader
                           onUploadSuccess={handleImageUpload}
@@ -424,13 +424,13 @@ export default function ServiceDetailModal({
 
           {/* Footer */}
           {!loadingDetail && selectedService && (
-            <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800">
+            <div className="p-4 sm:p-6 border-t border-slate-700 flex-shrink-0 bg-slate-800">
               <div className="flex flex-col sm:flex-row gap-2 justify-end">
                 {isEditMode ? (
                   <>
                     <button
                       onClick={handleCancelEdit}
-                      className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                      className="px-4 py-2.5 border border-slate-700 bg-slate-800 text-slate-200 rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
                     >
                       <XCircle size={16} />
                       Hủy
@@ -447,7 +447,7 @@ export default function ServiceDetailModal({
                 ) : (
                   <button
                     onClick={onClose}
-                    className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                    className="px-4 py-2.5 border border-slate-700 bg-slate-800 text-slate-200 rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
                   >
                     <X size={16} />
                     Đóng

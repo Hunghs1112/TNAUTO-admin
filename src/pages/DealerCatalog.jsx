@@ -11,8 +11,8 @@ function DealerCategoriesSection() {
   return (
     <div className="space-y-4">
       <div className="app-panel">
-        <div className="app-panel-body text-sm leading-6 text-amber-950 dark:text-amber-100">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/70 dark:bg-amber-950/40">
+        <div className="app-panel-body text-sm leading-6 text-[#f8ecd6]">
+          <div className="rounded-2xl border border-[#c37b1e]/40 bg-[#c37b1e]/12 px-4 py-3">
             Danh mục sản phẩm đại lí là catalog riêng. Nếu danh mục vẫn còn sản phẩm, hệ thống sẽ chặn xóa để tránh mất liên kết dữ liệu.
           </div>
         </div>
@@ -53,8 +53,8 @@ function DealerProductsSection() {
   return (
     <>
       <div className="app-panel">
-        <div className="app-panel-body text-sm leading-6 text-blue-950 dark:text-blue-100">
-          <div className="rounded-2xl border border-blue-200 bg-blue-50/90 px-4 py-3 dark:border-blue-900/70 dark:bg-blue-950/40">
+        <div className="app-panel-body text-sm leading-6 text-[#dfe1e3]">
+          <div className="rounded-2xl border border-[#1e406b]/40 bg-[#1e406b]/12 px-4 py-3">
             Tạo và chỉnh sửa sản phẩm dealer tại đây. Bấm vào từng dòng để mở chi tiết, quản lý ảnh, đổi ảnh chính và cập nhật video.
           </div>
         </div>
@@ -104,7 +104,7 @@ function DealerCatalog() {
         description="Quản lý module catalog tách riêng cho đại lí với nhóm danh mục, sản phẩm và ảnh sản phẩm theo bộ API `/api/dealer/*`."
         badge="API riêng"
       >
-        <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+        <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm">
           <Store className="h-4 w-4" />
           <span>/api/dealer</span>
         </div>

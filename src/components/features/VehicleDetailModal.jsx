@@ -47,7 +47,7 @@ function formatDocumentDate(value) {
 function VehicleInput({ label, value, onChange, placeholder, type = 'text', className = '' }) {
   return (
     <div className={className}>
-      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-slate-400">
+      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400">
         {label}
       </label>
       <input
@@ -55,7 +55,7 @@ function VehicleInput({ label, value, onChange, placeholder, type = 'text', clas
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
       />
     </div>
   );
@@ -70,10 +70,10 @@ function VehicleDocumentSection({
   const SectionIcon = icon;
 
   return (
-    <section className="rounded-xl border border-gray-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-700/50">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
-          {SectionIcon ? <SectionIcon size={18} className="text-blue-500" /> : null}
+    <section className="rounded-xl border border-slate-700 bg-slate-800 shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-700 bg-slate-700/50 px-4 py-3">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-slate-100">
+          {SectionIcon ? <SectionIcon size={18} className="text-[#e0a02e]" /> : null}
           {title}
         </h3>
 
@@ -195,22 +195,22 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
       size="xl"
     >
       {!vehicleId ? (
-        <div className="py-10 text-center text-gray-500">Không tìm thấy thông tin xe.</div>
+        <div className="py-10 text-center text-slate-400">Không tìm thấy thông tin xe.</div>
       ) : (
         <div className="relative space-y-6 pb-4">
           {loadingDetail ? (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-sm dark:bg-slate-900/75">
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-slate-950/75 backdrop-blur-sm">
+              <div className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-medium text-slate-200 shadow-lg">
                 Đang tải dữ liệu xe...
               </div>
             </div>
           ) : null}
 
           <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-            <section className="rounded-xl border border-gray-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-              <div className="border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-700/50">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
-                  <Car size={18} className="text-blue-500" />
+            <section className="rounded-xl border border-slate-700 bg-slate-800 shadow-sm">
+              <div className="border-b border-slate-700 bg-slate-700/50 px-4 py-3">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-100">
+                  <Car size={18} className="text-[#e0a02e]" />
                   Ảnh xe
                 </h3>
               </div>
@@ -231,8 +231,8 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
                   placeholder="https://example.com/car.jpg"
                 />
 
-                <div className="rounded-xl border border-dashed border-gray-200 p-3 dark:border-slate-700">
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                <div className="rounded-xl border border-dashed border-slate-700 p-3">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                     Cập nhật ảnh
                   </div>
                   <ImageUploader
@@ -245,34 +245,34 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
                   />
                 </div>
 
-                <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-900/60">
-                  <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                <div className="grid gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-sm">
+                  <div className="flex items-center gap-2 text-slate-200">
                     <User size={16} className="text-slate-400" />
                     <span>Khách hàng: {customerName}</span>
                   </div>
 
-                  <div className="text-slate-600 dark:text-slate-300">ID xe: #{currentVehicle?.id}</div>
-                  <div className="text-slate-600 dark:text-slate-300">
+                  <div className="text-slate-300">ID xe: #{currentVehicle?.id}</div>
+                  <div className="text-slate-300">
                     Tạo lúc: {currentVehicle?.created_at ? formatDate(currentVehicle.created_at) : 'Chưa có'}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-slate-600 dark:text-slate-300">Đăng kiểm:</span>
+                    <span className="text-slate-300">Đăng kiểm:</span>
                     <StatusBadge status={currentVehicle?.inspection_status ?? 'null'} type="vehicle_document" />
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-slate-600 dark:text-slate-300">Bảo hiểm:</span>
+                    <span className="text-slate-300">Bảo hiểm:</span>
                     <StatusBadge status={currentVehicle?.insurance_status ?? 'null'} type="vehicle_document" />
                   </div>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-xl border border-gray-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-              <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-700/50">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
-                  <Car size={18} className="text-blue-500" />
+            <section className="rounded-xl border border-slate-700 bg-slate-800 shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-700 bg-slate-700/50 px-4 py-3">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-100">
+                  <Car size={18} className="text-[#e0a02e]" />
                   Thông tin xe
                 </h3>
 
@@ -311,21 +311,21 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
                   />
                 </div>
 
-                <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-900/60 sm:grid-cols-2">
-                  <div className="text-slate-700 dark:text-slate-200">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Ngày cấp đăng ký</div>
+                <div className="grid gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-sm sm:grid-cols-2">
+                  <div className="text-slate-200">
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Ngày cấp đăng ký</div>
                     <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.registration_issued_date)}</div>
                   </div>
-                  <div className="text-slate-700 dark:text-slate-200">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Hết hạn đăng kiểm</div>
+                  <div className="text-slate-200">
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Hết hạn đăng kiểm</div>
                     <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.inspection_expiry_date)}</div>
                   </div>
-                  <div className="text-slate-700 dark:text-slate-200">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Bắt đầu bảo hiểm</div>
+                  <div className="text-slate-200">
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Bắt đầu bảo hiểm</div>
                     <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.insurance_start_date)}</div>
                   </div>
-                  <div className="text-slate-700 dark:text-slate-200">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Hết hạn bảo hiểm</div>
+                  <div className="text-slate-200">
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Hết hạn bảo hiểm</div>
                     <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.insurance_expiry_date)}</div>
                   </div>
                 </div>

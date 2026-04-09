@@ -13,7 +13,7 @@ export default function ImageLightbox({ imageUrl, onClose }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/90 dark:bg-black/95 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div className="relative max-w-7xl max-h-[95vh] w-full h-full flex items-center justify-center">
@@ -25,7 +25,7 @@ export default function ImageLightbox({ imageUrl, onClose }) {
         />
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-3 bg-white/10 dark:bg-slate-800/50 hover:bg-white/20 dark:hover:bg-slate-700/50 text-white rounded-lg transition-all duration-200 backdrop-blur-sm"
+          className="absolute top-4 right-4 rounded-lg bg-slate-900/60 p-3 text-white transition-all duration-200 backdrop-blur-sm hover:bg-slate-800"
           aria-label="Đóng"
         >
           <X size={24} />

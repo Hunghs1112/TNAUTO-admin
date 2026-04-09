@@ -404,24 +404,24 @@ export default function OfferDetailModal({
   return (
     <>
       {/* Offer Detail Modal */}
-      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
-        <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-gray-200/50 dark:border-slate-700/50 animate-fade-in">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+        <div className="bg-slate-800 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl border border-slate-700/50 animate-fade-in">
           {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
+          <div className="p-4 sm:p-6 border-b border-slate-700 flex-shrink-0 gradient-header transition-colors duration-300">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-100 transition-colors duration-300">
                   {selectedOffer ? `Chi tiết ưu đãi #${selectedOffer.id}` : 'Đang tải...'}
                 </h3>
                 {selectedOffer && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-slate-400">
                     {selectedOffer.name}
                   </p>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
+                className="p-2 text-slate-500 hover:text-slate-200 hover:bg-slate-700 rounded-lg transition-all duration-200 active:scale-95"
                 aria-label="Đóng"
               >
                 <X size={20} />
@@ -438,11 +438,11 @@ export default function OfferDetailModal({
           
           {/* Content */}
           {!loadingDetail && selectedOffer && (
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-800 transition-colors duration-300 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-800 transition-colors duration-300 space-y-4">
               {/* Thông tin ưu đãi - Có thể sửa */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+              <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                  <h4 className="font-semibold text-base sm:text-lg text-slate-300">
                     Thông tin ưu đãi
                   </h4>
                   {!isEditMode && (
@@ -489,19 +489,19 @@ export default function OfferDetailModal({
                 ) : (
                   // Chế độ xem
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Tên:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOffer.name || '-'}</span></div>
-                    <div><span className="font-medium text-gray-700 dark:text-gray-300">Dịch vụ:</span> <span className="text-gray-900 dark:text-gray-100">{selectedOffer.service_name || (selectedOffer.service_id ? `ID: ${selectedOffer.service_id}` : '-')}</span></div>
+                    <div><span className="font-medium text-slate-300">Tên:</span> <span className="text-slate-100">{selectedOffer.name || '-'}</span></div>
+                    <div><span className="font-medium text-slate-300">Dịch vụ:</span> <span className="text-slate-100">{selectedOffer.service_name || (selectedOffer.service_id ? `ID: ${selectedOffer.service_id}` : '-')}</span></div>
                     {selectedOffer.content && (
-                      <div className="sm:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Nội dung:</span> <span className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{selectedOffer.content}</span></div>
+                      <div className="sm:col-span-2"><span className="font-medium text-slate-300">Nội dung:</span> <span className="text-slate-100 whitespace-pre-wrap">{selectedOffer.content}</span></div>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Hình ảnh - Có thể thêm/xóa/xem/đặt ảnh chính */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 border border-gray-200 dark:border-slate-600">
+              <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                  <h4 className="font-semibold text-base sm:text-lg text-slate-300">
                     Hình ảnh ưu đãi ({offerImages.length})
                   </h4>
                   <button
@@ -515,7 +515,7 @@ export default function OfferDetailModal({
 
                 {/* Image Uploader */}
                 {showImageUploader && (
-                  <div className="mb-4 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-600">
+                  <div className="mb-4 p-3 bg-slate-800 rounded-lg border border-slate-600">
                     <ImageUploader 
                       onUploadSuccess={handleImageUpload}
                       multiple={true}
@@ -541,13 +541,13 @@ export default function OfferDetailModal({
 
           {/* Footer */}
           {!loadingDetail && selectedOffer && (
-            <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800">
+            <div className="p-4 sm:p-6 border-t border-slate-700 flex-shrink-0 bg-slate-800">
               <div className="flex flex-col sm:flex-row gap-2 justify-end">
                 {isEditMode ? (
                   <>
                     <button
                       onClick={handleCancelEdit}
-                      className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                      className="px-4 py-2.5 border border-slate-700 bg-slate-800 text-slate-200 rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
                     >
                       <XCircle size={16} />
                       Hủy
@@ -564,7 +564,7 @@ export default function OfferDetailModal({
                 ) : (
                   <button
                     onClick={onClose}
-                    className="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-slate-600 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
+                    className="px-4 py-2.5 border border-slate-700 bg-slate-800 text-slate-200 rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-2"
                   >
                     <X size={16} />
                     Đóng
@@ -579,4 +579,3 @@ export default function OfferDetailModal({
     </>
   );
 }
-

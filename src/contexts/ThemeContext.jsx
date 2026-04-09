@@ -1,23 +1,16 @@
-// src/contexts/ThemeContext.jsx
-// Dark Mode Implementation - System Preference Only
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
+const THEME_STORAGE_KEY = 'tnauto-admin-theme';
 const ThemeContext = createContext();
 
-// Get theme from system preference only
-function getSystemTheme() {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  }
-  // Default to light if system preference not available
-  return 'light';
-}
-
-// Apply theme class to document
 function applyTheme(theme) {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
   const root = document.documentElement;
-  
+  root.dataset.theme = theme;
+
   if (theme === 'dark') {
     root.classList.add('dark');
   } else {
@@ -25,59 +18,82 @@ function applyTheme(theme) {
   }
 }
 
-export function ThemeProvider({ children }) {
-  // Initialize theme from system preference
-  const [theme, setTheme] = useState(() => {
-    const initialTheme = getSystemTheme();
-    // Apply theme immediately on mount
-    if (typeof document !== 'undefined') {
-      applyTheme(initialTheme);
-    }
-    return initialTheme;
-  });
+function getSystemTheme() {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return 'dark';
+}
 
-  // Apply theme whenever it changes
+function getInitialTheme() {
+  if (typeof window === 'undefined') {
+    return 'dark';
+  }
+
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    applyTheme(storedTheme);
+    return storedTheme;
+  }
+
+  const systemTheme = getSystemTheme();
+  applyTheme(systemTheme);
+  return systemTheme;
+}
+
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(getInitialTheme);
+
   useEffect(() => {
     applyTheme(theme);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
   }, [theme]);
 
-  // Listen to system preference changes
   useEffect(() => {
-    if (!window.matchMedia) return;
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return undefined;
+    }
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleSystemThemeChange = (e) => {
-      const newTheme = e.matches ? 'dark' : 'light';
-      setTheme(newTheme);
-      applyTheme(newTheme);
+    const handleSystemThemeChange = (event) => {
+      const hasStoredTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+      if (hasStoredTheme === 'light' || hasStoredTheme === 'dark') {
+        return;
+      }
+
+      setTheme(event.matches ? 'dark' : 'light');
     };
 
-    // Set initial theme
-    handleSystemThemeChange(mediaQuery);
-
-    // Modern browsers
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleSystemThemeChange);
       return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
-    } else {
-      // Fallback for older browsers
-      mediaQuery.addListener(handleSystemThemeChange);
-      return () => mediaQuery.removeListener(handleSystemThemeChange);
     }
+
+    mediaQuery.addListener(handleSystemThemeChange);
+    return () => mediaQuery.removeListener(handleSystemThemeChange);
   }, []);
 
-  return (
-    <ThemeContext.Provider value={{ theme }}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo(
+    () => ({
+      theme,
+      isDark: theme === 'dark',
+      setTheme,
+      toggleTheme: () => setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark')),
+    }),
+    [theme]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {
   const context = useContext(ThemeContext);
+
   if (!context) {
     throw new Error('useTheme must be used within ThemeProvider');
   }
+
   return context;
 }

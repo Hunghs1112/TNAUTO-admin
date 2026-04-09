@@ -77,7 +77,7 @@ export default function FormField({
             </select>
 
             {searchable && normalizedSearch && filteredOptions.length === 0 ? (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-slate-400">
                 Không tìm thấy kết quả phù hợp.
               </p>
             ) : null}
@@ -108,9 +108,9 @@ export default function FormField({
               checked={normalizedValue}
               onChange={onChange}
               disabled={disabled}
-              className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-blue-500/50 bg-white dark:bg-slate-700 transition-all duration-200 cursor-pointer"
+              className="h-4 w-4 cursor-pointer rounded-md border border-slate-600 bg-slate-700 text-[#dfe1e3] transition-all duration-200 focus:ring-2 focus:ring-[#1e406b]/50"
             />
-            <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+            <label className="ml-2 text-sm text-slate-300">
               {label}
             </label>
           </div>
@@ -187,7 +187,7 @@ export default function FormField({
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <label className="mb-1 block text-xs font-medium text-slate-400">
                   Số ngày
                 </label>
                 <input
@@ -212,7 +212,7 @@ export default function FormField({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <label className="mb-1 block text-xs font-medium text-slate-400">
                   Số giờ
                 </label>
                 <input
@@ -238,7 +238,7 @@ export default function FormField({
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-slate-400">
               Nhập số ngày và số giờ. Giá trị sẽ được chuyển đổi thành giây để lưu vào cơ sở dữ liệu.
             </p>
           </div>
@@ -274,7 +274,7 @@ export default function FormField({
                 className={`${baseInputClass} ${className}`}
               />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-slate-400">
               Nhập số tháng bảo hành. Giá trị sẽ được chuyển đổi thành giây để lưu vào cơ sở dữ liệu.
             </p>
           </div>
@@ -301,7 +301,7 @@ export default function FormField({
             />
             {value && (
               <div className="mt-3">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">Ảnh hiện tại:</p>
+                <p className="text-xs text-slate-400 mb-2 font-medium">Ảnh hiện tại:</p>
                 {multiple && Array.isArray(value) ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {value.map((url, index) => (
@@ -319,7 +319,7 @@ export default function FormField({
                             const newValue = value.filter((_, i) => i !== index);
                             onChange({ target: { name, value: newValue } });
                           }}
-                          className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                          className="absolute top-1 right-1 bg-[#f8ecd6]0 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-[#8f5f23]"
                           title="Xóa ảnh"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -341,7 +341,7 @@ export default function FormField({
                     <button
                       type="button"
                       onClick={() => onChange({ target: { name, value: multiple ? [] : '' } })}
-                      className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                      className="absolute top-1 right-1 bg-[#f8ecd6]0 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-[#8f5f23]"
                       title="Xóa ảnh"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,8 +377,8 @@ export default function FormField({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">
-        {label} {required && <span className="text-red-500 dark:text-red-400">*</span>}
+      <label className="block text-sm font-semibold text-slate-300 transition-colors duration-300">
+        {label} {required && <span className="text-[#b48242]">*</span>}
       </label>
       {renderInput()}
     </div>

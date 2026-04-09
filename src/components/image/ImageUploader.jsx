@@ -268,8 +268,8 @@ export default function ImageUploader({
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               currentMode === 'file' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-[#1e406b] text-white' 
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
             <FileImage size={18} />
@@ -284,8 +284,8 @@ export default function ImageUploader({
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               currentMode === 'link' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-[#1e406b] text-white' 
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
             <Link size={18} />
@@ -296,7 +296,7 @@ export default function ImageUploader({
 
       {/* File Upload Area */}
       {(currentMode === 'file' || uploadMode === 'file') && allowFileUpload && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+        <div className="rounded-lg border-2 border-dashed border-slate-700 bg-slate-900/40 p-6 text-center transition-colors hover:border-[#1e406b]">
           <input
             type="file"
             accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
@@ -317,11 +317,11 @@ export default function ImageUploader({
               e.stopPropagation();
             }}
           >
-            <Upload className="w-12 h-12 text-gray-400 mb-3" />
-            <p className="text-sm text-gray-600 mb-1">
+            <Upload className="mb-3 h-12 w-12 text-slate-500" />
+            <p className="mb-1 text-sm text-slate-300">
               Click để chọn ảnh hoặc kéo thả vào đây
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-slate-500">
               {multiple ? `Tối đa ${maxFiles} ảnh` : '1 ảnh'} • JPEG, PNG, GIF, WebP • Tối đa 5MB
             </p>
           </label>
@@ -330,11 +330,11 @@ export default function ImageUploader({
 
       {/* Link Input Area */}
       {(currentMode === 'link' || uploadMode === 'link') && allowLinkUpload && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+        <div className="rounded-lg border-2 border-dashed border-slate-700 bg-slate-900/40 p-6">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2 mb-2">
-              <Link className="w-5 h-5 text-gray-400" />
-              <span className="text-sm font-medium text-gray-600">Nhập link ảnh</span>
+              <Link className="h-5 w-5 text-slate-500" />
+              <span className="text-sm font-medium text-slate-300">Nhập link ảnh</span>
             </div>
             
             <div className="flex gap-2">
@@ -349,7 +349,7 @@ export default function ImageUploader({
                   }
                 }}
                 placeholder="https://example.com/image.jpg"
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1e406b]"
               />
               <button
                 type="button"
@@ -357,8 +357,8 @@ export default function ImageUploader({
                 disabled={!linkInput.trim()}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                   linkInput.trim()
-                    ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'bg-[#1e406b] text-white hover:bg-[#112552]'
+                    : 'bg-slate-700 text-slate-400 cursor-not-allowed'
                 }`}
               >
                 <Plus size={18} />
@@ -366,7 +366,7 @@ export default function ImageUploader({
               </button>
             </div>
             
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-slate-500">
               Hỗ trợ: JPG, PNG, GIF, WebP • {multiple ? `Tối đa ${maxFiles} link` : '1 link'}
             </p>
           </div>
@@ -375,24 +375,24 @@ export default function ImageUploader({
 
       {/* Error Message */}
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-[#b48242]/30 bg-[#b48242]/12 p-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#b48242]" />
+          <p className="text-sm text-[#eecd7e]">{error}</p>
         </div>
       )}
 
       {/* Preview Area */}
       {previews.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold mb-2">Ảnh đã chọn ({previews.length})</h4>
+          <h4 className="mb-2 text-sm font-semibold text-slate-200">Ảnh đã chọn ({previews.length})</h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {previews.map((preview, index) => (
-              <div key={index} className="relative group bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
-                <div className="aspect-square bg-white">
+              <div key={index} className="group relative overflow-hidden rounded-lg border-2 border-slate-700 bg-slate-900">
+                <div className="aspect-square bg-slate-900">
                   <img
                     src={preview.url}
                     alt={preview.name}
-                    className="w-full h-full object-cover bg-white"
+                    className="h-full w-full bg-slate-900 object-cover"
                     loading="lazy"
                     onError={(e) => {
                       e.target.style.display = 'none';
@@ -400,27 +400,27 @@ export default function ImageUploader({
                       if (fallback) fallback.style.display = 'flex';
                     }}
                   />
-                  <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400" style={{display: 'none'}}>
+                  <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-slate-800 text-slate-500" style={{display: 'none'}}>
                     <FileImage size={24} />
                   </div>
                 </div>
                 <button
                   onClick={() => handleRemove(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  className="absolute top-1 right-1 bg-[#f8ecd6]0 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                   title="Xóa"
                 >
                   <X size={16} />
                 </button>
-                <div className="p-2 bg-white border-t border-gray-200">
-                  <div className="text-xs text-gray-500 truncate" title={preview.name}>
+                <div className="border-t border-slate-700 bg-slate-900 p-2">
+                  <div className="truncate text-xs text-slate-400" title={preview.name}>
                     {preview.name}
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-400">{preview.size}</div>
+                    <div className="text-xs text-slate-500">{preview.size}</div>
                     <div className={`text-xs px-1 py-0.5 rounded ${
                       preview.type === 'file' 
-                        ? 'bg-blue-100 text-blue-600' 
-                        : 'bg-green-100 text-green-600'
+                        ? 'bg-[#1e406b]/12 text-[#eecd7e]' 
+                        : 'bg-[#8f5f23]/10 text-[#eecd7e]'
                     }`}>
                       {preview.type === 'file' ? 'File' : 'Link'}
                     </div>
@@ -440,8 +440,8 @@ export default function ImageUploader({
             disabled={uploading}
             className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium ${
               uploading
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                : 'bg-[#1e406b] hover:bg-[#1e406b] text-white'
             }`}
           >
             {uploading ? (

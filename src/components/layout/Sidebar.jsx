@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import ThemeToggle from '../ui/ThemeToggle';
 
 const menuItems = [
   { id: 'customers', label: 'Khách hàng', icon: Users, path: '/customers' },
@@ -70,7 +71,7 @@ function GarageIdentity({ garage }) {
 
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-bold text-white">{garage.name || 'Gara hiện tại'}</div>
-          <div className="mt-1 inline-flex rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-200">
+          <div className="mt-1 inline-flex rounded-full border border-[#1e406b]/20 bg-[#1e406b]/12 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#eecd7e]">
             {garage.code || 'NO-CODE'}
           </div>
 
@@ -120,11 +121,12 @@ function Sidebar() {
         className="hidden h-screen w-80 shrink-0 border-r border-slate-800/50 lg:flex lg:flex-col"
         style={{ background: 'var(--gradient-sidebar)' }}
       >
-        <div className="border-b border-slate-800/50 bg-slate-900/30 px-6 py-6">
+        <div className="relative border-b border-slate-800/50 bg-slate-900/30 px-6 py-6">
+          <ThemeToggle className="absolute right-6 top-6" />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">TNAUTO Multi-Gara</p>
           <h2 className="mt-3 text-xl font-bold text-white">Bảng điều khiển gara</h2>
           <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#e0a02e]" />
             <span>{pageTitle}</span>
           </div>
 
@@ -143,9 +145,7 @@ function Sidebar() {
                 type="button"
                 onClick={() => handleNavigate(item)}
                 className={`flex min-h-[48px] w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'scale-[1.01] text-white shadow-lg'
-                    : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+                  isActive ? 'scale-[1.01] text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
                 }`}
                 style={isActive ? { background: 'var(--gradient-primary)' } : undefined}
               >
@@ -177,20 +177,23 @@ function Sidebar() {
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-lg font-bold text-white">{pageTitle}</h1>
               <div className="mt-1 flex items-center gap-2 text-xs text-slate-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#e0a02e]" />
                 <span className="truncate">{garage?.name || garage?.code || 'Phiên gara hiện tại'}</span>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={toggleMenu}
-              className="flex items-center gap-2 rounded-xl px-3 py-2 text-white transition-colors hover:bg-slate-800/50"
-              aria-label="Mở menu"
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              <ChevronDown className={`h-4 w-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                type="button"
+                onClick={toggleMenu}
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-white transition-colors hover:bg-slate-800/50"
+                aria-label="Mở menu"
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                <ChevronDown className={`h-4 w-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
           </div>
         </div>
 

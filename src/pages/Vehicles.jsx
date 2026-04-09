@@ -78,6 +78,7 @@ function Vehicles() {
         columns={vehiclesConfig.columns}
         fieldsForModal={vehicleFormFields}
         title={vehiclesConfig.title}
+        description="Quản lý xe đang được liên kết với khách hàng trong gara."
         showPagination={true}
         limit={20}
         showSearch={true}

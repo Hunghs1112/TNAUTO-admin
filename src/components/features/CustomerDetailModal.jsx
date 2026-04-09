@@ -11,7 +11,7 @@ import { formatDate } from '../../utils/format';
 import { buttonStyles } from '../../styles/colors';
 import VehicleDetailModal from './VehicleDetailModal';
 import { useToast } from '../../contexts/ToastContext';
-import { useAuth } from '../../contexts/AuthContext';
+
 
 function normalizeArrayResponse(res) {
   const raw = res?.data;
@@ -107,47 +107,47 @@ function AddVehicleModal({ isOpen, customer, onClose, onSuccess }) {
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">
-              Biển số xe <span className="text-red-500">*</span>
+            <label className="mb-1 block font-medium text-slate-300">
+              Biển số xe <span className="text-[#e0a02e]">*</span>
             </label>
             <input
               value={form.license_plate}
               onChange={(e) => setForm((prev) => ({ ...prev, license_plate: e.target.value }))}
               placeholder="VD: 30A-12345"
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 uppercase outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 uppercase text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-slate-400">
               Hệ thống sẽ tự trim khoảng trắng và chuẩn hóa thành chữ in hoa trước khi gửi.
             </p>
           </div>
 
           <div>
-            <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Model</label>
+            <label className="mb-1 block font-medium text-slate-300">Model</label>
             <input
               value={form.model}
               onChange={(e) => setForm((prev) => ({ ...prev, model: e.target.value }))}
               placeholder="VD: Toyota Vios"
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
             />
           </div>
 
           <div>
-            <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Link ảnh xe</label>
+            <label className="mb-1 block font-medium text-slate-300">Link ảnh xe</label>
             <input
               type="url"
               value={form.image_url}
               onChange={(e) => setForm((prev) => ({ ...prev, image_url: e.target.value }))}
               placeholder="https://example.com/car.jpg"
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
             />
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <div className="font-medium text-gray-800 dark:text-gray-200">Ảnh xe</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Có thể dán link trực tiếp hoặc upload ảnh.</div>
+              <div className="font-medium text-slate-200">Ảnh xe</div>
+              <div className="text-xs text-slate-400">Có thể dán link trực tiếp hoặc upload ảnh.</div>
             </div>
             <ImagePreview
               src={form.image_url}
@@ -206,7 +206,6 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
   });
 
   const { success, error } = useToast();
-  const { garage } = useAuth();
   const customerId = customer?.id;
 
   const resetForm = useCallback((currentCustomer, currentDriverLicense) => {
@@ -223,7 +222,7 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
   const fetchExtra = useCallback(async ({ force = false } = {}) => {
     if (!isOpen || !customerId) return;
 
-    const fetchKey = `${customerId}:${garage?.code || ''}`;
+    const fetchKey = `${customerId}`;
 
     if (shouldSkipFetch(fetchKey, force)) return;
 
@@ -243,19 +242,42 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
       const nextCustomer = customerRes ? normalizeObjectResponse(customerRes) : customer;
       const nextDriverLicense = dlRes ? normalizeObjectResponse(dlRes) : null;
       const customerPhone = nextCustomer?.phone || customer?.phone || '';
-      const garageCode = garage?.code || '';
 
       let nextVehicles = extractEmbeddedVehicles(nextCustomer);
-      if (customerPhone && garageCode) {
+      if (customerPhone) {
         const vehiclesResponse = await customersAPI
           .getVehiclesForGarage({
             phone: customerPhone,
-            garageCode,
           })
           .catch(() => null);
 
         if (vehiclesResponse) {
-          nextVehicles = normalizeArrayResponse(vehiclesResponse);
+          const fetchedVehicles = normalizeArrayResponse(vehiclesResponse);
+          const targetCustomerId = Number(nextCustomer?.id || customer?.id);
+          const normalizedCustomerPhone = String(customerPhone || '').trim();
+
+          nextVehicles = fetchedVehicles.filter((vehicle) => {
+            const rawCustomerId =
+              vehicle?.customer_id ??
+              vehicle?.customerId ??
+              vehicle?.customer?.id ??
+              vehicle?.owner_id ??
+              vehicle?.ownerId ??
+              null;
+
+            if (rawCustomerId !== null && rawCustomerId !== undefined && rawCustomerId !== '') {
+              return Number(rawCustomerId) === targetCustomerId;
+            }
+
+            const vehiclePhone =
+              vehicle?.customer_phone ??
+              vehicle?.phone ??
+              vehicle?.customer?.phone ??
+              vehicle?.owner_phone ??
+              '';
+
+            return String(vehiclePhone || '').trim() === normalizedCustomerPhone;
+          });
         }
       }
 
@@ -272,7 +294,7 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
       setIsInitialLoading(false);
       setIsRefreshing(false);
     }
-  }, [customer, customerId, garage?.code, isOpen, resetForm]);
+  }, [customer, customerId, isOpen, resetForm]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -363,8 +385,8 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
         ) : (
           <div className="relative space-y-4">
             {isRefreshing ? (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-sm dark:bg-slate-900/75">
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-slate-950/75 backdrop-blur-sm">
+                <div className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-medium text-slate-200 shadow-lg">
                   Đang tải dữ liệu...
                 </div>
               </div>
@@ -410,101 +432,101 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
             {activeTab === 'basic' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-                  <div className="sm:col-span-2 flex items-center gap-4 rounded-xl bg-gray-50 p-3 dark:bg-slate-800/50">
+                  <div className="sm:col-span-2 flex items-center gap-4 rounded-xl bg-slate-800/50 p-3">
                     <ImagePreview
                       src={isEditing ? editForm.avatar_url : currentCustomer.avatar_url}
                       alt={currentCustomer.name || 'Avatar'}
-                      className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-sm dark:border-slate-700"
+                      className="h-16 w-16 rounded-full border-2 border-slate-700 object-cover shadow-sm"
                       showModal={true}
                       directDisplay={true}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-lg font-bold text-gray-900 dark:text-gray-100">
+                      <div className="truncate text-lg font-bold text-slate-100">
                         {currentCustomer.name || '-'}
                       </div>
-                      <div className="text-xs font-medium text-blue-600 dark:text-blue-400">ID: #{currentCustomer.id}</div>
+                      <div className="text-xs font-medium text-[#eecd7e]">ID: #{currentCustomer.id}</div>
                     </div>
                   </div>
 
                   <div>
-                    <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Họ tên</label>
+                    <label className="mb-1 block font-medium text-slate-300">Họ tên</label>
                     {isEditing ? (
                       <input
                         value={editForm.name}
                         onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
-                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
                       />
                     ) : (
-                      <div className="rounded-lg bg-gray-50 px-3 py-2 text-gray-900 dark:bg-slate-800/30 dark:text-gray-100">{currentCustomer.name || '-'}</div>
+                      <div className="rounded-lg bg-slate-800/40 px-3 py-2 text-slate-100">{currentCustomer.name || '-'}</div>
                     )}
                   </div>
 
                   <div>
-                    <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">SĐT</label>
+                    <label className="mb-1 block font-medium text-slate-300">SĐT</label>
                     {isEditing ? (
                       <input
                         value={editForm.phone}
                         onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))}
-                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
                       />
                     ) : (
-                      <div className="rounded-lg bg-gray-50 px-3 py-2 text-gray-900 dark:bg-slate-800/30 dark:text-gray-100">{currentCustomer.phone || '-'}</div>
+                      <div className="rounded-lg bg-slate-800/40 px-3 py-2 text-slate-100">{currentCustomer.phone || '-'}</div>
                     )}
                   </div>
 
                   <div>
-                    <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Email</label>
+                    <label className="mb-1 block font-medium text-slate-300">Email</label>
                     {isEditing ? (
                       <input
                         value={editForm.email}
                         onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
-                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
                       />
                     ) : (
-                      <div className="rounded-lg bg-gray-50 px-3 py-2 text-gray-900 dark:bg-slate-800/30 dark:text-gray-100">{currentCustomer.email || '-'}</div>
+                      <div className="rounded-lg bg-slate-800/40 px-3 py-2 text-slate-100">{currentCustomer.email || '-'}</div>
                     )}
                   </div>
 
                   <div>
-                    <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Số xe đã lưu</label>
-                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-gray-900 dark:bg-slate-800/30 dark:text-gray-100">
+                    <label className="mb-1 block font-medium text-slate-300">Số xe đã lưu</label>
+                    <div className="rounded-lg bg-slate-800/40 px-3 py-2 text-slate-100">
                       {vehicles.length}
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t border-gray-100 pt-4 dark:border-slate-700">
-                  <h4 className="mb-4 flex items-center gap-2 font-semibold text-gray-800 dark:text-gray-200">
-                    <CreditCard size={18} className="text-blue-500" />
+                <div className="border-t border-slate-700 pt-4">
+                  <h4 className="mb-4 flex items-center gap-2 font-semibold text-slate-200">
+                    <CreditCard size={18} className="text-[#e0a02e]" />
                     Thông tin Giấy phép lái xe (GPLX)
                   </h4>
 
-                  <div className="grid grid-cols-1 gap-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm dark:border-blue-900/30 dark:bg-blue-900/10 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 rounded-xl border border-[#1e406b]/30 bg-[#112552]/18 p-4 text-sm sm:grid-cols-2">
                     <div>
-                      <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Số GPLX</label>
+                      <label className="mb-1 block font-medium text-slate-300">Số GPLX</label>
                       {isEditing ? (
                         <input
                           value={editForm.license_no}
                           onChange={(e) => setEditForm((p) => ({ ...p, license_no: e.target.value }))}
                           placeholder="Nhập số GPLX..."
-                          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
                         />
                       ) : (
-                        <div className="font-semibold text-gray-900 dark:text-gray-100">{driverLicense?.license_no || 'Chưa cập nhật'}</div>
+                        <div className="font-semibold text-slate-100">{driverLicense?.license_no || 'Chưa cập nhật'}</div>
                       )}
                     </div>
 
                     <div>
-                      <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Ngày hết hạn</label>
+                      <label className="mb-1 block font-medium text-slate-300">Ngày hết hạn</label>
                       {isEditing ? (
                         <input
                           type="date"
                           value={editForm.license_expires_at}
                           onChange={(e) => setEditForm((p) => ({ ...p, license_expires_at: e.target.value }))}
-                          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900"
+                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 outline-none focus:ring-2 focus:ring-[#1e406b]"
                         />
                       ) : (
-                        <div className={`font-semibold ${!driverLicense?.expires_at ? 'text-gray-500' : ''}`}>
+                        <div className={`font-semibold ${!driverLicense?.expires_at ? 'text-slate-400' : ''}`}>
                           {driverLicense?.expires_at ? formatDate(driverLicense.expires_at) : 'Chưa cập nhật'}
                         </div>
                       )}
@@ -517,8 +539,8 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
             {activeTab === 'vehicles' && (
               <div className="space-y-3">
                 {(!vehicles || vehicles.length === 0) ? (
-                  <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-10 text-center text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800/30 dark:text-gray-300">
-                    <Car className="mx-auto mb-2 text-gray-400" size={32} />
+                  <div className="rounded-xl border-2 border-dashed border-slate-700 bg-slate-800/30 py-10 text-center text-sm text-slate-300">
+                    <Car className="mx-auto mb-2 text-slate-500" size={32} />
                     Khách hàng này chưa có xe trong hệ thống
                   </div>
                 ) : (
@@ -527,7 +549,7 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
                       <div
                         key={v.id || v.license_plate}
                         onClick={() => handleEditVehicle(v)}
-                        className="group relative cursor-pointer rounded-xl border border-gray-200 bg-white p-3 transition-all hover:border-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500"
+                        className="group relative cursor-pointer rounded-xl border border-slate-700 bg-slate-800 p-3 transition-all hover:border-[#1e406b]"
                       >
                         <div className="flex items-center gap-3">
                           <ImagePreview
@@ -538,14 +560,14 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
                             directDisplay={true}
                           />
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1 truncate font-bold text-gray-900 dark:text-gray-100">
-                              <span className="rounded bg-yellow-400 px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-black">{v.license_plate}</span>
+                            <div className="flex items-center gap-1 truncate font-bold text-slate-100">
+                              <span className="rounded bg-[#e0a02e] px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-[#112552]">{v.license_plate}</span>
                             </div>
-                            <div className="mt-1 truncate text-xs text-gray-600 dark:text-gray-400">
+                            <div className="mt-1 truncate text-xs text-slate-400">
                               {v.model || 'Chưa rõ model'}
                             </div>
                           </div>
-                          <div className="rounded-lg bg-gray-100 p-1.5 text-gray-400 transition-colors group-hover:bg-blue-50 group-hover:text-blue-500 dark:bg-slate-700 dark:group-hover:bg-blue-900/20">
+                          <div className="rounded-lg bg-slate-700 p-1.5 text-slate-400 transition-colors group-hover:bg-[#112552]/20 group-hover:text-[#dfe1e3]">
                             <Settings size={16} />
                           </div>
                         </div>

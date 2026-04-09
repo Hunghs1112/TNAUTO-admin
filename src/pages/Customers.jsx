@@ -16,7 +16,7 @@ function Customers() {
         columns={customersConfig.columns}
         fieldsForModal={customersConfig.fieldsForModal}
         title={customersConfig.title}
-        description="Danh sách này chỉ gồm các khách hàng đã liên kết với gara đang đăng nhập. Mỗi khách có thể có nhiều xe riêng trong phần chi tiết."
+        description="Quản lý khách hàng đã liên kết với gara hiện tại."
         showPagination={true}
         limit={20}
         disableCreate={false}

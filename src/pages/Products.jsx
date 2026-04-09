@@ -30,6 +30,7 @@ function Products() {
         columns={productsConfig.columns}
         fieldsForModal={productsConfig.fieldsForModal}
         title={productsConfig.title}
+        description="Quản lý sản phẩm, thông tin giá và trạng thái hiển thị trong gara."
         showPagination={true}
         limit={12}
         refreshTrigger={refreshKey}

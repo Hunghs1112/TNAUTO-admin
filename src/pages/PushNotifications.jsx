@@ -112,22 +112,22 @@ function PushNotifications() {
 
   return (
     <div className="p-6">
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="rounded-lg border border-slate-700/80 bg-slate-900 shadow p-6">
         <div className="flex items-center gap-2 mb-6">
-          <Radio size={24} className="text-blue-600" />
-          <h2 className="text-2xl font-bold">Push Notification (Realtime)</h2>
+          <Radio size={24} className="text-[#1e406b]" />
+          <h2 className="text-2xl font-bold text-slate-100">Push Notification (Realtime)</h2>
         </div>
 
         {/* Push type selector */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Loại Push</label>
+          <label className="block text-sm font-medium text-slate-300 mb-2">Loại Push</label>
           <div className="flex gap-3">
             <button
               onClick={() => setPushModal({ ...pushModal, type: 'user' })}
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
                 pushModal.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-[#1e406b] text-white'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
               <Users size={18} className="inline mr-2" />
@@ -137,8 +137,8 @@ function PushNotifications() {
               onClick={() => setPushModal({ ...pushModal, type: 'broadcast' })}
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
                 pushModal.type === 'broadcast'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-[#1e406b] text-white'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
               <Radio size={18} className="inline mr-2" />
@@ -148,8 +148,8 @@ function PushNotifications() {
               onClick={() => setPushModal({ ...pushModal, type: 'topic' })}
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
                 pushModal.type === 'topic'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-[#1e406b] text-white'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
               <Target size={18} className="inline mr-2" />
@@ -161,15 +161,15 @@ function PushNotifications() {
         <div className="space-y-4 max-w-2xl">
           {/* User-specific fields */}
           {pushModal.type === 'user' && (
-            <div className="p-4 bg-blue-50 rounded-lg space-y-4">
+            <div className="rounded-lg border border-[#1e406b]/20 bg-[#1e406b]/12 p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  User Type <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  User Type <span className="text-[#e0a02e]">*</span>
                 </label>
                 <select
                   value={pushModal.user_type}
                   onChange={(e) => setPushModal({ ...pushModal, user_type: e.target.value, user_id: '' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-transparent focus:ring-2 focus:ring-[#1e406b]"
                 >
                   <option value="customer">Khách hàng</option>
                   <option value="employee">Nhân viên</option>
@@ -177,13 +177,13 @@ function PushNotifications() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chọn người nhận <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Chọn người nhận <span className="text-[#e0a02e]">*</span>
                 </label>
                 <select
                   value={pushModal.user_id}
                   onChange={(e) => setPushModal({ ...pushModal, user_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-transparent focus:ring-2 focus:ring-[#1e406b]"
                 >
                   <option value="">-- Chọn {pushModal.user_type === 'customer' ? 'khách hàng' : 'nhân viên'} --</option>
                   {pushModal.user_type === 'customer' 
@@ -205,14 +205,14 @@ function PushNotifications() {
 
           {/* Broadcast user type field */}
           {pushModal.type === 'broadcast' && (
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Gửi cho <span className="text-red-500">*</span>
+            <div className="rounded-lg border border-[#1e406b]/20 bg-[#1e406b]/12 p-4">
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                Gửi cho <span className="text-[#e0a02e]">*</span>
               </label>
               <select
                 value={pushModal.broadcast_user_type}
                 onChange={(e) => setPushModal({ ...pushModal, broadcast_user_type: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-transparent focus:ring-2 focus:ring-[#1e406b]"
               >
                 <option value="customer">Tất cả Khách hàng</option>
                 <option value="employee">Tất cả Nhân viên</option>
@@ -222,14 +222,14 @@ function PushNotifications() {
 
           {/* Topic field */}
           {pushModal.type === 'topic' && (
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Topic <span className="text-red-500">*</span>
+            <div className="rounded-lg border border-[#1e406b]/20 bg-[#1e406b]/12 p-4">
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                Topic <span className="text-[#e0a02e]">*</span>
               </label>
               <select
                 value={pushModal.topic}
                 onChange={(e) => setPushModal({ ...pushModal, topic: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-transparent focus:ring-2 focus:ring-[#1e406b]"
               >
                 <option value="customers">customers - Tất cả khách hàng</option>
                 <option value="employees">employees - Tất cả nhân viên</option>
@@ -241,33 +241,33 @@ function PushNotifications() {
 
           {/* Notification content */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Title <span className="text-[#e0a02e]">*</span>
             </label>
             <input
               type="text"
               value={pushModal.title}
               onChange={(e) => setPushModal({ ...pushModal, title: e.target.value })}
               placeholder="🎉 Khuyến mãi đặc biệt"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-transparent focus:ring-2 focus:ring-[#1e406b]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Body <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Body <span className="text-[#e0a02e]">*</span>
             </label>
             <textarea
               value={pushModal.body}
               onChange={(e) => setPushModal({ ...pushModal, body: e.target.value })}
               placeholder="Giảm giá 50% cho tất cả dịch vụ hôm nay!"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-transparent focus:ring-2 focus:ring-[#1e406b]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh (Optional)</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Hình ảnh (Optional)</label>
             <ImageUploader
               onUploadSuccess={(url) => setPushModal({ ...pushModal, imageUrl: url })}
               multiple={false}
@@ -277,12 +277,12 @@ function PushNotifications() {
               allowLinkUpload={true}
             />
             {pushModal.imageUrl && (
-              <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">Current image URL:</p>
-                <p className="text-sm text-blue-600 break-all">{pushModal.imageUrl}</p>
+              <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/70 p-2">
+                <p className="text-xs text-slate-400 mb-1">Current image URL:</p>
+                <p className="text-sm text-[#eecd7e] break-all">{pushModal.imageUrl}</p>
                 <button
                   onClick={() => setPushModal({ ...pushModal, imageUrl: '' })}
-                  className="mt-1 text-xs text-red-500 hover:text-red-700"
+                  className="mt-1 text-xs text-[#b48242] hover:text-[#eecd7e]"
                 >
                   Clear image
                 </button>
@@ -291,7 +291,7 @@ function PushNotifications() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-300 mb-1">
               Custom Data (JSON - Optional)
             </label>
             <textarea
@@ -299,7 +299,7 @@ function PushNotifications() {
               onChange={(e) => setPushModal({ ...pushModal, data: e.target.value })}
               placeholder='{"type": "promotion", "promo_id": "SUMMER2025"}'
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+              className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-transparent focus:ring-2 focus:ring-[#1e406b] font-mono text-sm"
             />
           </div>
 

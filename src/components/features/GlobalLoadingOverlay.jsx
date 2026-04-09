@@ -47,10 +47,10 @@ export default function GlobalLoadingOverlay() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-slate-900/90">
-      <div className="rounded-2xl border border-gray-200 bg-white/95 px-8 py-6 text-center shadow-2xl dark:border-slate-700 dark:bg-slate-800/95">
-        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent dark:border-blue-400" />
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/88 backdrop-blur-sm">
+      <div className="rounded-2xl border border-slate-700 bg-slate-900/95 px-8 py-6 text-center shadow-2xl">
+        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-slate-600 border-t-[#e0a02e]" />
+        <p className="text-sm font-medium text-slate-300">
           {globalLoadingMessage || 'Đang xử lý...'}
         </p>
       </div>

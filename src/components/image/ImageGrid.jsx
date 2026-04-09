@@ -41,7 +41,7 @@ export default function ImageGrid({
 
           const isPrimary = img.is_primary === 1 || img.is_primary === true;
           const imageFallback = (
-            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400 dark:bg-slate-700 dark:text-slate-500">
+            <div className="flex h-full w-full items-center justify-center bg-slate-800 text-slate-500">
               <ImageIcon size={24} />
             </div>
           );
@@ -49,14 +49,14 @@ export default function ImageGrid({
           return (
             <div
               key={img.id}
-              className={`group relative aspect-square overflow-hidden rounded-lg border-2 bg-gray-100 transition-all dark:bg-slate-800 ${
+              className={`group relative aspect-square overflow-hidden rounded-lg border-2 bg-slate-800 transition-all ${
                 isPrimary
-                  ? 'border-yellow-400 ring-2 ring-yellow-200 dark:border-yellow-500 dark:ring-yellow-800'
-                  : 'border-gray-200 dark:border-slate-600 dark:hover:border-blue-500 hover:border-blue-400'
+                  ? 'border-[#e0a02e] ring-2 ring-[#e0a02e]/30'
+                  : 'border-slate-600 hover:border-[#1e406b]'
               }`}
             >
               {isPrimary ? (
-                <div className="absolute left-1 top-1 z-30 flex items-center gap-1 rounded-full bg-yellow-400 px-2 py-1 text-xs font-bold text-yellow-900 shadow-lg">
+                <div className="absolute left-1 top-1 z-30 flex items-center gap-1 rounded-full bg-[#e0a02e] px-2 py-1 text-xs font-bold text-[#112552] shadow-lg">
                   <Star size={12} fill="currentColor" />
                   Ảnh chính
                 </div>
@@ -74,13 +74,13 @@ export default function ImageGrid({
                 onClick={() => setLightboxImage(imageUrl)}
               />
 
-              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center gap-2 bg-black/0 transition-all group-hover:bg-black/30 dark:group-hover:bg-black/50">
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center gap-2 bg-black/0 transition-all group-hover:bg-black/50">
                 <button
                   onClick={(event) => {
                     event.stopPropagation();
                     setLightboxImage(imageUrl);
                   }}
-                  className="pointer-events-auto rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-blue-600 opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100 dark:bg-slate-700 dark:text-blue-400"
+                  className="pointer-events-auto rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-[#eecd7e] opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100"
                 >
                   Xem lớn
                 </button>
@@ -91,7 +91,7 @@ export default function ImageGrid({
                       event.stopPropagation();
                       onSetPrimary(img.id);
                     }}
-                    className="pointer-events-auto rounded-lg bg-white px-2 py-1.5 text-xs font-medium text-amber-600 opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100 dark:bg-slate-700 dark:text-amber-400"
+                    className="pointer-events-auto rounded-lg bg-slate-900 px-2 py-1.5 text-xs font-medium text-[#eecd7e] opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100"
                     title="Đặt làm ảnh chính"
                   >
                     <Star size={14} />
@@ -104,7 +104,7 @@ export default function ImageGrid({
                       event.stopPropagation();
                       onDelete(img.id, img.image_url);
                     }}
-                    className="pointer-events-auto rounded-lg bg-white px-2 py-1.5 text-xs font-medium text-red-600 opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100 dark:bg-slate-700 dark:text-red-400"
+                    className="pointer-events-auto rounded-lg bg-slate-900 px-2 py-1.5 text-xs font-medium text-[#b48242] opacity-0 shadow-md transition-all hover:scale-105 hover:shadow-lg group-hover:opacity-100"
                     title="Xóa ảnh"
                   >
                     <Trash2 size={14} />

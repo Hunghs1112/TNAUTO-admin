@@ -1,21 +1,10 @@
 ﻿import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
-import { clearAuthSession, getAuthToken, getStoredGarageContext } from './authStorage';
+import { clearAuthSession, getAuthToken } from './authStorage';
 
-import { buildVehiclePayload } from '../utils/vehicleDocuments';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://103.200.20.253:5000/api';
 const API_ROOT = API_BASE.replace(/\/api\/?$/, '');
-const GARAGE_SCOPED_PREFIXES = [
-  '/services',
-  '/service-categories',
-  '/products',
-  '/categories',
-  '/offers',
-  '/dealer/products',
-  '/dealer/categories',
-  '/vehicles',
-];
 
 function createApiClient(baseURL) {
   return axios.create({
@@ -32,65 +21,6 @@ let servicesListCache = {
   expiresAt: 0,
   items: null,
 };
-
-async function requestWithFallback(primaryRequest, fallbackRequest) {
-  try {
-    return await primaryRequest();
-  } catch (error) {
-    const status = error?.response?.status;
-    if (fallbackRequest && [404, 405, 501].includes(status)) {
-      return fallbackRequest();
-    }
-
-    throw error;
-  }
-}
-
-function extractRequestPath(url = '') {
-  if (!url) {
-    return '';
-  }
-
-  try {
-    if (/^https?:\/\//i.test(url)) {
-      return new URL(url).pathname.replace(/^\/api/, '');
-    }
-  } catch {
-    // Ignore invalid URLs and keep the relative path.
-  }
-
-  return String(url).replace(/^\/api/, '');
-}
-
-function shouldAttachGarageScope(url) {
-  const path = extractRequestPath(url);
-  return GARAGE_SCOPED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
-}
-
-function appendGarageScope(config) {
-  if (config?.skipGarageScope || !shouldAttachGarageScope(config?.url)) {
-    return config;
-  }
-
-  const garage = getStoredGarageContext();
-  if (garage.id === null && !garage.code) {
-    return config;
-  }
-
-  const nextParams = { ...(config.params || {}) };
-  if (nextParams.garage_id !== undefined || nextParams.garage_code !== undefined) {
-    return config;
-  }
-
-  return {
-    ...config,
-    params: {
-      ...nextParams,
-      ...(garage.id !== null ? { garage_id: garage.id } : {}),
-      ...(garage.code ? { garage_code: garage.code } : {}),
-    },
-  };
-}
 
 function extractListItems(response) {
   const raw = response?.data;
@@ -226,7 +156,7 @@ async function fetchAllServices({ force = false } = {}) {
   }
 
   const pageSize = 50;
-  const firstResponse = await api.get('/services', {
+  const firstResponse = await api.get('/web/services', {
     params: {
       page: 1,
       limit: pageSize,
@@ -247,7 +177,7 @@ async function fetchAllServices({ force = false } = {}) {
 
   const responses = await Promise.all(
     Array.from({ length: meta.totalPages - 1 }, (_, index) =>
-      api.get('/services', {
+      api.get('/web/services', {
         params: {
           page: index + 2,
           limit: pageSize,
@@ -267,7 +197,7 @@ async function fetchAllServices({ force = false } = {}) {
 
 [api, rootApi].forEach((client) => {
   client.interceptors.request.use((config) => {
-    const nextConfig = appendGarageScope({ ...config });
+    const nextConfig = { ...config };
     const nextHeaders = nextConfig.headers || {};
 
     if (!nextConfig.skipAuth) {
@@ -320,130 +250,108 @@ async function fetchAllServices({ force = false } = {}) {
 
 export const authAPI = {
   loginGarage: (data) =>
-    api.post('/auth/garage/login', data, {
+    api.post('/web/auth/login', data, {
       skipAuth: true,
       skipAuthFailureHandler: true,
     }),
   resolveGarageByCode: (code) =>
-    api.get(`/garages/by-code/${encodeURIComponent(code)}`, {
+    api.get(`/public/garages/by-code/${encodeURIComponent(code)}`, {
       skipAuth: true,
       skipAuthFailureHandler: true,
     }),
 };
 
-export const dealersAPI = createCrudAPI(api, '/dealers', {
-  getAll: (params = {}) => api.get('/dealers', { params }),
-  getById: (id) => api.get(`/dealers/${id}`),
-  create: (data) => api.post('/dealers', data),
-  update: (id, data) => api.put(`/dealers/${id}`, data),
-  delete: (id) => api.delete(`/dealers/${id}`),
-  getStats: () => api.get('/dealers/stats'),
-  register: (data) => api.post('/auth/dealer/register', data),
-  uploadAvatar: (id, file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    return api.post(`/dealers/${id}/upload-avatar`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
+export const dealersAPI = createCrudAPI(api, '/web/dealers', {
+  getAll: (params = {}) => api.get('/web/dealers', { params }),
+  getById: (id) => api.get(`/web/dealers/${id}`),
+  create: (data) => api.post('/web/dealers', data),
+  update: (id, data) => api.put(`/web/dealers/${id}`, data),
+  delete: (id) => api.delete(`/web/dealers/${id}`),
 });
 
-export const customersAPI = createCrudAPI(api, '/customers', {
-  getStats: () => api.get('/customers/stats'),
-  register: (data) => api.post('/customers/register', data),
-  login: (data) => api.post('/customers/login', data),
-  updateProfile: (data) => api.put('/customers/profile', data),
-  deleteAccount: (data) => api.delete('/customers/account', data),
+export const customersAPI = createCrudAPI(api, '/web/customers', {
+  getStats: () => api.get('/web/customers/stats'),
   uploadAvatar: (id, file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return api.post(`/customers/${id}/upload-avatar`, formData, {
+    return api.post(`/web/customers/${id}/upload-avatar`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
   getDriverLicense: async (id) => {
     try {
-      return await api.get(`/customers/${id}/driver-license`);
+      return await api.get(`/web/customers/${id}/driver-license`);
     } catch (requestError) {
       if (requestError?.status === 404) {
         return null;
       }
-
       throw requestError;
     }
   },
-  updateDriverLicense: (id, data) => api.put(`/customers/${id}/driver-license`, data),
-  getVehiclesForGarage: ({ phone, garageCode }) =>
-    api.get('/customers/vehicles', {
+  updateDriverLicense: (id, data) => api.put(`/web/customers/${id}/driver-license`, data),
+  deleteDriverLicense: (id) => api.delete(`/web/customers/${id}/driver-license`),
+  getVehiclesForGarage: ({ phone }) =>
+    api.get('/web/vehicles', {
       params: {
         phone,
-        garage_code: garageCode,
       },
     }),
-  addVehicle: (id, data) => api.post(`/customers/${id}/vehicles`, data),
+  addVehicle: (id, data) => api.post(`/web/customers/${id}/vehicles`, data),
 });
 
-export const employeesAPI = createCrudAPI(api, '/employees', {
-  getStats: () => api.get('/employees/stats'),
-  login: (data) => api.post('/employees/login', data),
-  getAssignedOrders: () => api.get('/employees/orders/assigned'),
-  getOrders: () => api.get('/employees/orders'),
-  getOrderById: (id) => api.get(`/employees/orders/${id}`),
-  assignOrder: (data) => api.post('/employees/assign-order', data),
+export const employeesAPI = createCrudAPI(api, '/web/employees', {
+  getStats: () => api.get('/web/employees/stats'),
+  assignOrder: (data) => api.post('/web/employees/assign-order', data),
   uploadAvatar: (id, file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return api.post(`/employees/${id}/upload-avatar`, formData, {
+    return api.post(`/web/employees/${id}/upload-avatar`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
 });
 
-export const servicesAPI = createCrudAPI(api, '/services', {
+export const servicesAPI = createCrudAPI(api, '/web/services', {
   getAll: async (params = {}) => {
     const services = await fetchAllServices();
     const filteredServices = sortServicesByNewest(services).filter((service) => matchesServiceSearch(service, params.search));
     return buildPaginatedResponse(filteredServices, params);
   },
   create: async (data) => {
-    const response = await api.post('/services/admin', data);
+    const response = await api.post('/web/services', data);
     invalidateServicesCache();
     return response;
   },
   update: async (id, data) => {
-    const response = await api.put(`/services/admin/${id}`, data);
+    const response = await api.put(`/web/services/${id}`, data);
     invalidateServicesCache();
     return response;
   },
   delete: async (id) => {
-    const response = await api.delete(`/services/admin/${id}`);
+    const response = await api.delete(`/web/services/${id}`);
     invalidateServicesCache();
     return response;
   },
-  getStats: () => api.get('/services/admin/stats'),
+  getStats: () => api.get('/web/services/stats'),
   uploadImage: (id, file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return api.post(`/services/admin/${id}/upload-image`, formData, {
+    return api.post(`/web/services/${id}/upload-image`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
 });
 
-export const productsAPI = createCrudAPI(api, '/products', {
-  getAll: (params = {}) =>
-    requestWithFallback(
-      () => api.get('/products', { params }),
-      () => api.get('/products/admin', { params })
-    ),
-  create: (data) => api.post('/products/admin', data),
-  update: (id, data) => api.put(`/products/admin/${id}`, data),
-  delete: (id) => api.delete(`/products/admin/${id}`),
-  getStats: () => api.get('/products/admin/stats'),
-  createImage: (data) => api.post('/products/images', data),
-  getImages: (productId) => api.get(`/products/${productId}/images`),
-  updateImage: (id, data) => api.put(`/products/images/${id}`, data),
-  deleteImage: (id) => api.delete(`/products/images/${id}`),
+export const productsAPI = createCrudAPI(api, '/web/products', {
+  getAll: (params = {}) => api.get('/web/products', { params }),
+  create: (data) => api.post('/web/products', data),
+  update: (id, data) => api.put(`/web/products/${id}`, data),
+  delete: (id) => api.delete(`/web/products/${id}`),
+  getStats: () => api.get('/web/products/stats'),
+  createImage: (data) => api.post('/web/products/images', data),
+  getImages: (productId) => api.get(`/web/products/${productId}/images`),
+  updateImage: (id, data) => api.put(`/web/products/images/${id}`, data),
+  deleteImage: (id) => api.delete(`/web/products/images/${id}`),
 });
 
 export const dealerCategoriesAPI = createCrudAPI(api, '/dealer/categories', {
@@ -466,105 +374,85 @@ export const dealerProductsAPI = createCrudAPI(api, '/dealer/products', {
   deleteImage: (id) => api.delete(`/dealer/products/images/${id}`),
 });
 
-export const serviceCategoriesAPI = createCrudAPI(api, '/service-categories', {
-  getAll: (params = {}) =>
-    requestWithFallback(
-      () => api.get('/service-categories', { params }),
-      () => api.get('/service-categories/admin', { params })
-    ),
-  create: (data) => api.post('/service-categories/admin', data),
-  update: (id, data) => api.put(`/service-categories/admin/${id}`, data),
-  delete: (id) => api.delete(`/service-categories/admin/${id}`),
-  getStats: () => api.get('/service-categories/admin/stats'),
+export const serviceCategoriesAPI = createCrudAPI(api, '/web/service-categories', {
+  getAll: (params = {}) => api.get('/web/service-categories', { params }),
+  create: (data) => api.post('/web/service-categories', data),
+  update: (id, data) => api.put(`/web/service-categories/${id}`, data),
+  delete: (id) => api.delete(`/web/service-categories/${id}`),
+  getStats: () => api.get('/web/service-categories/stats'),
   uploadImage: (id, file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return api.post(`/service-categories/admin/${id}/upload-image`, formData, {
+    return api.post(`/web/service-categories/${id}/upload-image`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
 });
 
-export const categoriesAPI = createCrudAPI(api, '/categories', {
-  getAll: (params = {}) =>
-    requestWithFallback(
-      () => api.get('/categories', { params }),
-      () => api.get('/categories/admin', { params })
-    ),
-  create: (data) => api.post('/categories/admin', data),
-  update: (id, data) => api.put(`/categories/admin/${id}`, data),
-  delete: (id) => api.delete(`/categories/admin/${id}`),
-  getStats: () => api.get('/categories/admin/stats'),
+export const categoriesAPI = createCrudAPI(api, '/web/categories', {
+  getAll: (params = {}) => api.get('/web/categories', { params }),
+  create: (data) => api.post('/web/categories', data),
+  update: (id, data) => api.put(`/web/categories/${id}`, data),
+  delete: (id) => api.delete(`/web/categories/${id}`),
+  getStats: () => api.get('/web/categories/stats'),
   uploadImage: (id, file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return api.post(`/categories/admin/${id}/upload-image`, formData, {
+    return api.post(`/web/categories/${id}/upload-image`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
 });
 
-export const vehiclesAPI = createCrudAPI(api, '/vehicles', {
-  getAll: (params = {}) => api.get('/vehicles/admin/all', { params }),
-  getById: (id) =>
-    requestWithFallback(
-      () => api.get(`/vehicles/${id}`),
-      () => api.get(`/vehicles/admin/${id}`)
-    ),
-  create: (data) => api.post('/vehicles', buildVehiclePayload(data)),
-  update: (id, data) => api.put(`/vehicles/admin/${id}`, buildVehiclePayload(data)),
-  delete: (id) => api.delete(`/vehicles/admin/${id}`),
-  getStats: () => api.get('/vehicles/admin/stats'),
+export const vehiclesAPI = createCrudAPI(api, '/web/vehicles', {
+  getAll: (params = {}) => api.get('/web/vehicles', { params }),
+  getById: (id) => api.get(`/web/vehicles/${id}`),
+  create: (data) => api.post('/web/vehicles', buildVehiclePayload(data)),
+  update: (id, data) => api.put(`/web/vehicles/${id}`, buildVehiclePayload(data)),
+  delete: (id) => api.delete(`/web/vehicles/${id}`),
+  getStats: () => api.get('/web/vehicles/stats'),
   uploadImage: (id, file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return api.post(`/vehicles/admin/${id}/upload-image`, formData, {
+    return api.post(`/web/vehicles/${id}/upload-image`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  searchByPlate: (plate) => api.get('/vehicles/search', { params: { license_plate: plate } }),
-  getInspection: (vehicleId) => api.get(`/vehicles/${vehicleId}/inspection`),
-  updateInspection: (vehicleId, data) => api.put(`/vehicles/${vehicleId}/inspection`, data),
-  deleteInspection: (vehicleId) => api.delete(`/vehicles/${vehicleId}/inspection`),
 });
 
-export const serviceOrdersAPI = createCrudAPI(api, '/service-orders', {
-  getStats: () => api.get('/service-orders/admin/stats'),
-  updateStatus: (id, data) => api.put(`/service-orders/admin/${id}/status`, data),
-  assign: (id, data) => api.patch(`/service-orders/admin/${id}/assign`, data),
-  complete: (id, data) => api.patch(`/service-orders/admin/${id}/complete`, data),
-  delete: (id) => api.delete(`/service-orders/admin/${id}`),
+export const serviceOrdersAPI = createCrudAPI(api, '/web/service-orders', {
+  getStats: () => api.get('/web/service-orders/stats'),
+  updateStatus: (id, data) => api.put(`/web/service-orders/${id}/status`, data),
+  assign: (id, data) => api.patch(`/web/service-orders/${id}/assign`, data),
+  complete: (id, data) => api.patch(`/web/service-orders/${id}/complete`, data),
+  delete: (id) => api.delete(`/web/service-orders/${id}`),
 });
 
-export const offersAPI = createCrudAPI(api, '/offers', {
-  getAll: (params = {}) =>
-    requestWithFallback(
-      () => api.get('/offers', { params }),
-      () => api.get('/offers/admin', { params })
-    ),
-  create: (data) => api.post('/offers/admin', data),
-  update: (id, data) => api.put(`/offers/admin/${id}`, data),
-  delete: (id) => api.delete(`/offers/admin/${id}`),
-  getStats: () => api.get('/offers/admin/stats'),
+export const offersAPI = createCrudAPI(api, '/web/offers', {
+  getAll: (params = {}) => api.get('/web/offers', { params }),
+  create: (data) => api.post('/web/offers', data),
+  update: (id, data) => api.put(`/web/offers/${id}`, data),
+  delete: (id) => api.delete(`/web/offers/${id}`),
+  getStats: () => api.get('/web/offers/stats'),
   uploadImage: (id, file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return api.post(`/offers/admin/${id}/upload-image`, formData, {
+    return api.post(`/web/offers/${id}/upload-image`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  createImage: (data) => api.post('/offers/images', data),
-  getImages: (offerId) => api.get(`/offers/${offerId}/images`),
-  updateImage: (id, data) => api.put(`/offers/images/${id}`, data),
-  deleteImage: (id) => api.delete(`/offers/images/${id}`),
+  createImage: (data) => api.post('/web/offers/images', data),
+  getImages: (offerId) => api.get(`/web/offers/${offerId}/images`),
+  updateImage: (id, data) => api.put(`/web/offers/images/${id}`, data),
+  deleteImage: (id) => api.delete(`/web/offers/images/${id}`),
 });
 
-export const warrantiesAPI = createCrudAPI(api, '/warranties', {
-  getAll: (params) => api.get('/warranties', { params }),
-  create: (data) => api.post('/warranties', data),
-  update: (id, data) => api.put(`/warranties/${id}`, data),
-  delete: (id) => api.delete(`/warranties/${id}`),
-  getStats: () => api.get('/warranties/stats'),
+export const warrantiesAPI = createCrudAPI(api, '/web/warranties', {
+  getAll: (params) => api.get('/web/warranties', { params }),
+  create: (data) => api.post('/web/warranties', data),
+  update: (id, data) => api.put(`/web/warranties/${id}`, data),
+  delete: (id) => api.delete(`/web/warranties/${id}`),
+  getStats: () => api.get('/web/warranties/stats'),
 });
 
 export const uploadAPI = {
@@ -592,37 +480,13 @@ export const serviceOrderImagesAPI = {
 };
 
 export const notificationsAPI = {
-  getUserNotifications: (params) => api.get('/notifications', { params }),
-  getUnreadCount: (params) => api.get('/notifications/unread-count', { params }),
-  markAsRead: (id) => api.put(`/notifications/${id}/read`),
-  markAllAsRead: (data) => api.put('/notifications/read-all', data),
-  delete: (id) =>
-    requestWithFallback(
-      () => api.delete(`/admin/notifications/${id}`),
-      () => api.delete(`/notifications/${id}`)
-    ),
-  getAll: (params) =>
-    requestWithFallback(
-      () => api.get('/admin/notifications', { params }),
-      () => api.get('/notifications/admin/all', { params })
-    ),
-  send: (data) =>
-    requestWithFallback(
-      () => api.post('/notifications/send', data),
-      () => api.post('/admin/notifications', data)
-    ),
-  getStats: () =>
-    requestWithFallback(
-      () => api.get('/notifications/admin/stats'),
-      () => api.get('/admin/notifications/stats')
-    ),
-  getAdminLogs: (params) =>
-    requestWithFallback(
-      () => api.get('/admin/notifications', { params }),
-      () => api.get('/notifications/admin/all', { params })
-    ),
-  getCustomers: () => api.get('/customers', { params: { limit: 1000 } }),
-  getEmployees: () => api.get('/employees', { params: { limit: 1000 } }),
+  delete: (id) => api.delete(`/web/notifications/${id}`),
+  getAll: (params) => api.get('/web/notifications', { params }),
+  send: (data) => api.post('/web/notifications', data),
+  getStats: () => api.get('/web/notifications/stats'),
+  getAdminLogs: (params) => api.get('/web/notifications', { params }),
+  getCustomers: () => api.get('/web/customers', { params: { limit: 1000 } }),
+  getEmployees: () => api.get('/web/employees', { params: { limit: 1000 } }),
 };
 
 export const fcmTokensAPI = {
@@ -637,9 +501,14 @@ export const fcmTokensAPI = {
 };
 
 export const serviceReminderConfigsAPI = {
-  getAll: (params) => api.get('/admin/service-reminder-configs', { params }),
-  upsert: (serviceId, data) => api.put(`/admin/service-reminder-configs/${serviceId}`, data),
-  setEnabled: (serviceId, enabled) => api.patch(`/admin/service-reminder-configs/${serviceId}/enabled`, { enabled }),
+  getAll: (params) => api.get('/web/settings/service-reminder-configs', { params }),
+  upsert: (serviceId, data) => api.put(`/web/settings/service-reminder-configs/${serviceId}`, data),
+  setEnabled: (serviceId, enabled) => api.patch(`/web/settings/service-reminder-configs/${serviceId}/enabled`, { enabled }),
+};
+
+export const uiVisibilityAPI = {
+  get: () => api.get('/web/settings/ui-visibility'),
+  update: (data) => api.put('/web/settings/ui-visibility', data),
 };
 
 export const adminNotificationsAPI = {

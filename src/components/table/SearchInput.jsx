@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 const SearchInput = memo(({ onSearch, placeholder = 'Tìm kiếm...', className = '' }) => {
   const [searchInput, setSearchInput] = useState('');
@@ -22,7 +22,7 @@ const SearchInput = memo(({ onSearch, placeholder = 'Tìm kiếm...', className 
 
     searchTimeoutRef.current = setTimeout(() => {
       onSearch?.(value);
-    }, 120);
+    }, 150);
   };
 
   const handleClearSearch = () => {
@@ -37,18 +37,22 @@ const SearchInput = memo(({ onSearch, placeholder = 'Tìm kiếm...', className 
 
   return (
     <div className={`relative ${className}`}>
+      <Search
+        size={16}
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+      />
       <input
         type="text"
         value={searchInput}
         onChange={(event) => handleSearchChange(event.target.value)}
         placeholder={placeholder}
-        className="app-input pr-10"
+        className="app-input pl-9 pr-10 text-slate-100 placeholder:text-slate-500"
       />
       {searchInput ? (
         <button
           type="button"
           onClick={handleClearSearch}
-          className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
           title="Xóa tìm kiếm"
         >
           <X size={16} />

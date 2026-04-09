@@ -151,15 +151,16 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 backdrop-blur-sm sm:flex sm:items-center sm:justify-center sm:p-4">
       <div className="app-panel my-4 flex max-h-[calc(100vh-1.5rem)] w-full max-w-2xl flex-col sm:my-0 sm:max-h-[90vh]">
         <div className="app-panel-header shrink-0">
-          <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">TNAUTO Admin</p>
+          <h3 className="mt-2 text-2xl font-bold text-white">
             {isEdit ? `Sửa ${title.toLowerCase()}` : `Thêm ${title.toLowerCase()}`}
           </h3>
         </div>
 
         <div className="app-panel-body flex min-h-0 flex-1 flex-col overflow-hidden">
           {loadingOptions ? (
-            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-300">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-slate-300">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#e0a02e] border-t-transparent" />
               <span>Đang tải dữ liệu...</span>
             </div>
           ) : null}
@@ -170,14 +171,12 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
                 if (field.type === 'section') {
                   return (
                     <div key={field.name || field.label || `section-${index}`} className={index > 0 ? 'pt-3' : undefined}>
-                      {index > 0 ? <div className="mb-4 border-t border-slate-200 dark:border-slate-800" /> : null}
+                      {index > 0 ? <div className="mb-4 border-t border-slate-700" /> : null}
                       <div className="space-y-1">
-                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                           {field.label}
                         </div>
-                        {field.description ? (
-                          <p className="text-sm text-slate-500 dark:text-slate-300">{field.description}</p>
-                        ) : null}
+                        {field.description ? <p className="text-sm text-slate-300">{field.description}</p> : null}
                       </div>
                     </div>
                   );
@@ -223,7 +222,7 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
               })}
             </div>
 
-            <div className="mt-4 flex shrink-0 flex-col justify-end gap-3 border-t border-slate-200 pt-4 sm:flex-row dark:border-slate-800">
+            <div className="mt-4 flex shrink-0 flex-col justify-end gap-3 border-t border-slate-700 pt-4 sm:flex-row">
               <button type="button" onClick={onClose} className="btn-gradient-secondary">
                 Hủy
               </button>

@@ -39,8 +39,8 @@ export default function FilterPanel({
         onClick={onToggle}
         className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
           isOpen 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-[#1e406b] text-white' 
+            : 'border border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-600 hover:bg-slate-800'
         }`}
       >
         <Filter size={18} />
@@ -49,15 +49,15 @@ export default function FilterPanel({
 
       {/* Filter Panel */}
       {isOpen && (
-        <div className={`bg-gray-50 rounded-lg p-4 space-y-3 ${className}`}>
+        <div className={`space-y-3 rounded-lg border border-slate-700 bg-slate-900/80 p-4 ${className}`}>
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+            <h3 className="flex items-center gap-2 font-semibold text-slate-100">
               <Filter size={18} />
               Bộ lọc
             </h3>
             <button
               onClick={onToggle}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-slate-400 hover:text-slate-200"
             >
               <X size={18} />
             </button>
@@ -79,16 +79,16 @@ export default function FilterPanel({
             ))}
           </div>
           
-          <div className="flex gap-2 pt-2 border-t border-gray-200">
+          <div className="flex gap-2 border-t border-slate-700 pt-2">
             <button 
               onClick={onApply} 
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-[#1e406b] text-white rounded-md hover:bg-[#112552] transition-colors"
             >
               Áp dụng
             </button>
             <button 
               onClick={handleClear} 
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+              className="rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-slate-200 transition-colors hover:border-slate-600 hover:bg-slate-700"
             >
               Xóa bộ lọc
             </button>

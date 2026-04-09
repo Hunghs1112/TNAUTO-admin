@@ -1,4 +1,3 @@
-﻿// src/pages/ServiceReminderRules.jsx
 import { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import { servicesAPI, serviceReminderConfigsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
@@ -225,8 +224,8 @@ function ServiceReminderRules() {
         <div className="app-panel-header">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Danh sách cấu hình</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Tìm nhanh dịch vụ rồi bật hoặc chỉnh sửa quy tắc nhắc tương ứng.</p>
+              <h2 className="text-lg font-semibold text-slate-100">Danh sách cấu hình</h2>
+              <p className="mt-1 text-sm text-slate-300">Tìm nhanh dịch vụ rồi bật hoặc chỉnh sửa quy tắc nhắc tương ứng.</p>
             </div>
             <div className="w-full lg:w-80">
               <input
@@ -259,7 +258,7 @@ function ServiceReminderRules() {
                 const cooldown = cfg?.cooldown_days ?? '—';
 
                 return (
-                  <tr key={svc.id} className="text-gray-900 dark:text-gray-100">
+                  <tr key={svc.id} className="text-slate-100">
                     <td className="px-4 py-3 font-medium">{svc.name || svc.service_name || `#${svc.id}`}</td>
                     <td className="px-4 py-3">
                       <button
@@ -298,7 +297,7 @@ function ServiceReminderRules() {
       {isEditOpen && (
         <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Cấu hình nhắc dịch vụ">
           <div className="space-y-4">
-            <div className="text-sm text-gray-700 dark:text-gray-300">
+            <div className="text-sm text-slate-300">
               <div className="font-semibold">Dịch vụ:</div>
               <div>{editService?.name || editService?.service_name || ''}</div>
             </div>
@@ -309,23 +308,23 @@ function ServiceReminderRules() {
                 checked={!!form.enabled}
                 onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
               />
-              <span className="text-sm text-gray-800 dark:text-gray-200">Bật nhắc</span>
+              <span className="text-sm text-slate-200">Bật nhắc</span>
             </label>
 
             <div>
-              <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Mốc nhắc (ngày sau)</div>
+              <div className="text-sm font-medium text-slate-200 mb-1">Mốc nhắc (ngày sau)</div>
               <input
                 value={form.reminder_days_input}
                 onChange={(e) => setForm((f) => ({ ...f, reminder_days_input: e.target.value }))}
                 className="app-input"
                 placeholder="30,60,90"
               />
-              <div className="text-xs text-gray-500 mt-1">Nhập dạng: 30,60,90</div>
+              <div className="mt-1 text-xs text-slate-400">Nhập dạng: 30,60,90</div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Giờ gửi</div>
+                <div className="text-sm font-medium text-slate-200 mb-1">Giờ gửi</div>
                 <input
                   value={form.send_time}
                   onChange={(e) => setForm((f) => ({ ...f, send_time: e.target.value }))}
@@ -334,7 +333,7 @@ function ServiceReminderRules() {
                 />
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Số ngày giãn cách</div>
+                <div className="text-sm font-medium text-slate-200 mb-1">Số ngày giãn cách</div>
                 <input
                   type="number"
                   min={0}
@@ -346,7 +345,7 @@ function ServiceReminderRules() {
             </div>
 
             <div>
-              <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Mẫu tiêu đề</div>
+              <div className="text-sm font-medium text-slate-200 mb-1">Mẫu tiêu đề</div>
               <input
                 value={form.title_template}
                 onChange={(e) => setForm((f) => ({ ...f, title_template: e.target.value }))}
@@ -355,7 +354,7 @@ function ServiceReminderRules() {
             </div>
 
             <div>
-              <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Mẫu nội dung</div>
+              <div className="text-sm font-medium text-slate-200 mb-1">Mẫu nội dung</div>
               <textarea
                 value={form.body_template}
                 onChange={(e) => setForm((f) => ({ ...f, body_template: e.target.value }))}
@@ -364,9 +363,9 @@ function ServiceReminderRules() {
               />
             </div>
 
-            <div className="p-3 rounded-lg bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700">
-              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">Xem trước</div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700">
+              <div className="text-sm font-semibold text-slate-200 mb-1">Xem trước</div>
+              <div className="text-sm text-slate-300">
                 <div className="font-medium">{renderTemplate(form.title_template, mockPreviewData) || '—'}</div>
                 <div>{renderTemplate(form.body_template, mockPreviewData) || '—'}</div>
               </div>
@@ -392,4 +391,3 @@ function ServiceReminderRules() {
 }
 
 export default memo(ServiceReminderRules);
-

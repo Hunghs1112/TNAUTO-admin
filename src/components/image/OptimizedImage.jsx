@@ -59,7 +59,7 @@ function enqueueImageTask(start) {
 function DefaultPlaceholder({ className }) {
   return (
     <div
-      className={`${className} flex items-center justify-center bg-gray-100 text-gray-300 dark:bg-slate-700 dark:text-slate-500`}
+      className={`${className} flex items-center justify-center bg-slate-800 text-slate-500`}
       aria-hidden="true"
     >
       <ImageIcon size={16} />

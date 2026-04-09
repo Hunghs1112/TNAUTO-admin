@@ -150,11 +150,11 @@ export default function ProductVideo({ videoUrl, className = '' }) {
   if (!videoInfo) {
     // Invalid video URL format
     return (
-      <div className={`product-video-error ${className} p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800`}>
-        <p className="text-red-600 dark:text-red-400 text-sm mb-2">
+      <div className={`product-video-error ${className} p-4 bg-[#b48242]/12 rounded-lg border border-[#b48242]/30`}>
+        <p className="text-[#b48242] text-sm mb-2">
           URL video không hợp lệ hoặc không được hỗ trợ.
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-slate-400">
           Hỗ trợ: YouTube, Vimeo, TikTok, Facebook, Instagram, hoặc direct video URL (.mp4, .webm, .ogg, .mov)
         </p>
       </div>
@@ -229,8 +229,8 @@ export default function ProductVideo({ videoUrl, className = '' }) {
     
     if (!videoId) {
       return (
-        <div className={`product-video-error ${className} p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800`}>
-          <p className="text-red-600 dark:text-red-400 text-sm">
+        <div className={`product-video-error ${className} p-4 bg-[#b48242]/12 rounded-lg border border-[#b48242]/30`}>
+          <p className="text-[#b48242] text-sm">
             Không thể parse TikTok URL. Vui lòng sử dụng format: https://www.tiktok.com/@username/video/VIDEO_ID
           </p>
         </div>
@@ -242,8 +242,8 @@ export default function ProductVideo({ videoUrl, className = '' }) {
       return (
         <div className={`product-video ${className} flex items-center justify-center p-8`}>
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Đang tải video TikTok...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e406b] mx-auto mb-2"></div>
+            <p className="text-sm text-slate-400">Đang tải video TikTok...</p>
           </div>
         </div>
       );
@@ -254,7 +254,7 @@ export default function ProductVideo({ videoUrl, className = '' }) {
       // Fallback to blockquote method
       return (
         <div className={`product-video ${className}`}>
-          <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs text-yellow-600 dark:text-yellow-400">
+          <div className="mb-2 p-2 bg-[#c37b1e]/12 rounded text-xs text-[#eecd7e]">
             Không thể tải embed từ TikTok API. Đang sử dụng phương pháp dự phòng.
           </div>
           <div className="flex justify-center w-full">
@@ -333,15 +333,15 @@ export default function ProductVideo({ videoUrl, className = '' }) {
   // TikTok short URL - show link
   if (videoInfo.type === 'tiktok' && videoInfo.isShortUrl) {
     return (
-      <div className={`product-video ${className} p-4 bg-gray-100 dark:bg-slate-700 rounded-lg`}>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+      <div className={`product-video ${className} p-4 bg-slate-700 rounded-lg`}>
+        <p className="text-sm text-slate-400 mb-2">
           TikTok short URL được phát hiện. Vui lòng sử dụng URL đầy đủ để embed.
         </p>
         <a 
           href={videoUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-blue-500 hover:underline text-sm"
+          className="text-[#e0a02e] hover:underline text-sm"
         >
           Mở video trên TikTok →
         </a>

@@ -291,12 +291,12 @@ export default function ServiceOrderDetailModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm dark:bg-black/70 sm:p-4">
-      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col rounded-xl border border-gray-200/50 bg-white shadow-2xl dark:border-slate-700/50 dark:bg-slate-800">
-        <div className="gradient-header flex-shrink-0 border-b border-gray-200 p-4 transition-colors duration-300 dark:border-slate-700 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 backdrop-blur-sm sm:p-4">
+      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col rounded-xl border border-slate-700/50 bg-slate-800 shadow-2xl  ">
+        <div className="gradient-header flex-shrink-0 border-b border-slate-700 p-4 transition-colors duration-300 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 transition-colors duration-300 dark:text-gray-100 sm:text-xl">
+              <h3 className="text-lg font-bold text-slate-100 transition-colors duration-300 sm:text-xl">
                 {selectedOrder ? `Chi tiết đơn dịch vụ #${selectedOrder.id}` : 'Đang tải...'}
               </h3>
               {selectedOrder ? (
@@ -313,7 +313,7 @@ export default function ServiceOrderDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-gray-600 active:scale-95 dark:text-gray-500 dark:hover:bg-slate-700 dark:hover:text-gray-300"
+              className="rounded-lg p-2 text-slate-500 transition-all duration-200 hover:bg-slate-700 hover:text-slate-200 active:scale-95"
               aria-label="Đóng"
             >
               <X size={20} />
@@ -328,56 +328,56 @@ export default function ServiceOrderDetailModal({
         ) : null}
 
         {!loadingDetail && selectedOrder ? (
-          <div className="flex-1 space-y-4 overflow-y-auto bg-white p-4 transition-colors duration-300 dark:bg-slate-800 sm:p-6">
+          <div className="flex-1 space-y-4 overflow-y-auto bg-slate-800 p-4 transition-colors duration-300 sm:p-6">
             {flowHint ? (
               <div
                 className={`rounded-xl border px-4 py-3 text-sm ${
                   waitingForClaim
-                    ? 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100'
-                    : 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-100'
+                    ? 'border-[#c37b1e]/30 bg-[#c37b1e]/12 text-[#eecd7e]'
+                    : 'border-[#1e406b]/30 bg-[#1e406b]/12 text-[#eecd7e]'
                 }`}
               >
                 {flowHint}
               </div>
             ) : null}
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
-              <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+            <div className="rounded-xl border border-slate-600 bg-slate-700/50 p-4">
+              <h4 className="mb-3 text-base font-semibold text-slate-300 sm:text-lg">
                 Thông tin đơn dịch vụ
               </h4>
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Khách hàng:</span>{' '}
-                  <span className="text-gray-900 dark:text-gray-100">{selectedOrder.customer_name || '-'}</span>
+                  <span className="font-medium text-slate-300">Khách hàng:</span>{' '}
+                  <span className="text-slate-100">{selectedOrder.customer_name || '-'}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">SDT:</span>{' '}
-                  <span className="text-gray-900 dark:text-gray-100">{selectedOrder.receiver_phone || '-'}</span>
+                  <span className="font-medium text-slate-300">SDT:</span>{' '}
+                  <span className="text-slate-100">{selectedOrder.receiver_phone || '-'}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Dịch vụ:</span>{' '}
-                  <span className="text-gray-900 dark:text-gray-100">{selectedOrder.service_name || '-'}</span>
+                  <span className="font-medium text-slate-300">Dịch vụ:</span>{' '}
+                  <span className="text-slate-100">{selectedOrder.service_name || '-'}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Nhà cung cấp:</span>{' '}
-                  <span className="text-gray-900 dark:text-gray-100">
+                  <span className="font-medium text-slate-300">Nhà cung cấp:</span>{' '}
+                  <span className="text-slate-100">
                     {selectedOrder.service_supplier_name || selectedOrder.supplier_name || '-'}
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Nhân viên:</span>{' '}
+                  <span className="font-medium text-slate-300">Nhân viên:</span>{' '}
                   <span
                     className={
                       waitingForClaim
-                        ? 'font-medium text-amber-700 dark:text-amber-300'
-                        : 'text-gray-900 dark:text-gray-100'
+                        ? 'font-medium text-[#eecd7e]'
+                        : 'text-slate-100'
                     }
                   >
                     {assigneeLabel}
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Trạng thái đơn:</span>{' '}
+                  <span className="font-medium text-slate-300">Trạng thái đơn:</span>{' '}
                   <StatusBadge
                     status={selectedOrder.status}
                     type="order"
@@ -385,43 +385,43 @@ export default function ServiceOrderDetailModal({
                   />
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày nhận:</span>{' '}
-                  <span className="text-gray-900 dark:text-gray-100">
+                  <span className="font-medium text-slate-300">Ngày nhận:</span>{' '}
+                  <span className="text-slate-100">
                     {selectedOrder.receive_date
                       ? new Date(selectedOrder.receive_date).toLocaleDateString('vi-VN')
                       : '-'}
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày giao:</span>{' '}
-                  <span className="text-gray-900 dark:text-gray-100">
+                  <span className="font-medium text-slate-300">Ngày giao:</span>{' '}
+                  <span className="text-slate-100">
                     {selectedOrder.delivery_date
                       ? new Date(selectedOrder.delivery_date).toLocaleDateString('vi-VN')
                       : '-'}
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Ngày tạo:</span>{' '}
-                  <span className="text-gray-900 dark:text-gray-100">{formatDate(selectedOrder.created_at)}</span>
+                  <span className="font-medium text-slate-300">Ngày tạo:</span>{' '}
+                  <span className="text-slate-100">{formatDate(selectedOrder.created_at)}</span>
                 </div>
                 {selectedOrder.address ? (
                   <div className="sm:col-span-2">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Dia chi:</span>{' '}
-                    <span className="text-gray-900 dark:text-gray-100">{selectedOrder.address}</span>
+                    <span className="font-medium text-slate-300">Dia chi:</span>{' '}
+                    <span className="text-slate-100">{selectedOrder.address}</span>
                   </div>
                 ) : null}
                 {selectedOrder.note ? (
                   <div className="sm:col-span-2">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Ghi chú:</span>{' '}
-                    <span className="text-gray-900 dark:text-gray-100">{selectedOrder.note}</span>
+                    <span className="font-medium text-slate-300">Ghi chú:</span>{' '}
+                    <span className="text-slate-100">{selectedOrder.note}</span>
                   </div>
                 ) : null}
               </div>
             </div>
 
             {selectedOrder.license_plate || selectedOrder.vehicle_model ? (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-                <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+              <div className="rounded-xl border border-[#1e406b]/30 bg-[#112552]/18 p-4">
+                <h4 className="mb-3 text-base font-semibold text-slate-300 sm:text-lg">
                   Thong tin xe
                 </h4>
                 <div className="flex gap-4">
@@ -430,7 +430,7 @@ export default function ServiceOrderDetailModal({
                       <img
                         src={normalizeImageUrl(selectedOrder.vehicle_image_url) || selectedOrder.vehicle_image_url}
                         alt="Xe"
-                        className="h-24 w-24 rounded-lg border-2 border-gray-200 bg-white object-cover dark:border-slate-600 dark:bg-slate-700 sm:h-32 sm:w-32"
+                        className="h-24 w-24 rounded-lg border-2 border-slate-600 bg-slate-800 object-cover sm:h-32 sm:w-32"
                         onError={(event) => {
                           event.currentTarget.style.display = 'none';
                         }}
@@ -438,24 +438,24 @@ export default function ServiceOrderDetailModal({
                     </div>
                   ) : null}
 
-                  <div className="grid flex-1 grid-cols-1 gap-2 text-sm text-gray-900 dark:text-gray-100">
+                  <div className="grid flex-1 grid-cols-1 gap-2 text-sm text-slate-100">
                     {selectedOrder.license_plate ? (
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Biển số xe:</span>{' '}
-                        <span className="rounded bg-yellow-400 px-3 py-1 font-bold text-black dark:bg-yellow-500 dark:text-gray-900">
+                        <span className="font-medium text-slate-300">Biển số xe:</span>{' '}
+                        <span className="rounded bg-[#e0a02e] px-3 py-1 font-bold text-[#112552]">
                           {selectedOrder.license_plate}
                         </span>
                       </div>
                     ) : null}
                     {selectedOrder.vehicle_model ? (
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Mẫu xe:</span>{' '}
+                        <span className="font-medium text-slate-300">Mẫu xe:</span>{' '}
                         {selectedOrder.vehicle_model}
                       </div>
                     ) : null}
                     {selectedOrder.vehicle_type ? (
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Loai xe:</span>{' '}
+                        <span className="font-medium text-slate-300">Loai xe:</span>{' '}
                         {selectedOrder.vehicle_type}
                       </div>
                     ) : null}
@@ -464,20 +464,20 @@ export default function ServiceOrderDetailModal({
               </div>
             ) : null}
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
-              <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+            <div className="rounded-xl border border-slate-600 bg-slate-700/50 p-4">
+              <h4 className="mb-3 text-base font-semibold text-slate-300 sm:text-lg">
                 Thao tac
               </h4>
 
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
                     Trạng thái đơn
                   </label>
                   <select
                     value={selectedOrder.status || ''}
                     onChange={(event) => handleStatusChange(event.target.value)}
-                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm transition-all duration-200 hover:shadow-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 focus:shadow-lg dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 dark:focus:border-blue-400"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-slate-100 shadow-sm transition-all duration-200 hover:shadow-md focus:border-[#e0a02e] focus:ring-2 focus:ring-[#1e406b]/50 focus:shadow-lg"
                   >
                     {statusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -485,7 +485,7 @@ export default function ServiceOrderDetailModal({
                       </option>
                     ))}
                   </select>
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="mt-2 text-xs text-slate-400">
                     {waitingForClaim
                       ? 'Đơn chỉ nên chuyển sang xử lý sau khi có nhân viên nhận hoặc được admin giao thủ công.'
                       : 'Trạng thái này sẽ đồng bộ với app nhân viên và các thông báo liên quan.'}
@@ -493,14 +493,14 @@ export default function ServiceOrderDetailModal({
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
                     Nhân viên phụ trách
                   </label>
                   <select
                     value={selectedOrder.employee_id || ''}
                     onChange={(event) => handleAssignEmployee(event.target.value)}
                     disabled={isClosedOrder}
-                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm transition-all duration-200 hover:shadow-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 focus:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 dark:focus:border-blue-400"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-slate-100 shadow-sm transition-all duration-200 hover:shadow-md focus:border-[#e0a02e] focus:ring-2 focus:ring-[#1e406b]/50 focus:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <option value="">
                       {waitingForClaim ? 'Chọn nhân viên để giao thủ công' : 'Chưa giao'}
@@ -511,16 +511,16 @@ export default function ServiceOrderDetailModal({
                       </option>
                     ))}
                   </select>
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="mt-2 text-xs text-slate-400">
                     {assignmentHint}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700/50">
+            <div className="rounded-xl border border-slate-600 bg-slate-700/50 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <h4 className="text-base font-semibold text-gray-700 dark:text-gray-300 sm:text-lg">
+                <h4 className="text-base font-semibold text-slate-300 sm:text-lg">
                   Hình ảnh đơn dịch vụ ({orderImages.length})
                 </h4>
                 <button
@@ -534,7 +534,7 @@ export default function ServiceOrderDetailModal({
               </div>
 
               {showImageUploader ? (
-                <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800">
+                <div className="mb-4 rounded-lg border border-slate-600 bg-slate-800 p-3">
                   <ImageUploader
                     onUploadSuccess={handleImageUpload}
                     multiple={true}
@@ -557,7 +557,7 @@ export default function ServiceOrderDetailModal({
         ) : null}
 
         {!loadingDetail && selectedOrder ? (
-          <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+          <div className="flex-shrink-0 border-t border-slate-600 bg-slate-800 p-4   sm:p-6">
             <div className="flex flex-col justify-between gap-2 sm:flex-row">
               <div className="flex flex-wrap gap-2">
                 <button
@@ -573,7 +573,7 @@ export default function ServiceOrderDetailModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex items-center gap-2 rounded-xl bg-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-300 hover:shadow-md active:scale-[0.98] dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600"
+                className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 shadow-sm transition-all duration-200 hover:bg-slate-600 hover:shadow-md active:scale-[0.98]"
               >
                 <X size={16} />
                 Đóng

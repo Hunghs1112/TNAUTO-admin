@@ -32,7 +32,7 @@ export default function ServiceOrderManagement({ tableActionsRef = null }) {
       label: 'Hình ảnh',
       render: (value, item) => {
         if (!item.image_urls || item.image_urls.length === 0) {
-          return <span className="text-xs italic text-gray-400">Chưa có</span>;
+          return <span className="text-xs italic text-slate-400">Chưa có</span>;
         }
 
         const validUrls = item.image_urls
@@ -42,7 +42,7 @@ export default function ServiceOrderManagement({ tableActionsRef = null }) {
           .slice(0, 3);
 
         if (!validUrls.length) {
-          return <span className="text-xs italic text-gray-400">Chưa có</span>;
+          return <span className="text-xs italic text-slate-400">Chưa có</span>;
         }
 
         return (
@@ -50,21 +50,21 @@ export default function ServiceOrderManagement({ tableActionsRef = null }) {
             <div className="flex gap-1">
               {validUrls.map((url, index) => (
                 <div key={index} className="group relative cursor-pointer" title="Ảnh xem trước">
-                  <div className="h-12 w-12 overflow-hidden rounded-lg border-2 border-gray-200 bg-gray-50 transition-all hover:border-blue-400 hover:shadow-md dark:border-slate-600 dark:bg-slate-700 dark:hover:border-blue-500">
+                  <div className="h-12 w-12 overflow-hidden rounded-lg border-2 border-slate-600 bg-slate-700 transition-all hover:border-[#1e406b] hover:shadow-md">
                     <OptimizedImage
                       src={url}
                       alt={`Ảnh ${index + 1}`}
                       className="h-full w-full object-cover transition-transform hover:scale-110"
                       containerClassName="h-full w-full"
-                      placeholder={<div className="h-full w-full bg-gray-100 dark:bg-slate-700" />}
-                      fallback={<div className="h-full w-full bg-gray-100 dark:bg-slate-700" />}
+                      placeholder={<div className="h-full w-full bg-slate-700" />}
+                      fallback={<div className="h-full w-full bg-slate-700" />}
                     />
                   </div>
                 </div>
               ))}
             </div>
             {item.image_urls.length > 3 ? (
-              <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+              <span className="rounded-full bg-[#1e406b]/15 px-2 py-1 text-xs text-[#eecd7e]">
                 +{item.image_urls.length - 3}
               </span>
             ) : null}

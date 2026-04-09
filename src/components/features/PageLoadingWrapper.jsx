@@ -25,19 +25,19 @@ export default function PageLoadingWrapper({
     return (
       <div className={`relative ${className}`}>
         {children}
-        <div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm flex items-center justify-center z-30">
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-gray-100 max-w-xs mx-4">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm">
+          <div className="mx-4 max-w-xs rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl">
             <div className="text-center">
               {/* Beautiful spinner */}
               <div className="relative mb-4">
                 <div className="w-12 h-12 mx-auto">
-                  <div className="absolute inset-0 rounded-full border-3 border-blue-100"></div>
+                  <div className="absolute inset-0 rounded-full border-3 border-slate-700"></div>
                   <div className="absolute inset-0 rounded-full border-3 border-transparent border-t-blue-500 animate-spin"></div>
                   <div className="absolute inset-1 rounded-full border-2 border-transparent border-t-blue-300 animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.2s'}}></div>
                 </div>
-                <div className="absolute inset-0 rounded-full bg-blue-50 animate-ping opacity-15"></div>
+                <div className="absolute inset-0 rounded-full bg-[#1e406b]/12 animate-ping opacity-20"></div>
               </div>
-              <p className="text-gray-600 font-medium text-sm">{message}</p>
+              <p className="text-sm font-medium text-slate-300">{message}</p>
             </div>
           </div>
         </div>
@@ -52,17 +52,17 @@ export default function PageLoadingWrapper({
           {/* Beautiful inline spinner */}
           <div className="relative mb-4">
             <div className="w-16 h-16 mx-auto">
-              <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-slate-700"></div>
               <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 animate-spin"></div>
               <div className="absolute inset-2 rounded-full border-2 border-transparent border-t-blue-300 animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
             </div>
-            <div className="absolute inset-0 rounded-full bg-blue-50 animate-ping opacity-20"></div>
+            <div className="absolute inset-0 rounded-full bg-[#1e406b]/12 animate-ping opacity-20"></div>
           </div>
-          <p className="text-gray-600 font-semibold text-lg">{message}</p>
+          <p className="text-lg font-semibold text-slate-300">{message}</p>
           <div className="flex justify-center space-x-1 mt-3">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+            <div className="w-2 h-2 bg-[#1e406b] rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+            <div className="w-2 h-2 bg-[#1e406b] rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+            <div className="w-2 h-2 bg-[#1e406b] rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
           </div>
         </div>
       </div>

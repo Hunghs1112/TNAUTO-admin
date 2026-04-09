@@ -39,7 +39,7 @@ function normalizeSearchValue(value) {
 function normalizeSearchText(value) {
   return normalizeSearchValue(value)
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
 }
@@ -293,7 +293,7 @@ export default function GenericTable({
         setIsEdit(false);
         refreshAfterSave();
       } catch (error) {
-      showError(error?.message || 'Không thể xóa dữ liệu. Vui lòng thử lại.');
+        showError(error?.message || 'Không thể xóa dữ liệu. Vui lòng thử lại.');
       }
     },
     [api, dispatchCategoryEvent, idKey, isEdit, refreshAfterSave, selectedItem, showError, showSuccess]
@@ -311,7 +311,7 @@ export default function GenericTable({
       showSuccess(deleteSuccessMessage);
       onRefresh?.();
     } catch (error) {
-      showError(error?.message || 'Kh?ng th? x?a d? li?u. Vui l?ng th? l?i.');
+      showError(error?.message || 'Không thể xóa dữ liệu. Vui lòng thử lại.');
     }
   }, [api, confirmDeleteId, deleteSuccessMessage, onDelete, onRefresh, showError, showSuccess]);
 
@@ -340,13 +340,13 @@ export default function GenericTable({
     }
 
     if (sortConfig.key !== key) {
-      return <ArrowUpDown size={14} className="opacity-30 dark:opacity-50" />;
+      return <ArrowUpDown size={14} className="opacity-40" />;
     }
 
     return sortConfig.direction === 'asc' ? (
-      <ArrowUp size={14} className="text-blue-600 dark:text-blue-400" />
+      <ArrowUp size={14} className="text-[#eecd7e]" />
     ) : (
-      <ArrowDown size={14} className="text-blue-600 dark:text-blue-400" />
+      <ArrowDown size={14} className="text-[#eecd7e]" />
     );
   };
 
@@ -367,7 +367,7 @@ export default function GenericTable({
               <div className="flex flex-wrap items-center justify-between gap-4">
                 {!hideTitle ? (
                   <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+                    <h2 className="text-2xl font-bold text-slate-100">{title}</h2>
                     <span className="app-badge">{totalItems || data.length}</span>
                   </div>
                 ) : (
@@ -379,7 +379,7 @@ export default function GenericTable({
                     <div className="relative w-full max-w-sm">
                       <SearchInput onSearch={handleSearch} placeholder={searchPlaceholder} />
                       {searchTerm ? (
-                        <div className="absolute -top-2 right-2 z-20 rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white shadow-lg dark:bg-slate-100 dark:text-slate-900">
+                        <div className="absolute -top-2 right-2 z-20 rounded-full border border-slate-700 bg-slate-900/95 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-lg">
                           {searchIndicatorLabel}
                         </div>
                       ) : null}
@@ -409,7 +409,7 @@ export default function GenericTable({
               <div className="relative">
                 <SearchInput onSearch={handleSearch} placeholder={searchPlaceholder} />
                 {searchTerm ? (
-                  <div className="absolute -top-2 right-2 z-20 rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white shadow-lg dark:bg-slate-100 dark:text-slate-900">
+                  <div className="absolute -top-2 right-2 z-20 rounded-full border border-slate-700 bg-slate-900/95 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-lg">
                     {searchIndicatorLabel}
                   </div>
                 ) : null}
@@ -420,9 +420,9 @@ export default function GenericTable({
       ) : null}
 
       {enableBulkActions && selectedRows.size > 0 ? (
-        <div className="flex items-center justify-between border-t border-blue-200 bg-blue-50/80 px-4 py-3 dark:border-blue-900/60 dark:bg-blue-950/30 lg:px-6">
-          <span className="text-sm text-slate-700 dark:text-slate-200">
-            Đã chọn <span className="font-semibold text-blue-700 dark:text-blue-300">{selectedRows.size}</span> mục
+        <div className="flex items-center justify-between border-t border-[#1e406b]/60 bg-[#112552]/30 px-4 py-3 lg:px-6">
+          <span className="text-sm text-slate-200">
+            Đã chọn <span className="font-semibold text-[#eecd7e]">{selectedRows.size}</span> mục
           </span>
           <div className="flex gap-2">
             <button type="button" onClick={handleBulkDelete} className="btn-gradient-error">
@@ -436,10 +436,10 @@ export default function GenericTable({
         </div>
       ) : null}
 
-      <div className="relative flex-1 overflow-auto bg-white dark:bg-slate-900">
+      <div className="relative flex-1 overflow-auto bg-slate-950">
         {isRefreshing && filteredData.length > 0 ? (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-slate-900/80">
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/72 backdrop-blur-sm">
+            <div className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-medium text-slate-200 shadow-lg">
               Đang tải dữ liệu...
             </div>
           </div>
@@ -450,7 +450,7 @@ export default function GenericTable({
             <TableSkeleton rows={5} columns={columns.length + (showActions ? 1 : 0)} />
           </div>
         ) : filteredData.length > 0 ? (
-          <div className="overflow-x-auto border-t border-slate-200/80 dark:border-slate-800/80">
+          <div className="overflow-x-auto border-t border-slate-800/80">
             <table className="data-table min-w-full">
               <thead className="sticky top-0 z-10">
                 <tr>
@@ -460,7 +460,7 @@ export default function GenericTable({
                         type="checkbox"
                         checked={filteredData.length > 0 && selectedRows.size === filteredData.length}
                         onChange={(event) => handleSelectAll(event.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-slate-600 text-[#e0a02e] focus:ring-[#1e406b]"
                       />
                     </th>
                   ) : null}
@@ -471,7 +471,7 @@ export default function GenericTable({
                       onClick={() => column.sortable !== false && handleSort(column.key)}
                       className={
                         enableSort && column.sortable !== false
-                          ? 'cursor-pointer transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-800'
+                          ? 'cursor-pointer transition-colors hover:bg-slate-800/80'
                           : undefined
                       }
                     >
@@ -491,7 +491,7 @@ export default function GenericTable({
                     key={item[idKey]}
                     onClick={() => onRowClick?.(item)}
                     className={`${onRowClick ? 'cursor-pointer' : ''} ${
-                      selectedRows.has(item[idKey]) ? 'bg-blue-50 dark:bg-blue-950/30' : ''
+                      selectedRows.has(item[idKey]) ? 'bg-[#112552]/30' : ''
                     }`}
                   >
                     {enableBulkActions ? (
@@ -501,18 +501,18 @@ export default function GenericTable({
                           checked={selectedRows.has(item[idKey])}
                           onChange={(event) => handleSelectRow(item[idKey], event.target.checked)}
                           onClick={(event) => event.stopPropagation()}
-                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 rounded border-slate-600 text-[#e0a02e] focus:ring-[#1e406b]"
                         />
                       </td>
                     ) : null}
 
                     {columns.map((column) => (
-                      <td key={column.key} className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">
+                      <td key={column.key} className="px-4 py-3 text-sm text-slate-100">
                         {column.render ? (
                           column.render(item[column.key], item)
                         ) : (
-                          <span className="text-slate-700 dark:text-slate-300">
-                            {item[column.key] || <span className="text-slate-400">-</span>}
+                          <span className="text-slate-200">
+                            {item[column.key] || <span className="text-slate-500">-</span>}
                           </span>
                         )}
                       </td>
@@ -528,7 +528,7 @@ export default function GenericTable({
                                 event.stopPropagation();
                                 handleView(item);
                               }}
-                              className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                              className="rounded-lg p-2 text-[#dfe1e3] transition-colors hover:bg-[#1e406b]/12"
                               title="Xem chi tiết"
                             >
                               <Eye size={16} />
@@ -540,7 +540,7 @@ export default function GenericTable({
                                 event.stopPropagation();
                                 handleEdit(item);
                               }}
-                              className="rounded-lg p-2 text-amber-600 transition-colors hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                              className="rounded-lg p-2 text-[#e0a02e] transition-colors hover:bg-[#c37b1e]/12"
                               title="Sửa"
                             >
                               <Pencil size={16} />
@@ -554,7 +554,7 @@ export default function GenericTable({
                                 event.stopPropagation();
                                 setConfirmDeleteId(item[idKey]);
                               }}
-                              className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
+                              className="rounded-lg p-2 text-[#b48242] transition-colors hover:bg-[#b48242]/12"
                               title={deleteActionLabel}
                             >
                               <Trash2 size={16} />
@@ -588,7 +588,7 @@ export default function GenericTable({
       </div>
 
       {showPagination && totalPages > 1 ? (
-        <div className="border-t border-slate-200/80 bg-slate-50/80 px-4 py-4 dark:border-slate-800/80 dark:bg-slate-900/80 lg:px-6">
+        <div className="border-t border-slate-800/80 bg-slate-950/70 px-4 py-4 lg:px-6">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -619,16 +619,16 @@ export default function GenericTable({
           <div className="app-panel w-full max-w-md">
             <div className="app-panel-body">
               <div className="mb-6 flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#b48242]/15 text-[#b48242]">
                   <Trash2 size={22} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{deleteConfirmTitle}</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">Vui lòng xác nhận trước khi tiếp tục.</p>
+                  <h3 className="text-xl font-bold text-slate-100">{deleteConfirmTitle}</h3>
+                  <p className="mt-1 text-sm text-slate-300">Vui lòng xác nhận trước khi tiếp tục.</p>
                 </div>
               </div>
 
-              <p className="mb-6 text-sm leading-6 text-slate-700 dark:text-slate-200">
+              <p className="mb-6 text-sm leading-6 text-slate-200">
                 {deleteConfirmDescription}
               </p>
 

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "read",
+      "edit",
+      "run-local-dev-server"
+    ]
+  },
+  "local": {
+    "notes": "Cấu hình máy cá nhân, không commit"
+  }
+}

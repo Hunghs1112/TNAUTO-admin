@@ -11,7 +11,7 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import NotificationDetailModal from './NotificationDetailModal';
 import NotificationSendModal from './NotificationSendModal';
 
-const DEFAULT_LIMIT = 50;
+const PAGE_SIZE = 50;
 
 const notificationTypeMap = {
   warranty_reminder: 'Nhắc bảo hành',
@@ -31,27 +31,26 @@ const notificationStatusMap = {
 };
 
 
-function normalizeDateFilterBoundary(value, boundary) {
+function normalizeDateFilterBoundary(value) {
   const input = String(value || '').trim();
   if (!input) return '';
 
   const matchedIso = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (matchedIso) {
-    return boundary === 'start' ? `${input}T00:00:00` : `${input}T23:59:59.999`;
+    return input;
   }
 
   const matchedVn = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (matchedVn) {
     const [, day, month, year] = matchedVn;
-    const isoDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return boundary === 'start' ? `${isoDate}T00:00:00` : `${isoDate}T23:59:59.999`;
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
 
   return input;
 }
 
-function buildNotificationParams(limit, offset, filters) {
-  const params = { limit, offset };
+function buildNotificationParams(page, filters) {
+  const params = { page };
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value === '' || value === null || value === undefined) {
@@ -59,12 +58,12 @@ function buildNotificationParams(limit, offset, filters) {
     }
 
     if (key === 'date_from') {
-      params[key] = normalizeDateFilterBoundary(value, 'start');
+      params.from_date = normalizeDateFilterBoundary(value);
       return;
     }
 
     if (key === 'date_to') {
-      params[key] = normalizeDateFilterBoundary(value, 'end');
+      params.to_date = normalizeDateFilterBoundary(value);
       return;
     }
 
@@ -92,8 +91,7 @@ export default function NotificationManagement() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  const [limit, setLimit] = useState(DEFAULT_LIMIT);
-  const [offset, setOffset] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     date_from: '',
     date_to: '',
@@ -119,8 +117,7 @@ export default function NotificationManagement() {
 
   const { success, error } = useToast();
 
-  const currentPage = useMemo(() => Math.floor(offset / limit) + 1, [limit, offset]);
-  const totalPages = useMemo(() => Math.max(1, Math.ceil((total || 0) / limit)), [limit, total]);
+  const totalPages = useMemo(() => Math.max(1, Math.ceil((total || 0) / PAGE_SIZE)), [total]);
 
   const recipientNameByKey = useMemo(() => {
     const nextMap = {};
@@ -218,7 +215,7 @@ export default function NotificationManagement() {
     setLoading(true);
 
     try {
-      const params = buildNotificationParams(limit, offset, appliedFilters);
+      const params = buildNotificationParams(currentPage, appliedFilters);
 
       const response = await notificationsAPI.getAll(params);
       const nextItems = normalizeListResponse(response);
@@ -234,7 +231,7 @@ export default function NotificationManagement() {
     } finally {
       setLoading(false);
     }
-  }, [appliedFilters, error, limit, offset]);
+  }, [appliedFilters, currentPage, error]);
 
   useEffect(() => {
     loadLookupData();
@@ -262,7 +259,7 @@ export default function NotificationManagement() {
   );
 
   const handleApplyFilters = () => {
-    setOffset(0);
+    setCurrentPage(1);
     setAppliedFilters(filters);
   };
 
@@ -281,7 +278,7 @@ export default function NotificationManagement() {
 
     setFilters(emptyFilters);
     setAppliedFilters(emptyFilters);
-    setOffset(0);
+    setCurrentPage(1);
   };
 
   if (loading && !items.length) {
@@ -451,8 +448,8 @@ export default function NotificationManagement() {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={total}
-          limit={limit}
-          onPageChange={(page) => setOffset((page - 1) * limit)}
+          limit={PAGE_SIZE}
+          onPageChange={(page) => setCurrentPage(page)}
           hideTitle={true}
           showTableHeaderActions={false}
         />

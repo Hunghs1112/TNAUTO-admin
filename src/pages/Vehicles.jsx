@@ -13,7 +13,6 @@ const vehicleFormFields = [
     required: true,
     searchable: true,
     apiEndpoint: '/customers',
-    apiParams: { limit: 1000 },
     valueKey: 'id',
     labelKey: 'name',
     labelFormat: (item) => `${item.name || 'Khách hàng'}${item.phone ? ` - ${item.phone}` : ''}`,

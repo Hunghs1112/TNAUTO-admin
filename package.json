@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:claude": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-claude-to-cursor.ps1",
+    "sync:claude:dry": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-claude-to-cursor.ps1 -DryRun",
+    "check:claude-sync": "powershell -ExecutionPolicy Bypass -File ./scripts/check-claude-sync.ps1",
+    "sync:all": "npm run sync:claude && npm run check:claude-sync"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

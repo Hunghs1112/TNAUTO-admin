@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "read",
+      "edit",
+      "run-safe-commands"
+    ],
+    "deny": [
+      "commit-secrets",
+      "destructive-git-without-confirmation"
+    ]
+  },
+  "hooks": {
+    "beforeCommit": [
+      "lint",
+      "typecheck"
+    ],
+    "beforeMerge": [
+      "lint",
+      "build"
+    ]
+  },
+  "defaults": {
+    "language": "vi",
+    "uiThemeMode": "system"
+  }
+}

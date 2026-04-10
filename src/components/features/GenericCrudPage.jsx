@@ -20,7 +20,8 @@ function extractListData(response) {
 function extractPaginationMeta(response, fallbackPage, fallbackLimit, fallbackTotal) {
   const raw = response?.data || {};
   const pagination = raw.pagination || {};
-  const totalItems = Number(raw.total ?? pagination.totalItems ?? fallbackTotal ?? 0) || 0;
+  const totalItems =
+    Number(raw.total ?? raw.count ?? pagination.totalItems ?? pagination.total ?? fallbackTotal ?? 0) || 0;
   const pageSize = Number(raw.limit ?? pagination.pageSize ?? fallbackLimit ?? 10) || fallbackLimit || 10;
   const totalPages =
     Number(raw.totalPages ?? pagination.totalPages ?? Math.max(1, Math.ceil(totalItems / Math.max(pageSize, 1)))) || 1;
@@ -58,6 +59,7 @@ function GenericCrudPage({
   disableCreate = false,
   categoryChangeEventName,
   createButtonText = 'Thêm mới',
+  additionalParams = null,
 }) {
   const { transformData = (data) => data, onError } = options;
   const { error: showError } = useToast();
@@ -76,12 +78,14 @@ function GenericCrudPage({
   const transformDataRef = useRef(transformData);
   const onErrorRef = useRef(onError);
   const hasLoadedOnceRef = useRef(false);
+  const additionalParamsRef = useRef(additionalParams || null);
 
   useEffect(() => {
     apiRef.current = api;
     transformDataRef.current = transformData;
     onErrorRef.current = onError;
-  }, [api, transformData, onError]);
+    additionalParamsRef.current = additionalParams || null;
+  }, [additionalParams, api, transformData, onError]);
 
   const fetchData = useCallback(
     async ({ isInitial = false } = {}) => {
@@ -92,12 +96,25 @@ function GenericCrudPage({
       }
 
       try {
-        const params = { _t: Date.now() };
+        const normalizedAdditionalParams =
+          additionalParamsRef.current && typeof additionalParamsRef.current === 'object' ? additionalParamsRef.current : {};
+        const params = {
+          _t: Date.now(),
+          ...normalizedAdditionalParams,
+        };
+
+        if (import.meta.env.DEV) {
+          console.log('[List Params]', {
+            title,
+            currentPage,
+            searchTerm,
+            showPagination,
+            additionalParams: normalizedAdditionalParams,
+          });
+        }
 
         if (showPagination) {
           params.page = currentPage;
-          params.limit = limit;
-          params.paginate = true;
         }
 
         if (searchTerm) {
@@ -152,7 +169,7 @@ function GenericCrudPage({
         }
       }
     },
-    [currentPage, limit, searchTerm, showError, showPagination]
+    [currentPage, limit, searchTerm, showError, showPagination, title]
   );
 
   useEffect(() => {

@@ -16,6 +16,7 @@ function createApiClient(baseURL) {
 
 const api = createApiClient(API_BASE);
 const rootApi = createApiClient(API_ROOT);
+const IS_DEV = import.meta.env.DEV;
 const SERVICES_CACHE_TTL_MS = 3000;
 let servicesListCache = {
   expiresAt: 0,
@@ -208,11 +209,34 @@ async function fetchAllServices({ force = false } = {}) {
     }
 
     nextConfig.headers = nextHeaders;
+
+    if (IS_DEV) {
+      const method = String(nextConfig.method || 'GET').toUpperCase();
+      const requestUrl = `${nextConfig.baseURL || ''}${nextConfig.url || ''}`;
+      console.log('[API Request]', {
+        method,
+        url: requestUrl,
+        params: nextConfig.params || null,
+        data: nextConfig.data || null,
+      });
+    }
+
     return nextConfig;
   });
 
   client.interceptors.response.use(
     (response) => {
+      if (IS_DEV) {
+        const method = String(response.config?.method || 'GET').toUpperCase();
+        const responseUrl = `${response.config?.baseURL || ''}${response.config?.url || ''}`;
+        console.log('[API Response]', {
+          method,
+          url: responseUrl,
+          status: response.status,
+          data: response.data,
+        });
+      }
+
       if (response.data && response.data.success !== undefined) {
         return response;
       }
@@ -226,6 +250,19 @@ async function fetchAllServices({ force = false } = {}) {
       };
     },
     (error) => {
+      if (IS_DEV) {
+        const method = String(error.config?.method || 'GET').toUpperCase();
+        const errorUrl = `${error.config?.baseURL || ''}${error.config?.url || ''}`;
+        console.log('[API Error]', {
+          method,
+          url: errorUrl,
+          status: error.response?.status,
+          code: error.code,
+          responseData: error.response?.data || null,
+          message: error.message,
+        });
+      }
+
       if (error.response?.status === 401 && !error.config?.skipAuthFailureHandler) {
         clearAuthSession('unauthorized');
       }

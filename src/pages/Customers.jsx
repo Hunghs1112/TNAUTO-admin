@@ -8,7 +8,6 @@ function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-
   return (
     <>
       <GenericCrudPage

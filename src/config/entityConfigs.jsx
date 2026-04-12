@@ -77,7 +77,7 @@ export const dealersConfig = {
     { name: 'avatar_url', label: 'Ảnh đại diện', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Quản lý đại lý',
-  apiEndpoint: '/dealers',
+  apiEndpoint: '/web/dealers',
 };
 
 // ===== CUSTOMER MANAGEMENT (ADMIN ONLY) =====
@@ -97,7 +97,7 @@ export const customersConfig = {
     { name: 'avatar_url', label: 'Ảnh đại diện', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Quản lý khách hàng',
-  apiEndpoint: '/customers',
+  apiEndpoint: '/web/customers',
 };
 
 // ===== EMPLOYEE MANAGEMENT (ADMIN ONLY) =====
@@ -116,7 +116,7 @@ export const employeesConfig = {
     { name: 'avatar_url', label: 'Ảnh đại diện', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Quản lý nhân viên',
-  apiEndpoint: '/employees',
+  apiEndpoint: '/web/employees',
 };
 
 // ===== SERVICE MANAGEMENT =====
@@ -147,7 +147,7 @@ export const servicesConfig = {
   fieldsForModal: [
     createTextFieldForModal('name', 'Tên dịch vụ', 'text', true),
     createTextFieldForModal('supplier_name', 'Nhà cung cấp'),
-    createSelectField('category_id', 'Danh mục dịch vụ', '/service-categories'),
+    createSelectField('category_id', 'Danh mục dịch vụ', '/web/service-categories'),
     createTextAreaField('description', 'Mô tả'),
     { 
       name: 'estimated_time', 
@@ -162,7 +162,7 @@ export const servicesConfig = {
     { name: 'image_url', label: 'Hình ảnh', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Dịch vụ',
-  apiEndpoint: '/services',
+  apiEndpoint: '/web/services',
 };
 
 // ===== PRODUCT MANAGEMENT =====
@@ -184,7 +184,7 @@ export const productsConfig = {
   fieldsForModal: [
     createTextFieldForModal('name', 'Tên sản phẩm', 'text', true),
     { name: 'price', label: 'Giá', type: 'number', min: 0, required: true },
-    createSelectField('category_id', 'Danh mục', '/categories'),
+    createSelectField('category_id', 'Danh mục', '/web/categories'),
     createTextAreaField('description', 'Mô tả'),
     { 
       name: 'video_url', 
@@ -194,7 +194,7 @@ export const productsConfig = {
     },
   ],
   title: 'Sản phẩm',
-  apiEndpoint: '/products',
+  apiEndpoint: '/web/products',
 };
 
 // ===== SERVICE CATEGORY MANAGEMENT =====
@@ -216,7 +216,7 @@ export const dealerProductsConfig = {
   fieldsForModal: [
     createTextFieldForModal('name', 'Tên sản phẩm dealer', 'text', true),
     { name: 'price', label: 'Giá', type: 'number', min: 0, required: true },
-    createSelectField('category_id', 'Danh mục sản phẩm đại lí', '/dealer/categories'),
+    createSelectField('category_id', 'Danh mục sản phẩm đại lí', '/web/categories'),
     createTextAreaField('description', 'Mô tả'),
     {
       name: 'video_url',
@@ -226,7 +226,7 @@ export const dealerProductsConfig = {
     },
   ],
   title: 'Sản phẩm dealer',
-  apiEndpoint: '/dealer/products',
+  apiEndpoint: '/web/products'
 };
 
 export const serviceCategoriesConfig = {
@@ -244,7 +244,7 @@ export const serviceCategoriesConfig = {
     { name: 'image_url', label: 'Hình ảnh', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Danh mục dịch vụ',
-  apiEndpoint: '/service-categories',
+  apiEndpoint: '/web/service-categories',
 };
 
 // ===== CATEGORY MANAGEMENT =====
@@ -263,7 +263,7 @@ export const categoriesConfig = {
     { name: 'image_url', label: 'Hình ảnh', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Danh mục sản phẩm',
-  apiEndpoint: '/categories',
+  apiEndpoint: '/web/categories',
 };
 
 // ===== VEHICLE MANAGEMENT =====
@@ -311,7 +311,7 @@ export const vehiclesConfig = {
       type: 'select',
       required: true,
       searchable: true,
-      apiEndpoint: '/customers',
+      apiEndpoint: '/web/customers',
       apiParams: { limit: 1000 },
       valueKey: 'id',
       labelKey: 'name',
@@ -323,7 +323,7 @@ export const vehiclesConfig = {
     { name: 'image_url', label: 'Hình ảnh xe', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
   ],
   title: 'Quản lý xe',
-  apiEndpoint: '/vehicles',
+  apiEndpoint: '/web/vehicles',
 };
 
 // ===== SERVICE ORDER MANAGEMENT =====
@@ -371,8 +371,8 @@ export const serviceOrdersConfig = {
     { key: 'receive_date', label: 'Ngày nhận', render: (val) => val ? <span className="text-xs">{new Date(val).toLocaleDateString('vi-VN')}</span> : '-' },
   ],
   fieldsForModal: [
-    createSelectField('customer_id', 'Khách hàng', '/customers', 'id', 'name', (item) => `${item.name} - ${item.phone}`),
-    createSelectField('service_id', 'Dịch vụ', '/services'),
+    createSelectField('customer_id', 'Khách hàng', '/web/customers', 'id', 'name', (item) => `${item.name} - ${item.phone}`),
+    createSelectField('service_id', 'Dịch vụ', '/web/services'),
     createTextFieldForModal('license_plate', 'Biển số xe', 'text', true),
     createTextFieldForModal('vehicle_type', 'Loại xe'),
     createTextFieldForModal('receiver_name', 'Tên người nhận', 'text', true),
@@ -383,7 +383,7 @@ export const serviceOrdersConfig = {
     createTextAreaField('note', 'Ghi chú'),
   ],
   title: 'Đơn dịch vụ',
-  apiEndpoint: '/service-orders',
+  apiEndpoint: '/web/service-orders',
 };
 
 // ===== OFFER MANAGEMENT =====
@@ -408,7 +408,7 @@ export const offersConfig = {
     createTextAreaField('content', 'Nội dung ưu đãi'),
   ],
   title: 'Ưu đãi',
-  apiEndpoint: '/offers',
+  apiEndpoint: '/web/offers',
 };
 
 // ===== WARRANTY MANAGEMENT =====
@@ -493,7 +493,7 @@ export const warrantiesConfig = {
     { name: 'note', label: 'Ghi chú', type: 'textarea' },
   ],
   title: 'Bảo hành',
-  apiEndpoint: '/warranties',
+  apiEndpoint: '/web/warranties',
 };
 
 // ===== NOTIFICATION MANAGEMENT =====
@@ -517,7 +517,7 @@ export const notificationsConfig = {
     { name: 'image_url', label: 'URL hình ảnh', type: 'text' },
   ],
   title: 'Thông báo',
-  apiEndpoint: '/notifications',
+  apiEndpoint: '/web/notifications',
 };
 
 // ===== SERVICE ORDER IMAGES =====
@@ -555,14 +555,14 @@ export const serviceOrderImagesConfig = {
       label: 'Người upload', 
       type: 'select', 
       required: true,
-      apiEndpoint: '/employees',
+      apiEndpoint: '/web/employees',
       valueKey: 'id',
       labelKey: 'name',
       labelFormat: (item) => `${item.name} - ${item.phone}`
     },
   ],
   title: 'Hình ảnh đơn hàng',
-  apiEndpoint: '/service-order-images',
+  apiEndpoint: '/web/service-orders/images',
 };
 
 // ===== PRODUCT IMAGES =====

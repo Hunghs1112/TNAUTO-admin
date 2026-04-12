@@ -151,6 +151,17 @@ function invalidateServicesCache() {
   };
 }
 
+function buildVehiclePayload(data = {}) {
+  const payload = { ...(data || {}) };
+
+  // Tenant scope is derived from bearer token on backend.
+  // Never send override fields from web admin client.
+  delete payload.garage_id;
+  delete payload.garage_code;
+
+  return payload;
+}
+
 async function fetchAllServices({ force = false } = {}) {
   if (!force && servicesListCache.items && servicesListCache.expiresAt > Date.now()) {
     return servicesListCache.items;
@@ -391,24 +402,24 @@ export const productsAPI = createCrudAPI(api, '/web/products', {
   deleteImage: (id) => api.delete(`/web/products/images/${id}`),
 });
 
-export const dealerCategoriesAPI = createCrudAPI(api, '/dealer/categories', {
-  getAll: (params = {}) => api.get('/dealer/categories', { params }),
-  getById: (id) => api.get(`/dealer/categories/${id}`),
-  create: (data) => api.post('/dealer/categories', data),
-  update: (id, data) => api.put(`/dealer/categories/${id}`, data),
-  delete: (id) => api.delete(`/dealer/categories/${id}`),
+export const dealerCategoriesAPI = createCrudAPI(api, '/web/categories', {
+  getAll: (params = {}) => api.get('/web/categories', { params }),
+  getById: (id) => api.get(`/web/categories/${id}`),
+  create: (data) => api.post('/web/categories', data),
+  update: (id, data) => api.put(`/web/categories/${id}`, data),
+  delete: (id) => api.delete(`/web/categories/${id}`),
 });
 
-export const dealerProductsAPI = createCrudAPI(api, '/dealer/products', {
-  getAll: (params = {}) => api.get('/dealer/products', { params }),
-  getById: (id) => api.get(`/dealer/products/${id}`),
-  create: (data) => api.post('/dealer/products', data),
-  update: (id, data) => api.put(`/dealer/products/${id}`, data),
-  delete: (id) => api.delete(`/dealer/products/${id}`),
-  createImage: (data) => api.post('/dealer/products/images', data),
-  getImages: (productId) => api.get(`/dealer/products/${productId}/images`),
-  updateImage: (id, data) => api.put(`/dealer/products/images/${id}`, data),
-  deleteImage: (id) => api.delete(`/dealer/products/images/${id}`),
+export const dealerProductsAPI = createCrudAPI(api, '/web/products', {
+  getAll: (params = {}) => api.get('/web/products', { params }),
+  getById: (id) => api.get(`/web/products/${id}`),
+  create: (data) => api.post('/web/products', data),
+  update: (id, data) => api.put(`/web/products/${id}`, data),
+  delete: (id) => api.delete(`/web/products/${id}`),
+  createImage: (data) => api.post('/web/products/images', data),
+  getImages: (productId) => api.get(`/web/products/${productId}/images`),
+  updateImage: (id, data) => api.put(`/web/products/images/${id}`, data),
+  deleteImage: (id) => api.delete(`/web/products/images/${id}`),
 });
 
 export const serviceCategoriesAPI = createCrudAPI(api, '/web/service-categories', {
@@ -511,9 +522,10 @@ export const uploadAPI = {
 };
 
 export const serviceOrderImagesAPI = {
-  getByOrder: (orderId) => api.get(`/service-order-images/${orderId}`),
-  create: (data) => api.post('/service-order-images', data),
-  delete: (id) => api.delete(`/service-order-images/${id}`),
+  getByOrder: (orderId) => api.get(`/web/service-orders/${orderId}/images`),
+  create: (data) => api.post('/web/service-orders/images', data),
+  update: (id, data) => api.put(`/web/service-orders/images/${id}`, data),
+  delete: (id) => api.delete(`/web/service-orders/images/${id}`),
 };
 
 export const notificationsAPI = {

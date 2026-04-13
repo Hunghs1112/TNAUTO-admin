@@ -1,19 +1,28 @@
-# memory.md — Bộ nhớ ngắn hạn của dự án
+# Project Memory
 
-## Snapshot hiện tại
+## Domain
+TN Auto backend phục vụ quản lý garage, khách hàng, xe, lệnh dịch vụ, sản phẩm, bảo hành, thông báo.
 
-- Dự án: `tnauto-admin`
-- Mục tiêu chính: admin dashboard cho vận hành
-- Frontend stack: React + Vite + Tailwind
+## Architecture Summary
+- Express API theo module route/controller/service.
+- MySQL làm nguồn dữ liệu chính.
+- Redis + BullMQ cho queue/worker thông báo.
+- Firebase Admin để push notification.
+- Cron jobs chạy từ server process theo cờ môi trường.
 
-## Quy ước đã chốt
+## Critical Paths
+- Auth flow: `src/routes/auth.js` + `src/controllers/authController.js`
+- Service order flow: `src/routes/serviceOrder.js` + `src/controllers/serviceOrderController.js`
+- Notification flow: route/controller/service + worker + queue utils
+- Reminder jobs: `src/jobs/*`
 
-- Ưu tiên semantic token cho màu sắc UI.
-- Có hỗ trợ light/dark mode.
-- Rule kỹ thuật nằm ở `rules/tech-defaults.md`.
-- Rule thiết kế/theme nằm ở `rules/design.md`.
+## Guardrails
+- Không thay đổi contract API nếu chưa có migration plan.
+- Với endpoints nặng đọc, cân nhắc cache middleware.
+- Với cron/job, tránh chạy trùng nhiều instance.
+- Luôn sanitize input và xử lý lỗi nhất quán.
 
-## Việc cần duy trì
-
-- Cập nhật file này khi có thay đổi kiến trúc/luồng quan trọng.
-- Không ghi thông tin nhạy cảm.
+## Open Improvements (future)
+- Bổ sung test tự động cho các luồng trọng yếu (auth/service-order/notification).
+- Chuẩn hoá response schema across all controllers.
+- Bổ sung observability cho queue latency và job failure rate.

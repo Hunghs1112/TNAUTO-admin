@@ -1,27 +1,10 @@
 {
-  "permissions": {
-    "allow": [
-      "read",
-      "edit",
-      "run-safe-commands"
-    ],
-    "deny": [
-      "commit-secrets",
-      "destructive-git-without-confirmation"
-    ]
-  },
-  "hooks": {
-    "beforeCommit": [
-      "lint",
-      "typecheck"
-    ],
-    "beforeMerge": [
-      "lint",
-      "build"
-    ]
-  },
-  "defaults": {
-    "language": "vi",
-    "uiThemeMode": "system"
-  }
+  "project": "tnauto-backend",
+  "default_subagent": "api-architect",
+  "subagents_enabled": true,
+  "notes": [
+    "Prefer CommonJS style",
+    "Keep controller thin, move logic to services",
+    "Protect API contract compatibility"
+  ]
 }

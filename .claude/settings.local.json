@@ -1,12 +1,8 @@
 {
-  "permissions": {
-    "allow": [
-      "read",
-      "edit",
-      "run-local-dev-server"
-    ]
+  "local": true,
+  "run_commands": {
+    "api": "npm run dev",
+    "worker": "npm run worker:dev"
   },
-  "local": {
-    "notes": "Cấu hình máy cá nhân, không commit"
-  }
+  "healthcheck": "http://localhost:5000/health"
 }

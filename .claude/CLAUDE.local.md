@@ -1,12 +1,14 @@
-# CLAUDE.local.md — Cấu hình private (không đẩy GitHub)
+# Local Notes (Do not commit sensitive info)
 
-Dùng cho thông tin cá nhân/local:
+## Machine-specific setup
+- OS: Windows
+- Shell: PowerShell
 
-- Ghi chú môi trường máy cá nhân
-- Lưu workflow riêng
-- Danh sách tài khoản/dev endpoint nội bộ (không chứa secret thô)
+## Local run checklist
+- Ensure `.env` is configured for local DB/Redis/Firebase.
+- Run API: `npm run dev`
+- Run worker (optional): `npm run worker:dev`
 
-## Lưu ý bảo mật
-
-- Không lưu token/password thực tế trong file này.
-- Nếu cần tham chiếu secret, chỉ ghi tên biến môi trường.
+## Personal reminders
+- Keep logs concise when debugging high-volume notification flows.
+- Verify `/health` and `/api-docs` after startup.

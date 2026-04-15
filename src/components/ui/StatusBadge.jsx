@@ -1,26 +1,26 @@
 const ORDER_STATUS_CONFIG = {
   pending: {
-    color: 'bg-[#c37b1e]/15 text-[#eecd7e] ring-1 ring-[#e0a02e]/30',
-    label: 'Chờ xử lý',
+    color: 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/35',
+    label: 'Chờ duyệt',
   },
   received: {
-    color: 'bg-[#c37b1e]/15 text-[#eecd7e] ring-1 ring-[#e0a02e]/30',
+    color: 'bg-sky-500/15 text-sky-300 ring-1 ring-sky-400/35',
     label: 'Đã tiếp nhận',
   },
   in_progress: {
-    color: 'bg-[#1e406b]/15 text-[#dfe1e3] ring-1 ring-[#1e406b]/30',
+    color: 'bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/35',
     label: 'Đang xử lý',
   },
   ready_for_pickup: {
-    color: 'bg-[#1e406b]/15 text-[#dfe1e3] ring-1 ring-[#1e406b]/30',
+    color: 'bg-violet-500/15 text-violet-300 ring-1 ring-violet-400/35',
     label: 'Sẵn sàng bàn giao',
   },
   completed: {
-    color: 'bg-[#8f5f23]/15 text-[#eecd7e] ring-1 ring-[#8f5f23]/30',
+    color: 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/35',
     label: 'Hoàn thành',
   },
   cancelled: {
-    color: 'bg-[#7a797c]/15 text-[#dfe1e3] ring-1 ring-[#7a797c]/30',
+    color: 'bg-slate-500/15 text-slate-300 ring-1 ring-slate-400/35',
     label: 'Đã hủy',
   },
 };

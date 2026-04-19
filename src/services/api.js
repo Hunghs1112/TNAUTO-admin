@@ -338,12 +338,7 @@ export const customersAPI = createCrudAPI(api, '/web/customers', {
   },
   updateDriverLicense: (id, data) => api.put(`/web/customers/${id}/driver-license`, data),
   deleteDriverLicense: (id) => api.delete(`/web/customers/${id}/driver-license`),
-  getVehiclesForGarage: ({ phone }) =>
-    api.get('/web/vehicles', {
-      params: {
-        phone,
-      },
-    }),
+  getVehiclesForGarage: (id) => api.get(`/web/customers/${id}/vehicles`),
   addVehicle: (id, data) => api.post(`/web/customers/${id}/vehicles`, data),
 });
 

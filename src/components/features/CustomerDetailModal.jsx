@@ -241,43 +241,13 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
 
       const nextCustomer = customerRes ? normalizeObjectResponse(customerRes) : customer;
       const nextDriverLicense = dlRes ? normalizeObjectResponse(dlRes) : null;
-      const customerPhone = nextCustomer?.phone || customer?.phone || '';
 
       let nextVehicles = extractEmbeddedVehicles(nextCustomer);
-      if (customerPhone) {
-        const vehiclesResponse = await customersAPI
-          .getVehiclesForGarage({
-            phone: customerPhone,
-          })
-          .catch(() => null);
+      if (customerId) {
+        const vehiclesResponse = await customersAPI.getVehiclesForGarage(customerId).catch(() => null);
 
         if (vehiclesResponse) {
-          const fetchedVehicles = normalizeArrayResponse(vehiclesResponse);
-          const targetCustomerId = Number(nextCustomer?.id || customer?.id);
-          const normalizedCustomerPhone = String(customerPhone || '').trim();
-
-          nextVehicles = fetchedVehicles.filter((vehicle) => {
-            const rawCustomerId =
-              vehicle?.customer_id ??
-              vehicle?.customerId ??
-              vehicle?.customer?.id ??
-              vehicle?.owner_id ??
-              vehicle?.ownerId ??
-              null;
-
-            if (rawCustomerId !== null && rawCustomerId !== undefined && rawCustomerId !== '') {
-              return Number(rawCustomerId) === targetCustomerId;
-            }
-
-            const vehiclePhone =
-              vehicle?.customer_phone ??
-              vehicle?.phone ??
-              vehicle?.customer?.phone ??
-              vehicle?.owner_phone ??
-              '';
-
-            return String(vehiclePhone || '').trim() === normalizedCustomerPhone;
-          });
+          nextVehicles = normalizeArrayResponse(vehiclesResponse);
         }
       }
 

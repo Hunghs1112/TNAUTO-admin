@@ -313,15 +313,23 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
 
                 <div className="grid gap-3 rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-sm sm:grid-cols-2">
                   <div className="text-slate-200">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Ngày cấp đăng ký</div>
-                    <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.registration_issued_date)}</div>
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Hết hạn bằng lái</div>
+                    <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.license_expiry_date)}</div>
+                  </div>
+                  <div className="text-slate-200">
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Số chứng nhận đăng kiểm</div>
+                    <div className="mt-1 font-semibold">{currentVehicle?.inspection_certificate_number || currentVehicle?.inspection_certificate_no || 'Chưa cập nhật'}</div>
+                  </div>
+                  <div className="text-slate-200">
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Ngày đăng kiểm</div>
+                    <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.inspection_date || currentVehicle?.inspection_last_date)}</div>
                   </div>
                   <div className="text-slate-200">
                     <div className="text-xs uppercase tracking-wide text-slate-500 ">Hết hạn đăng kiểm</div>
                     <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.inspection_expiry_date)}</div>
                   </div>
                   <div className="text-slate-200">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Bắt đầu bảo hiểm</div>
+                    <div className="text-xs uppercase tracking-wide text-slate-500 ">Ngày bắt đầu bảo hiểm</div>
                     <div className="mt-1 font-semibold">{formatDocumentDate(currentVehicle?.insurance_start_date)}</div>
                   </div>
                   <div className="text-slate-200">
@@ -334,26 +342,20 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
           </div>
 
           <VehicleDocumentSection
-            title="Đăng ký xe"
+            title="Bằng lái xe"
             icon={FileText}
           >
             <VehicleInput
-              label="Số đăng ký"
-              value={vehicleForm.registration_number}
-              onChange={(value) => setFieldValue('registration_number', value)}
-              placeholder="Nhập số đăng ký"
+              label="Số bằng lái xe"
+              value={vehicleForm.license_number}
+              onChange={(value) => setFieldValue('license_number', value)}
+              placeholder="Nhập số bằng lái"
             />
             <VehicleInput
-              label="Chủ xe"
-              value={vehicleForm.registration_owner_name}
-              onChange={(value) => setFieldValue('registration_owner_name', value)}
-              placeholder="Nhập tên chủ xe"
-            />
-            <VehicleInput
-              label="Ngày cấp"
+              label="Ngày hết hạn bằng lái"
               type="date"
-              value={vehicleForm.registration_issued_date}
-              onChange={(value) => setFieldValue('registration_issued_date', value)}
+              value={vehicleForm.license_expiry_date}
+              onChange={(value) => setFieldValue('license_expiry_date', value)}
             />
           </VehicleDocumentSection>
 
@@ -363,19 +365,19 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
             status={currentVehicle?.inspection_status}
           >
             <VehicleInput
-              label="Số chứng nhận"
-              value={vehicleForm.inspection_certificate_no}
-              onChange={(value) => setFieldValue('inspection_certificate_no', value)}
+              label="Số chứng nhận đăng kiểm"
+              value={vehicleForm.inspection_certificate_number}
+              onChange={(value) => setFieldValue('inspection_certificate_number', value)}
               placeholder="Nhập số chứng nhận đăng kiểm"
             />
             <VehicleInput
-              label="Ngày đăng kiểm gần nhất"
+              label="Ngày đăng kiểm"
               type="date"
-              value={vehicleForm.inspection_last_date}
-              onChange={(value) => setFieldValue('inspection_last_date', value)}
+              value={vehicleForm.inspection_date}
+              onChange={(value) => setFieldValue('inspection_date', value)}
             />
             <VehicleInput
-              label="Ngày hết hạn"
+              label="Ngày hết hạn đăng kiểm"
               type="date"
               value={vehicleForm.inspection_expiry_date}
               onChange={(value) => setFieldValue('inspection_expiry_date', value)}
@@ -388,25 +390,13 @@ function VehicleDetailModal({ isOpen, vehicle, onClose, onRefresh }) {
             status={currentVehicle?.insurance_status}
           >
             <VehicleInput
-              label="Đơn vị bảo hiểm"
-              value={vehicleForm.insurance_provider}
-              onChange={(value) => setFieldValue('insurance_provider', value)}
-              placeholder="Nhập tên đơn vị bảo hiểm"
-            />
-            <VehicleInput
-              label="Số hợp đồng / policy"
-              value={vehicleForm.insurance_policy_no}
-              onChange={(value) => setFieldValue('insurance_policy_no', value)}
-              placeholder="Nhập số hợp đồng bảo hiểm"
-            />
-            <VehicleInput
-              label="Ngày bắt đầu"
+              label="Ngày bắt đầu bảo hiểm"
               type="date"
               value={vehicleForm.insurance_start_date}
               onChange={(value) => setFieldValue('insurance_start_date', value)}
             />
             <VehicleInput
-              label="Ngày hết hạn"
+              label="Ngày hết hạn bảo hiểm"
               type="date"
               value={vehicleForm.insurance_expiry_date}
               onChange={(value) => setFieldValue('insurance_expiry_date', value)}

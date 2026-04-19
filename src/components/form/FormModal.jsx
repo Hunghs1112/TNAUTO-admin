@@ -63,12 +63,26 @@ function calculateWarrantyEndDate(startDate, warrantyPeriod) {
   return `${year}-${month}-${day}`;
 }
 
+function isVehicleDocumentForm(title) {
+  const normalized = String(title || '').toLowerCase();
+  return normalized.includes('xe');
+}
+
+function getVehicleRequiredFields(title) {
+  if (!isVehicleDocumentForm(title)) {
+    return [];
+  }
+
+  return ['license_expiry_date', 'inspection_certificate_number', 'inspection_date', 'inspection_expiry_date', 'insurance_company', 'insurance_start_date', 'insurance_expiry_date'];
+}
+
 export default function FormModal({ item, isEdit, onClose, onSave, title, fields = [] }) {
   const [formData, setFormData] = useState({});
   const [fieldOptions, setFieldOptions] = useState({});
   const [loadingOptions, setLoadingOptions] = useState(false);
 
   const warrantyForm = useMemo(() => isWarrantyForm(title), [title]);
+  const vehicleDocumentRequiredFields = useMemo(() => getVehicleRequiredFields(title), [title]);
 
   useEffect(() => {
     if (!isEdit || !item) {
@@ -142,6 +156,20 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
     const payload = { ...formData };
     if (warrantyForm) {
       payload.end_date = calculateWarrantyEndDate(payload.start_date, payload.warranty_period) || payload.end_date || '';
+    }
+
+    if (vehicleDocumentRequiredFields.length) {
+      vehicleDocumentRequiredFields.forEach((fieldName) => {
+        if (fieldName === 'license_expiry_date') return;
+      });
+      delete payload.insurance_contract_number;
+      delete payload.registration_number;
+      delete payload.registration_owner_name;
+      delete payload.registration_issued_date;
+      delete payload.inspection_last_date;
+      delete payload.inspection_certificate_no;
+      delete payload.insurance_policy_no;
+      if (payload.license_expiry_date === undefined) payload.license_expiry_date = '';
     }
 
     onSave(payload);

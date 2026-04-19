@@ -301,6 +301,13 @@ export const vehiclesConfig = {
       if (item.customer_id) return `ID: ${item.customer_id}`;
       return '-';
     }},
+    { key: 'license_expiry_date', label: 'Ngày hết hạn bằng lái', render: (val) => formatDate(val) },
+    { key: 'inspection_certificate_number', label: 'Số chứng nhận đăng kiểm', render: (val) => val || '-' },
+    { key: 'inspection_date', label: 'Ngày đăng kiểm', render: (val) => formatDate(val) },
+    { key: 'inspection_expiry_date', label: 'Ngày hết hạn đăng kiểm', render: (val) => formatDate(val) },
+    { key: 'insurance_company', label: 'Đơn vị bảo hiểm', render: (val) => val || '-' },
+    { key: 'insurance_start_date', label: 'Ngày bắt đầu bảo hiểm', render: (val) => formatDate(val) },
+    { key: 'insurance_expiry_date', label: 'Ngày hết hạn bảo hiểm', render: (val) => formatDate(val) },
     createImageColumn('image_url', 'Hình ảnh', "w-16 h-12 rounded"),
     createDateColumn('created_at', 'Ngày tạo'),
   ],

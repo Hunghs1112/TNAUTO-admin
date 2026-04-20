@@ -58,7 +58,8 @@ export default function ServiceDetailModal({
           try {
             let response;
             // Load from correct API based on endpoint
-            if (field.apiEndpoint === '/service-categories') {
+            const apiEndpoint = String(field.apiEndpoint || '');
+            if (apiEndpoint.includes('service-categories')) {
               response = await serviceCategoriesAPI.getAll();
             } else {
               response = await servicesAPI.getAll();
@@ -76,7 +77,18 @@ export default function ServiceDetailModal({
               dataArray = raw.data.data;
             }
             
-            optionsData[field.name] = dataArray.map(item => ({
+            const normalizedOptions = apiEndpoint.includes('service-categories')
+              ? dataArray.filter((item) =>
+                  item &&
+                  typeof item === 'object' &&
+                  !item.category_id &&
+                  !item.category_name &&
+                  !item.supplier_name &&
+                  (Object.prototype.hasOwnProperty.call(item, 'service_count') || Object.prototype.hasOwnProperty.call(item, 'description') || Object.prototype.hasOwnProperty.call(item, 'image_url'))
+                )
+              : dataArray;
+
+            optionsData[field.name] = normalizedOptions.map(item => ({
               value: item[field.valueKey || 'id'],
               label: field.labelFormat 
                 ? field.labelFormat(item)

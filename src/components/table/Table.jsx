@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import FormModal from '../form/FormModal';
+import Modal from '../ui/Modal';
 import { TableSkeleton } from '../ui/SkeletonLoader';
 import EmptyState from '../ui/EmptyState';
 import Pagination from '../ui/Pagination';
@@ -615,34 +616,34 @@ export default function GenericTable({
       ) : null}
 
       {confirmDeleteId ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="app-panel w-full max-w-md">
-            <div className="app-panel-body">
-              <div className="mb-6 flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#b48242]/15 text-[#b48242]">
-                  <Trash2 size={22} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-100">{deleteConfirmTitle}</h3>
-                  <p className="mt-1 text-sm text-slate-300">Vui lòng xác nhận trước khi tiếp tục.</p>
-                </div>
+        <Modal
+          isOpen={Boolean(confirmDeleteId)}
+          onClose={() => setConfirmDeleteId(null)}
+          title={deleteConfirmTitle}
+          size="sm"
+          placement="top"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#b48242]/15 text-[#b48242]">
+                <Trash2 size={22} />
               </div>
-
-              <p className="mb-6 text-sm leading-6 text-slate-200">
-                {deleteConfirmDescription}
-              </p>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={() => setConfirmDeleteId(null)} className="btn-gradient-secondary flex-1">
-                  Hủy
-                </button>
-                <button type="button" onClick={confirmDeleteAction} className="btn-gradient-error flex-1">
-                  {deleteConfirmButtonLabel}
-                </button>
+              <div>
+                <p className="text-sm text-slate-300">Vui lòng xác nhận trước khi tiếp tục.</p>
+                <p className="mt-2 text-sm leading-6 text-slate-200">{deleteConfirmDescription}</p>
               </div>
             </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button type="button" onClick={() => setConfirmDeleteId(null)} className="btn-gradient-secondary flex-1">
+                Hủy
+              </button>
+              <button type="button" onClick={confirmDeleteAction} className="btn-gradient-error flex-1">
+                {deleteConfirmButtonLabel}
+              </button>
+            </div>
           </div>
-        </div>
+        </Modal>
       ) : null}
     </div>
   );

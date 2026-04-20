@@ -1,12 +1,18 @@
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
+function getModalTarget() {
+  if (typeof document === 'undefined') return null;
+  return document.getElementById('modal-root') || document.body;
+}
+
 export default function Modal({
   isOpen,
   onClose,
   title,
   children,
   size = 'md',
+  placement = 'center',
   showCloseButton = true,
   className = '',
 }) {
@@ -22,9 +28,14 @@ export default function Modal({
     full: 'mx-4 max-w-full',
   };
 
+  const placementClasses = {
+    center: 'items-center justify-center py-4',
+    top: 'items-start justify-center pt-2 sm:pt-3',
+  };
+
   const modalContent = (
-    <div className="animate-fade-in fixed inset-0 z-50 overflow-y-auto bg-black/55 p-3 backdrop-blur-sm sm:flex sm:items-center sm:justify-center sm:p-4">
-      <div className={`app-panel my-4 flex max-h-[calc(100vh-1.5rem)] w-full flex-col sm:my-0 sm:max-h-[90vh] ${sizeClasses[size]} ${className}`}>
+    <div className={`animate-fade-in fixed inset-0 z-50 flex overflow-y-auto bg-black/55 p-2 backdrop-blur-sm sm:p-4 ${placementClasses[placement] || placementClasses.center}`}>
+      <div className={`app-panel mt-0 flex max-h-[calc(100vh-1rem)] w-full flex-col ${sizeClasses[size]} ${className}`}>
         {title || showCloseButton ? (
           <div className="app-panel-header flex shrink-0 items-center justify-between">
             {title ? <h2 className="text-2xl font-bold text-slate-100">{title}</h2> : <div />}
@@ -41,9 +52,11 @@ export default function Modal({
     </div>
   );
 
-  if (typeof document === 'undefined') {
+  const modalTarget = getModalTarget();
+
+  if (!modalTarget) {
     return modalContent;
   }
 
-  return createPortal(modalContent, document.body);
+  return createPortal(modalContent, modalTarget);
 }

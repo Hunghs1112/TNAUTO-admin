@@ -1,24 +1,15 @@
 const DATE_PREFIX_PATTERN = /^\d{4}-\d{2}-\d{2}/;
 
-export const VEHICLE_DOCUMENT_TEXT_FIELDS = [
-  'registration_number',
-  'registration_owner_name',
-  'registration_image_url',
+const VEHICLE_CANONICAL_TEXT_FIELDS = [
   'license_number',
-  'inspection_certificate_no',
+  'insurance_company',
+  'insurance_image_url',
   'inspection_certificate_number',
   'inspection_image_url',
-  'insurance_provider',
-  'insurance_company',
-  'insurance_policy_no',
-  'insurance_contract_number',
-  'insurance_image_url',
 ];
 
-export const VEHICLE_DOCUMENT_DATE_FIELDS = [
-  'registration_issued_date',
+const VEHICLE_CANONICAL_DATE_FIELDS = [
   'license_expiry_date',
-  'inspection_last_date',
   'inspection_date',
   'inspection_expiry_date',
   'insurance_start_date',
@@ -108,27 +99,16 @@ export function normalizeVehicleResponse(vehicle) {
     ...vehicle,
     model: getVehicleModelName(vehicle) || null,
     customer_name: getVehicleCustomerName(vehicle),
-    registration_number: vehicle.registration_number ?? null,
-    registration_owner_name: vehicle.registration_owner_name ?? null,
-    registration_issued_date: vehicle.registration_issued_date ?? null,
-    registration_image_url: vehicle.registration_image_url ?? null,
     license_number: vehicle.license_number ?? null,
     license_expiry_date: vehicle.license_expiry_date ?? null,
-    inspection_certificate_no: vehicle.inspection_certificate_no ?? null,
     inspection_certificate_number: vehicle.inspection_certificate_number ?? null,
-    inspection_last_date: vehicle.inspection_last_date ?? null,
     inspection_date: vehicle.inspection_date ?? null,
     inspection_expiry_date: vehicle.inspection_expiry_date ?? null,
     inspection_image_url: vehicle.inspection_image_url ?? null,
-    inspection_status: vehicle.inspection_status ?? null,
-    insurance_provider: vehicle.insurance_provider ?? null,
     insurance_company: vehicle.insurance_company ?? null,
-    insurance_policy_no: vehicle.insurance_policy_no ?? null,
-    insurance_contract_number: vehicle.insurance_contract_number ?? null,
     insurance_start_date: vehicle.insurance_start_date ?? null,
     insurance_expiry_date: vehicle.insurance_expiry_date ?? null,
     insurance_image_url: vehicle.insurance_image_url ?? null,
-    insurance_status: vehicle.insurance_status ?? null,
   };
 }
 
@@ -137,22 +117,13 @@ export function normalizeVehicleForm(vehicle) {
     license_plate: vehicle?.license_plate || '',
     model: getVehicleModelName(vehicle),
     image_url: vehicle?.image_url || '',
-    registration_number: vehicle?.registration_number || '',
-    registration_owner_name: vehicle?.registration_owner_name || '',
-    registration_issued_date: normalizeVehicleDateValue(vehicle?.registration_issued_date),
-    registration_image_url: vehicle?.registration_image_url || '',
     license_number: vehicle?.license_number || '',
     license_expiry_date: normalizeVehicleDateValue(vehicle?.license_expiry_date),
-    inspection_certificate_no: vehicle?.inspection_certificate_no || '',
-    inspection_certificate_number: vehicle?.inspection_certificate_number || vehicle?.inspection_certificate_no || '',
-    inspection_last_date: normalizeVehicleDateValue(vehicle?.inspection_last_date),
-    inspection_date: normalizeVehicleDateValue(vehicle?.inspection_date || vehicle?.inspection_last_date),
+    inspection_certificate_number: vehicle?.inspection_certificate_number || '',
+    inspection_date: normalizeVehicleDateValue(vehicle?.inspection_date),
     inspection_expiry_date: normalizeVehicleDateValue(vehicle?.inspection_expiry_date),
     inspection_image_url: vehicle?.inspection_image_url || '',
-    insurance_provider: vehicle?.insurance_provider || '',
-    insurance_company: vehicle?.insurance_company || vehicle?.insurance_provider || '',
-    insurance_policy_no: vehicle?.insurance_policy_no || '',
-    insurance_contract_number: vehicle?.insurance_contract_number || vehicle?.insurance_policy_no || '',
+    insurance_company: vehicle?.insurance_company || '',
     insurance_start_date: normalizeVehicleDateValue(vehicle?.insurance_start_date),
     insurance_expiry_date: normalizeVehicleDateValue(vehicle?.insurance_expiry_date),
     insurance_image_url: vehicle?.insurance_image_url || '',
@@ -178,13 +149,13 @@ export function buildVehiclePayload(source = {}) {
     payload.image_url = normalizeNullableText(source.image_url);
   }
 
-  VEHICLE_DOCUMENT_TEXT_FIELDS.forEach((fieldName) => {
+  VEHICLE_CANONICAL_TEXT_FIELDS.forEach((fieldName) => {
     if (hasOwn(source, fieldName)) {
       payload[fieldName] = normalizeNullableText(source[fieldName]);
     }
   });
 
-  VEHICLE_DOCUMENT_DATE_FIELDS.forEach((fieldName) => {
+  VEHICLE_CANONICAL_DATE_FIELDS.forEach((fieldName) => {
     if (hasOwn(source, fieldName)) {
       payload[fieldName] = normalizeNullableDate(source[fieldName]);
     }

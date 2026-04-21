@@ -1,5 +1,6 @@
 ﻿import axios from 'axios';
 import { createCrudAPI } from './apiFactory';
+import { buildVehiclePayload } from '../utils/vehicleDocuments';
 import { clearAuthSession, getAuthToken } from './authStorage';
 
 
@@ -151,8 +152,8 @@ function invalidateServicesCache() {
   };
 }
 
-function buildVehiclePayload(data = {}) {
-  const payload = { ...(data || {}) };
+function sanitizeVehiclePayload(data = {}) {
+  const payload = buildVehiclePayload(data);
 
   // Tenant scope is derived from bearer token on backend.
   // Never send override fields from web admin client.
@@ -450,8 +451,8 @@ export const categoriesAPI = createCrudAPI(api, '/web/categories', {
 export const vehiclesAPI = createCrudAPI(api, '/web/vehicles', {
   getAll: (params = {}) => api.get('/web/vehicles', { params }),
   getById: (id) => api.get(`/web/vehicles/${id}`),
-  create: (data) => api.post('/web/vehicles', buildVehiclePayload(data)),
-  update: (id, data) => api.put(`/web/vehicles/${id}`, buildVehiclePayload(data)),
+  create: (data) => api.post('/web/vehicles', sanitizeVehiclePayload(data)),
+  update: (id, data) => api.put(`/web/vehicles/${id}`, sanitizeVehiclePayload(data)),
   delete: (id) => api.delete(`/web/vehicles/${id}`),
   getStats: () => api.get('/web/vehicles/stats'),
   uploadImage: (id, file) => {

@@ -15,7 +15,7 @@ function PageHeader({
       <div className="app-hero-content">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">TNAUTO Admin</p>
+            <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">GaraOne Admin</p>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-[1.75rem] font-bold tracking-tight text-white">{title}</h1>
               {badge ? <span className="app-badge">{badge}</span> : null}

@@ -10,7 +10,7 @@ function Dealers() {
       columns={dealersConfig.columns}
       fieldsForModal={dealersConfig.fieldsForModal}
       title={dealersConfig.title}
-      description="Đại lý trong danh sách này chỉ thuộc gara hiện tại. Tạo, sửa và xóa đều được backend tự scope theo token gara."
+      description="Theo dõi và quản lý thông tin đại lý."
       options={{}}
       showPagination={true}
       limit={20}
@@ -21,4 +21,6 @@ function Dealers() {
 }
 
 export default memo(Dealers);
+
+
 

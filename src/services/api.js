@@ -4,7 +4,9 @@ import { buildVehiclePayload } from '../utils/vehicleDocuments';
 import { clearAuthSession, getAuthToken } from './authStorage';
 
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://103.200.20.253:5000/api';
+const API_BASE = import.meta.env.DEV
+  ? '/api'
+  : (import.meta.env.VITE_API_BASE_URL || 'http://103.200.20.253:5000/api');
 const API_ROOT = API_BASE.replace(/\/api\/?$/, '');
 
 function createApiClient(baseURL) {
@@ -303,11 +305,6 @@ export const authAPI = {
       skipAuth: true,
       skipAuthFailureHandler: true,
     }),
-  resolveGarageByCode: (code) =>
-    api.get(`/public/garages/by-code/${encodeURIComponent(code)}`, {
-      skipAuth: true,
-      skipAuthFailureHandler: true,
-    }),
 };
 
 export const dealersAPI = createCrudAPI(api, '/web/dealers', {
@@ -316,6 +313,14 @@ export const dealersAPI = createCrudAPI(api, '/web/dealers', {
   create: (data) => api.post('/web/dealers', data),
   update: (id, data) => api.put(`/web/dealers/${id}`, data),
   delete: (id) => api.delete(`/web/dealers/${id}`),
+});
+
+export const garagesAPI = createCrudAPI(api, '/web/garages', {
+  getAll: (params = {}) => api.get('/web/garages', { params }),
+  getById: (id) => api.get(`/web/garages/${id}`),
+  create: (data) => api.post('/web/garages', data),
+  update: (id, data) => api.put(`/web/garages/${id}`, data),
+  delete: (id) => api.delete(`/web/garages/${id}`),
 });
 
 export const customersAPI = createCrudAPI(api, '/web/customers', {

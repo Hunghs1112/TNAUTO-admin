@@ -30,7 +30,7 @@ function Products() {
         columns={productsConfig.columns}
         fieldsForModal={productsConfig.fieldsForModal}
         title={productsConfig.title}
-        description="Quản lý sản phẩm, thông tin giá và trạng thái hiển thị trong gara."
+        description="Theo dõi và quản lý thông tin sản phẩm."
         showPagination={true}
         limit={12}
         refreshTrigger={refreshKey}
@@ -51,3 +51,5 @@ function Products() {
 }
 
 export default memo(Products);
+
+

@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+﻿import { memo, useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Bell,
@@ -8,7 +8,6 @@ import {
   FileText,
   FolderOpen,
   LogOut,
-  MapPin,
   Menu,
   Package,
   Repeat,
@@ -23,6 +22,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const menuItems = [
+  { id: 'garages', label: 'Gara', icon: Building2, path: '/garages', superOnly: true },
   { id: 'customers', label: 'Khách hàng', icon: Users, path: '/customers' },
   { id: 'dealers', label: 'Đại lý', icon: Store, path: '/dealers' },
   { id: 'employees', label: 'Nhân viên', icon: Users, path: '/employees' },
@@ -59,27 +59,23 @@ function GarageIdentity({ garage }) {
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-900/50">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-900/50">
           {garage.avatar_url ? (
-            <img src={garage.avatar_url} alt={garage.name || garage.code || 'Garage'} className="h-full w-full object-cover" />
+            <img src={garage.avatar_url} alt={garage.name || 'Garage'} className="h-full w-full object-contain" />
           ) : (
-            <Building2 className="h-7 w-7 text-slate-400" />
+            <Building2 className="h-6 w-6 text-slate-400" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold text-white">{garage.name || 'Gara hiện tại'}</div>
-          <div className="mt-1 inline-flex rounded-full border border-[#1e406b]/20 bg-[#1e406b]/12 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#eecd7e]">
-            {garage.code || 'NO-CODE'}
-          </div>
-
-          {garage.address ? (
-            <div className="mt-2 flex items-start gap-2 text-xs leading-5 text-slate-300">
-              <MapPin size={14} className="mt-0.5 shrink-0 text-slate-500" />
-              <span>{garage.address}</span>
-            </div>
+          <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-slate-400">Gara hiện tại</p>
+          <p className="truncate text-[15px] font-semibold leading-tight text-white">{garage.name || 'Gara hiện tại'}</p>
+          {garage.is_super_garage ? (
+            <span className="mt-2 inline-flex rounded-full border border-amber-400/40 bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-200">
+              Super Garage
+            </span>
           ) : null}
         </div>
       </div>
@@ -90,12 +86,12 @@ function GarageIdentity({ garage }) {
 function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { garage, logout } = useAuth();
+  const { garage, isSuperGarage, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const currentPath = location.pathname;
   const pageTitle = useMemo(() => getPageTitle(currentPath), [currentPath]);
-  const items = useMemo(() => menuItems, []);
+  const items = useMemo(() => menuItems.filter((item) => !item.superOnly || isSuperGarage), [isSuperGarage]);
 
   const handleNavigate = useCallback(
     (item) => {
@@ -178,7 +174,7 @@ function Sidebar() {
               <h1 className="truncate text-lg font-bold text-white">{pageTitle}</h1>
               <div className="mt-1 flex items-center gap-2 text-xs text-slate-300">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#e0a02e]" />
-                <span className="truncate">{garage?.name || garage?.code || 'Phiên gara hiện tại'}</span>
+                <span className="truncate">{garage?.name || 'Phiên gara hiện tại'}</span>
               </div>
             </div>
 

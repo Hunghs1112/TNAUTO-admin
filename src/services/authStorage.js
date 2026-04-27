@@ -1,8 +1,25 @@
-const AUTH_STORAGE_KEY = 'tnauto_admin_garage_session';
-export const AUTH_SESSION_CHANGED_EVENT = 'tnauto:auth-session-changed';
+const AUTH_STORAGE_KEY = 'garaone_admin_garage_session';
+export const AUTH_SESSION_CHANGED_EVENT = 'garaone:auth-session-changed';
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+}
+
+function parseBooleanFlag(value) {
+  if (value === true || value === false) {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === '1' || normalized === 'true';
+  }
+
+  return false;
 }
 
 function normalizeGarage(rawGarage, rawSession = {}) {
@@ -18,6 +35,7 @@ function normalizeGarage(rawGarage, rawSession = {}) {
     ...source,
     id,
     code,
+    is_super_garage: parseBooleanFlag(source.is_super_garage ?? rawSession.is_super_garage),
   };
 }
 

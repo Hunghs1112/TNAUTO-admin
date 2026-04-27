@@ -1,18 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Building2, LogIn } from 'lucide-react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { useDebounce } from '../hooks/useDebounce';
-import { authAPI } from '../services/api';
 import ThemeToggle from '../components/ui/ThemeToggle';
-
-function normalizePreviewResponse(response) {
-  const raw = response?.data;
-  if (raw?.data && typeof raw.data === 'object') return raw.data;
-  if (raw && typeof raw === 'object') return raw;
-  return null;
-}
 
 export default function GarageLogin() {
   const navigate = useNavigate();
@@ -22,76 +13,27 @@ export default function GarageLogin() {
   const { success, error } = useToast();
 
   const [form, setForm] = useState({
-    garage_code: '',
+    login: '',
     password: '',
   });
   const [submitting, setSubmitting] = useState(false);
-  const [previewGarage, setPreviewGarage] = useState(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState('');
-
-  const debouncedGarageCode = useDebounce(form.garage_code, 450);
-
-  useEffect(() => {
-    const code = String(debouncedGarageCode || '').trim();
-    if (!code) {
-      setPreviewGarage(null);
-      setPreviewError('');
-      setPreviewLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setPreviewLoading(true);
-    setPreviewError('');
-
-    authAPI
-      .resolveGarageByCode(code)
-      .then((response) => {
-        if (cancelled) return;
-        const garage = normalizePreviewResponse(response);
-        setPreviewGarage(garage);
-        setPreviewError('');
-      })
-      .catch((previewRequestError) => {
-        if (cancelled) return;
-        setPreviewGarage(null);
-        setPreviewError(previewRequestError?.message || 'Không tìm thấy gara tương ứng với mã này.');
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setPreviewLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedGarageCode]);
-
-  const previewMeta = useMemo(() => {
-    if (!previewGarage) return null;
-    return {
-      name: previewGarage.name || 'Gara chưa đặt tên',
-      code: previewGarage.code || String(form.garage_code || '').trim().toUpperCase(),
-    };
-  }, [form.garage_code, previewGarage]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const garageCode = String(form.garage_code || '').trim().toUpperCase();
+    const loginInput = String(form.login || '').trim();
     const password = String(form.password || '');
 
-    if (!garageCode || !password) {
-      error('Vui lòng nhập mã gara và mật khẩu.');
+    if (!loginInput || !password) {
+      error('Vui lòng nhập số điện thoại/email và mật khẩu.');
       return;
     }
 
     setSubmitting(true);
     try {
-      const result = await login({ garage_code: garageCode, password });
-      const garageName = result?.session?.garage?.name || previewMeta?.name || garageCode;
-      success(`Đăng nhập gara thành công: ${garageName}`);
+      const result = await login({ login: loginInput, password });
+      const garageName = result?.session?.garage?.name || 'gara của bạn';
+      const roleLabel = result?.session?.garage?.is_super_garage ? ' (Super Garage)' : '';
+      success(`Đăng nhập gara thành công: ${garageName}${roleLabel}`);
       navigate(redirectTo, { replace: true });
     } catch (loginError) {
       error(loginError?.message || 'Không thể đăng nhập gara.');
@@ -127,22 +69,22 @@ export default function GarageLogin() {
           <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[#1e406b]/15 text-[#eecd7e] ring-1 ring-[#1e406b]/30">
             <Building2 size={20} />
           </div>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">TNAUTO Admin</p>
-          <h1 className="mt-2 text-2xl font-semibold text-white">Đăng nhập quản trị gara</h1>
-          <p className="mt-1 text-sm text-slate-400">Nhập mã gara và mật khẩu để tiếp tục.</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">GaraOne Admin</p>
+          <h1 className="mt-2 text-2xl font-semibold text-white">Đăng nhập quản lý gara</h1>
+          <p className="mt-1 text-sm text-slate-400">Nhập số điện thoại hoặc email và mật khẩu để tiếp tục.</p>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
-            value={form.garage_code}
+            value={form.login}
             onChange={(event) =>
               setForm((prev) => ({
                 ...prev,
-                garage_code: event.target.value.toUpperCase(),
+                login: event.target.value,
               }))
             }
-            placeholder="Mã gara (VD: DEFAULT)"
+            placeholder="Số điện thoại hoặc email"
             autoComplete="username"
             className="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-2.5 text-slate-100 placeholder:text-slate-500 focus:border-[#e0a02e] focus:outline-none focus:ring-2 focus:ring-[#1e406b]/30"
           />
@@ -167,19 +109,7 @@ export default function GarageLogin() {
         </form>
 
         <div className="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
-          {previewLoading ? (
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-[#e0a02e]" />
-              <span>Đang kiểm tra mã gara...</span>
-            </div>
-          ) : previewMeta ? (
-            <div>
-              <span className="font-semibold text-white">{previewMeta.name}</span>
-              <span className="ml-2 text-slate-400">({previewMeta.code})</span>
-            </div>
-          ) : (
-            <span className="text-slate-400">{previewError || 'Nhập mã gara để kiểm tra.'}</span>
-          )}
+          Tài khoản đăng nhập dùng chung cho web quản trị và app quản lý gara.
         </div>
       </section>
     </div>

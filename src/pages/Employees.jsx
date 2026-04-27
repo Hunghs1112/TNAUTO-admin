@@ -11,7 +11,7 @@ function Employees() {
       columns={employeesConfig.columns}
       fieldsForModal={employeesConfig.fieldsForModal}
       title={employeesConfig.title}
-      description="Nhân viên được hiển thị và quản lý trong đúng gara của phiên đăng nhập hiện tại."
+      description="Theo dõi và quản lý thông tin nhân viên."
       showPagination={true}
       limit={20}
     />
@@ -19,3 +19,5 @@ function Employees() {
 }
 
 export default memo(Employees);
+
+

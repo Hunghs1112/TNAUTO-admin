@@ -15,7 +15,7 @@ function Customers() {
         columns={customersConfig.columns}
         fieldsForModal={customersConfig.fieldsForModal}
         title={customersConfig.title}
-        description="Quản lý khách hàng đã liên kết với gara hiện tại."
+        description="Theo dõi và quản lý thông tin khách hàng."
         showPagination={true}
         limit={20}
         disableCreate={false}
@@ -50,3 +50,5 @@ function Customers() {
 }
 
 export default memo(Customers);
+
+

@@ -11,6 +11,7 @@ import DealerCatalog from './pages/DealerCatalog';
 import Dealers from './pages/Dealers';
 import DealerWarranties from './pages/DealerWarranties';
 import Employees from './pages/Employees';
+import Garages from './pages/Garages';
 import GarageLogin from './pages/GarageLogin';
 import Notifications from './pages/Notifications';
 import Offers from './pages/Offers';
@@ -27,6 +28,14 @@ function ProtectedLayout() {
   return <Layout key={sessionVersion} />;
 }
 
+function RequireSuperGarage({ children }) {
+  const { isSuperGarage } = useAuth();
+  if (!isSuperGarage) {
+    return <Navigate to="/customers" replace />;
+  }
+  return children;
+}
+
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
@@ -37,6 +46,14 @@ function AppRoutes() {
       <Route element={<RequireAuth />}>
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Navigate to="/customers" replace />} />
+          <Route
+            path="/garages"
+            element={
+              <RequireSuperGarage>
+                <Garages />
+              </RequireSuperGarage>
+            }
+          />
           <Route path="/customers" element={<Customers />} />
           <Route path="/dealers" element={<Dealers />} />
           <Route path="/employees" element={<Employees />} />

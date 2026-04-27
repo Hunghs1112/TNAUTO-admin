@@ -17,7 +17,7 @@ function ServiceOrders() {
     <div className="app-page">
       <PageHeader
         title="Đơn dịch vụ"
-        description="Theo dõi đơn dịch vụ trong gara hiện tại, từ lúc tạo đơn đến khi giao nhân viên và hoàn tất xử lý. Backend tự scope theo token nên web không cần gửi garage_id."
+        description="Theo dõi và quản lý các đơn dịch vụ."
         onRefresh={handleRefresh}
         onCreate={handleCreate}
         createButtonText="Tạo đơn mới"
@@ -31,3 +31,5 @@ function ServiceOrders() {
 }
 
 export default memo(ServiceOrders);
+
+

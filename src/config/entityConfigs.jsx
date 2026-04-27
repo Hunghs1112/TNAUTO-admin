@@ -80,6 +80,47 @@ export const dealersConfig = {
   apiEndpoint: '/web/dealers',
 };
 
+export const garagesConfig = {
+  columns: [
+    createIdColumn(),
+    createTextField('code', 'Mã gara'),
+    createTextField('name', 'Tên gara'),
+    createImageColumn('avatar_url', 'Ảnh đại diện', 'w-10 h-10 rounded-full object-cover'),
+    createImageColumn('banner_url', 'Ảnh banner', 'w-20 h-10 rounded object-cover'),
+    createTextField('phone', 'Số điện thoại'),
+    createTextField('email', 'Email'),
+    createTextField('address', 'Địa chỉ'),
+    {
+      key: 'is_super_garage',
+      label: 'Gara chủ',
+      render: (val) => (val ? 'Có' : 'Không'),
+    },
+    createTextField('status', 'Trạng thái'),
+  ],
+  fieldsForModal: [
+    { name: 'code', label: 'Mã gara', type: 'text', requiredOnCreate: true },
+    { name: 'name', label: 'Tên gara', type: 'text', requiredOnCreate: true },
+    createTextFieldForModal('phone', 'Số điện thoại', 'text'),
+    createTextFieldForModal('email', 'Email', 'email'),
+    createTextFieldForModal('password', 'Mật khẩu', 'password'),
+    createTextFieldForModal('address', 'Địa chỉ'),
+    { name: 'avatar_url', label: 'Ảnh đại diện', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
+    { name: 'banner_url', label: 'Ảnh banner', type: 'image', multiple: false, maxFiles: 1, uploadMode: 'both' },
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      options: [
+        { value: 'active', label: 'Hoạt động' },
+        { value: 'inactive', label: 'Tạm khóa' },
+      ],
+      requiredOnCreate: true,
+    },
+  ],
+  title: 'Quản lý gara',
+  apiEndpoint: '/web/garages',
+};
+
 // ===== CUSTOMER MANAGEMENT (ADMIN ONLY) =====
 export const customersConfig = {
   columns: [
@@ -186,12 +227,6 @@ export const productsConfig = {
     { name: 'price', label: 'Giá', type: 'number', min: 0, required: true },
     createSelectField('category_id', 'Danh mục', '/web/categories'),
     createTextAreaField('description', 'Mô tả'),
-    { 
-      name: 'video_url', 
-      label: 'URL video', 
-      type: 'text', 
-      placeholder: 'https://www.youtube.com/watch?v=xxxxx hoặc https://youtu.be/xxxxx',
-    },
   ],
   title: 'Sản phẩm',
   apiEndpoint: '/web/products',
@@ -218,12 +253,6 @@ export const dealerProductsConfig = {
     { name: 'price', label: 'Giá', type: 'number', min: 0, required: true },
     createSelectField('category_id', 'Danh mục sản phẩm đại lí', '/web/categories'),
     createTextAreaField('description', 'Mô tả'),
-    {
-      name: 'video_url',
-      label: 'URL video',
-      type: 'text',
-      placeholder: 'https://www.youtube.com/watch?v=xxxxx hoặc https://youtu.be/xxxxx',
-    },
   ],
   title: 'Sản phẩm dealer',
   apiEndpoint: '/web/products'

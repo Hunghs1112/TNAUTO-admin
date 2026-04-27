@@ -11,6 +11,23 @@ import {
 
 const AuthContext = createContext(null);
 
+function parseBooleanFlag(value) {
+  if (value === true || value === false) {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value === 1;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === '1' || normalized === 'true';
+  }
+
+  return false;
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => getStoredAuthSession());
   const [authReady, setAuthReady] = useState(false);
@@ -40,12 +57,22 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (credentials) => {
     const response = await authAPI.loginGarage(credentials);
     const payload = response?.data || {};
-    const rawGarage = payload.data && typeof payload.data === 'object' ? payload.data : {};
+    const loginData = payload.data && typeof payload.data === 'object' ? payload.data : {};
+    const garageData = payload.garage && typeof payload.garage === 'object' ? payload.garage : {};
+
     const garage = {
-      ...rawGarage,
-      id: rawGarage.id ?? payload.garage_id ?? payload.garageId ?? null,
-      code: rawGarage.code ?? payload.garage_code ?? payload.garageCode ?? credentials?.garage_code ?? null,
+      ...garageData,
+      ...loginData,
+      garage_manager_id: payload.garage_manager_id ?? loginData.garage_manager_id ?? null,
+      user_type: loginData.user_type ?? 'garage_manager',
+      id: garageData.id ?? loginData.id ?? loginData.garage_id ?? payload.garage_id ?? payload.garageId ?? null,
+      code: garageData.code ?? loginData.code ?? payload.garage_code ?? payload.garageCode ?? null,
+      name: garageData.name ?? loginData.name ?? null,
+      is_super_garage: parseBooleanFlag(
+        garageData.is_super_garage ?? loginData.is_super_garage ?? payload.is_super_garage
+      ),
     };
+
     const nextSession = setStoredAuthSession({
       token: payload.token,
       expiresAt: payload.expires_at,
@@ -88,6 +115,7 @@ export function AuthProvider({ children }) {
       token: session?.token || null,
       expiresAt: session?.expiresAt || null,
       garage: session?.garage || null,
+      isSuperGarage: Boolean(session?.garage?.is_super_garage),
       isAuthenticated: Boolean(session?.token) && !isAuthSessionExpired(session),
       sessionVersion: session?.sessionVersion || 0,
       login,
@@ -108,6 +136,7 @@ export function useAuth() {
       token: null,
       expiresAt: null,
       garage: null,
+      isSuperGarage: false,
       isAuthenticated: false,
       sessionVersion: 0,
       login: async () => {

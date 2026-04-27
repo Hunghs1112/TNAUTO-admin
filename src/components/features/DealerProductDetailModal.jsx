@@ -6,7 +6,6 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import ImageUploader from '../image/ImageUploader';
 import ImageGrid from '../image/ImageGrid';
 import FormField from '../form/FormField';
-import ProductVideo from '../video/ProductVideo';
 import { useLoadingKey } from '../../contexts/LoadingContext';
 import { useToast } from '../../contexts/ToastContext';
 import { dealerProductsConfig } from '../../config/entityConfigs';
@@ -39,7 +38,7 @@ export default function DealerProductDetailModal({
   startLoading: startDetailLoading,
   stopLoading: stopDetailLoading,
   loading: loadingDetail,
- } = useLoadingKey('dealer-product-detail', 'Đang tải chi tiết sản phẩm dealer...');
+ } = useLoadingKey('dealer-product-detail', 'Äang táº£i chi tiáº¿t sáº£n pháº©m dealer...');
  const { success, error } = useToast();
 
  useEffect(() => {
@@ -97,7 +96,7 @@ export default function DealerProductDetailModal({
   if (shouldSkipFetch(id, force)) return;
 
   beginFetch();
-  startDetailLoading('Đang tải chi tiết sản phẩm dealer...');
+  startDetailLoading('Äang táº£i chi tiáº¿t sáº£n pháº©m dealer...');
   try {
    const productRes = await dealerProductsAPI.getById(id);
    const productData = productRes.data?.data || productRes.data;
@@ -119,7 +118,7 @@ export default function DealerProductDetailModal({
    completeFetch(id);
   } catch (err) {
    console.error('Fetch dealer product details/images error:', err);
-   error('Không thể tải chi tiết sản phẩm dealer: ' + err.message);
+   error('KhÃ´ng thá»ƒ táº£i chi tiáº¿t sáº£n pháº©m dealer: ' + err.message);
    setSelectedProduct(null);
    setProductImages([]);
    failFetch();
@@ -131,17 +130,17 @@ export default function DealerProductDetailModal({
 
  const handleImageUpload = async (imageUrls) => {
   if (!selectedProduct) {
-   error('Vui lòng chọn sản phẩm dealer');
+   error('Vui lÃ²ng chá»n sáº£n pháº©m dealer');
    return;
   }
 
   try {
-   startDetailLoading('Đang tải ảnh lên...');
+   startDetailLoading('Äang táº£i áº£nh lÃªn...');
    const urls = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
    const validUrls = urls.filter((url) => !url.startsWith('data:image/'));
 
    if (validUrls.length === 0) {
-    error('Không có ảnh hợp lệ để tải lên');
+    error('KhÃ´ng cÃ³ áº£nh há»£p lá»‡ Ä‘á»ƒ táº£i lÃªn');
     return;
    }
 
@@ -170,23 +169,23 @@ export default function DealerProductDetailModal({
     }
    }
 
-   success(`Thêm thành công ${validUrls.length} ảnh!`);
+   success(`ThÃªm thÃ nh cÃ´ng ${validUrls.length} áº£nh!`);
    await fetchProductDetails(selectedProduct.id, { force: true });
    setShowImageUploader(false);
    onRefresh && onRefresh();
   } catch (err) {
    console.error('Create dealer image record error:', err);
-   error('Lỗi khi lưu thông tin ảnh: ' + err.message);
+   error('Lá»—i khi lÆ°u thÃ´ng tin áº£nh: ' + err.message);
   } finally {
    stopDetailLoading();
   }
  };
 
  const handleDeleteImage = async (imageId) => {
-  if (!window.confirm('Xóa hình ảnh này?')) return;
+  if (!window.confirm('XÃ³a hÃ¬nh áº£nh nÃ y?')) return;
 
   try {
-   startDetailLoading('Đang xóa ảnh...');
+   startDetailLoading('Äang xÃ³a áº£nh...');
    const deletedImage = productImages.find((img) => img.id === imageId);
    const isPrimary = deletedImage && Number(deletedImage.is_primary) === 1;
 
@@ -213,12 +212,12 @@ export default function DealerProductDetailModal({
     }
    }
 
-   success('Xóa ảnh thành công!');
+   success('XÃ³a áº£nh thÃ nh cÃ´ng!');
    await fetchProductDetails(selectedProduct.id, { force: true });
    onRefresh && onRefresh();
   } catch (err) {
    console.error('Delete dealer image error:', err);
-   error('Lỗi khi xóa ảnh: ' + err.message);
+   error('Lá»—i khi xÃ³a áº£nh: ' + err.message);
   } finally {
    stopDetailLoading();
   }
@@ -228,11 +227,11 @@ export default function DealerProductDetailModal({
   if (!selectedProduct) return;
 
   try {
-   startDetailLoading('Đang đặt làm ảnh chính...');
+   startDetailLoading('Äang Ä‘áº·t lÃ m áº£nh chÃ­nh...');
    const primaryImage = productImages.find((img) => img.id === imageId);
 
    if (!primaryImage) {
-    error('Không tìm thấy ảnh');
+    error('KhÃ´ng tÃ¬m tháº¥y áº£nh');
     return;
    }
 
@@ -246,12 +245,12 @@ export default function DealerProductDetailModal({
     console.error('Error updating dealer product image_url:', updateErr);
    }
 
-   success('Đặt ảnh chính thành công!');
+   success('Äáº·t áº£nh chÃ­nh thÃ nh cÃ´ng!');
    await fetchProductDetails(selectedProduct.id, { force: true });
    onRefresh && onRefresh();
   } catch (err) {
    console.error('Set dealer primary image error:', err);
-   error('Có lỗi xảy ra khi đặt ảnh chính: ' + err.message);
+   error('CÃ³ lá»—i xáº£y ra khi Ä‘áº·t áº£nh chÃ­nh: ' + err.message);
   } finally {
    stopDetailLoading();
   }
@@ -274,20 +273,20 @@ export default function DealerProductDetailModal({
   if (!selectedProduct) return;
 
   try {
-   startDetailLoading('Đang lưu thông tin sản phẩm dealer...');
+   startDetailLoading('Äang lÆ°u thÃ´ng tin sáº£n pháº©m dealer...');
 
    await dealerProductsAPI.update(selectedProduct.id, {
     ...formData,
     video_url: formData.video_url?.trim() ? formData.video_url.trim() : null,
    });
 
-   success('Cập nhật sản phẩm dealer thành công!');
+   success('Cáº­p nháº­t sáº£n pháº©m dealer thÃ nh cÃ´ng!');
    await fetchProductDetails(selectedProduct.id, { force: true });
    setIsEditMode(false);
    onRefresh && onRefresh();
   } catch (err) {
    console.error('Update dealer product error:', err);
-   error('Có lỗi xảy ra khi cập nhật sản phẩm dealer: ' + err.message);
+   error('CÃ³ lá»—i xáº£y ra khi cáº­p nháº­t sáº£n pháº©m dealer: ' + err.message);
   } finally {
    stopDetailLoading();
   }
@@ -308,7 +307,7 @@ export default function DealerProductDetailModal({
     <div className="gradient-header flex flex-shrink-0 items-start justify-between border-b border-slate-700 p-4 transition-colors duration-300 sm:p-6">
      <div>
       <h3 className="text-lg font-bold text-slate-100 transition-colors duration-300 sm:text-xl">
-       {selectedProduct ? `Chi tiết sản phẩm dealer #${selectedProduct.id}` : 'Đang tải...'}
+       {selectedProduct ? `Chi tiáº¿t sáº£n pháº©m dealer #${selectedProduct.id}` : 'Äang táº£i...'}
       </h3>
       {selectedProduct && (
        <p className="mt-1 text-sm text-slate-400">{selectedProduct.name}</p>
@@ -317,7 +316,7 @@ export default function DealerProductDetailModal({
      <button
       onClick={onClose}
       className="rounded-lg p-2 text-slate-500 transition-all duration-200 hover:bg-slate-700 hover:text-slate-400 hover:bg-slate-700 hover:text-slate-200"
-      aria-label="Đóng"
+      aria-label="ÄÃ³ng"
      >
       <X size={20} />
      </button>
@@ -325,7 +324,7 @@ export default function DealerProductDetailModal({
 
     {loadingDetail && (
      <div className="flex flex-1 items-center justify-center p-8">
-      <LoadingSpinner size="lg" message="Đang tải thông tin sản phẩm dealer..." />
+      <LoadingSpinner size="lg" message="Äang táº£i thÃ´ng tin sáº£n pháº©m dealer..." />
      </div>
     )}
 
@@ -334,7 +333,7 @@ export default function DealerProductDetailModal({
       <div className="rounded-xl border border-slate-600 bg-slate-700/50 p-4 ">
        <div className="mb-3 flex items-center justify-between">
         <h4 className="text-base font-semibold text-slate-300 sm:text-lg">
-         Thông tin sản phẩm dealer
+         ThÃ´ng tin sáº£n pháº©m dealer
         </h4>
         {!isEditMode && (
          <button
@@ -342,7 +341,7 @@ export default function DealerProductDetailModal({
           className="btn-gradient-primary flex items-center gap-2 px-3 py-1.5 text-sm font-medium"
          >
           <Edit2 size={16} />
-          Sửa
+          Sá»­a
          </button>
         )}
        </div>
@@ -381,11 +380,11 @@ export default function DealerProductDetailModal({
        ) : (
         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
          <div>
-          <span className="font-medium text-slate-300">Tên:</span>{' '}
+          <span className="font-medium text-slate-300">TÃªn:</span>{' '}
           <span className="text-slate-100">{selectedProduct.name || '-'}</span>
          </div>
          <div>
-          <span className="font-medium text-slate-300">Giá:</span>{' '}
+          <span className="font-medium text-slate-300">GiÃ¡:</span>{' '}
           <span className="text-slate-100">
            {selectedProduct.price !== null && selectedProduct.price !== undefined
             ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedProduct.price)
@@ -393,12 +392,12 @@ export default function DealerProductDetailModal({
           </span>
          </div>
          <div>
-          <span className="font-medium text-slate-300">Danh mục:</span>{' '}
+          <span className="font-medium text-slate-300">Danh má»¥c:</span>{' '}
           <span className="text-slate-100">{selectedProduct.category_name || '-'}</span>
          </div>
          {selectedProduct.description && (
           <div className="sm:col-span-2">
-           <span className="font-medium text-slate-300">Mô tả:</span>{' '}
+           <span className="font-medium text-slate-300">MÃ´ táº£:</span>{' '}
            <span className="text-slate-100">{selectedProduct.description}</span>
           </div>
          )}
@@ -409,60 +408,14 @@ export default function DealerProductDetailModal({
       <div className="rounded-xl border border-slate-600 bg-slate-700/50 p-4 ">
        <div className="mb-3 flex items-center justify-between">
         <h4 className="text-base font-semibold text-slate-300 sm:text-lg">
-         Video sản phẩm dealer
-        </h4>
-        {!isEditMode && (
-         <button
-          onClick={() => setIsEditMode(true)}
-          className="btn-gradient-primary flex items-center gap-2 px-3 py-1.5 text-sm font-medium"
-         >
-          <Edit2 size={16} />
-          {selectedProduct.video_url ? 'Sửa' : 'Thêm'}
-         </button>
-        )}
-       </div>
-
-       {isEditMode ? (
-        <div className="space-y-3">
-         <FormField
-          name="video_url"
-          label="URL video"
-          type="text"
-          value={formData.video_url || ''}
-          onChange={(e) => {
-           const value = e.target ? e.target.value : e.value || e;
-           handleFormChange('video_url', value);
-          }}
-          placeholder="https://www.youtube.com/watch?v=xxxxx hoặc https://youtu.be/xxxxx"
-         />
-         <p className="text-xs text-slate-400">
-          Để trống nếu muốn xóa video. Backend có thể normalize link về dạng embed URL.
-         </p>
-         {formData.video_url && (
-          <div className="mt-3">
-           <p className="mb-2 text-xs font-medium text-slate-300">Xem trước:</p>
-           <ProductVideo videoUrl={formData.video_url} />
-          </div>
-         )}
-        </div>
-       ) : selectedProduct.video_url ? (
-        <ProductVideo videoUrl={selectedProduct.video_url} />
-       ) : (
-        <div className="py-4 text-center text-slate-400">Chưa có video nào</div>
-       )}
-      </div>
-
-      <div className="rounded-xl border border-slate-600 bg-slate-700/50 p-4 ">
-       <div className="mb-3 flex items-center justify-between">
-        <h4 className="text-base font-semibold text-slate-300 sm:text-lg">
-         Hình ảnh sản phẩm dealer ({productImages.length})
+         HÃ¬nh áº£nh sáº£n pháº©m dealer ({productImages.length})
         </h4>
         <button
          onClick={() => setShowImageUploader((prev) => !prev)}
          className="btn-gradient-primary flex items-center gap-1 px-3 py-1.5 text-sm font-medium"
         >
          <Plus size={16} />
-         {showImageUploader ? 'Đóng' : 'Thêm ảnh'}
+         {showImageUploader ? 'ÄÃ³ng' : 'ThÃªm áº£nh'}
         </button>
        </div>
 
@@ -483,8 +436,8 @@ export default function DealerProductDetailModal({
         images={productImages}
         onDelete={handleDeleteImage}
         onSetPrimary={handleSetPrimary}
-        emptyTitle="Chưa có hình ảnh"
-        emptyDescription="Sản phẩm dealer này chưa có hình ảnh nào"
+        emptyTitle="ChÆ°a cÃ³ hÃ¬nh áº£nh"
+        emptyDescription="Sáº£n pháº©m dealer nÃ y chÆ°a cÃ³ hÃ¬nh áº£nh nÃ o"
        />
       </div>
      </div>
@@ -500,7 +453,7 @@ export default function DealerProductDetailModal({
           className="flex items-center gap-2 rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 shadow-sm transition-all duration-200 hover:bg-slate-600 hover:shadow-md active:scale-[0.98] bg-slate-700 hover:bg-slate-600"
          >
           <XCircle size={16} />
-          Hủy
+          Há»§y
          </button>
          <button
           onClick={handleSaveProduct}
@@ -508,7 +461,7 @@ export default function DealerProductDetailModal({
           className="btn-gradient-primary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
          >
           <Save size={16} />
-          Lưu
+          LÆ°u
          </button>
         </>
        ) : (
@@ -517,7 +470,7 @@ export default function DealerProductDetailModal({
          className="flex items-center gap-2 rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 shadow-sm transition-all duration-200 hover:bg-slate-600 hover:shadow-md active:scale-[0.98] bg-slate-700 hover:bg-slate-600"
         >
          <X size={16} />
-         Đóng
+         ÄÃ³ng
         </button>
        )}
       </div>

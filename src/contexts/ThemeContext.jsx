@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-const THEME_STORAGE_KEY = 'tnauto-admin-theme';
+const THEME_STORAGE_KEY = 'garaone-admin-theme';
 const ThemeContext = createContext();
 
 function applyTheme(theme) {

@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Filter, Send } from 'lucide-react';
 import { notificationsAPI } from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 import { buttonStyles } from '../../styles/colors';
 import { formatDate, truncateText } from '../../utils/format';
+import useNotificationManagement from '../../hooks/useNotificationManagement';
 import PageHeader from '../layout/PageHeader';
 import GenericTable from '../table/Table';
 import EmptyState from '../ui/EmptyState';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import NotificationDetailModal from './NotificationDetailModal';
 import NotificationSendModal from './NotificationSendModal';
-
-const PAGE_SIZE = 50;
 
 const notificationTypeMap = {
   warranty_reminder: 'Nhắc bảo hành',
@@ -30,108 +29,38 @@ const notificationStatusMap = {
   canceled: 'Đã hủy',
 };
 
-
-function normalizeDateFilterBoundary(value) {
-  const input = String(value || '').trim();
-  if (!input) return '';
-
-  const matchedIso = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (matchedIso) {
-    return input;
-  }
-
-  const matchedVn = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (matchedVn) {
-    const [, day, month, year] = matchedVn;
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  }
-
-  return input;
-}
-
-function buildNotificationParams(page, filters) {
-  const params = { page };
-
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value === '' || value === null || value === undefined) {
-      return;
-    }
-
-    if (key === 'date_from') {
-      params.from_date = normalizeDateFilterBoundary(value);
-      return;
-    }
-
-    if (key === 'date_to') {
-      params.to_date = normalizeDateFilterBoundary(value);
-      return;
-    }
-
-    params[key] = value;
-  });
-
-  return params;
-}
-
-function normalizeListResponse(response) {
-  const raw = response?.data;
-  if (Array.isArray(raw?.data)) return raw.data;
-  if (Array.isArray(raw)) return raw;
-  if (Array.isArray(raw?.data?.data)) return raw.data.data;
-  return [];
-}
-
 export default function NotificationManagement() {
-  const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [customers, setCustomers] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [showSendModal, setShowSendModal] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState(null);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
-    date_from: '',
-    date_to: '',
-    type: '',
-    status: '',
-    recipient_type: '',
-    recipient_id: '',
-    ref_type: '',
-    ref_id: '',
-    is_read: '',
-  });
-  const [appliedFilters, setAppliedFilters] = useState({
-    date_from: '',
-    date_to: '',
-    type: '',
-    status: '',
-    recipient_type: '',
-    recipient_id: '',
-    ref_type: '',
-    ref_id: '',
-    is_read: '',
-  });
-
   const { success, error } = useToast();
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil((total || 0) / PAGE_SIZE)), [total]);
-
-  const recipientNameByKey = useMemo(() => {
-    const nextMap = {};
-
-    customers.forEach((customer) => {
-      nextMap[`customer:${customer.id}`] = customer.name || `#${customer.id}`;
-    });
-
-    employees.forEach((employee) => {
-      nextMap[`employee:${employee.id}`] = employee.name || `#${employee.id}`;
-    });
-
-    return nextMap;
-  }, [customers, employees]);
+  const {
+    loading,
+    items,
+    total,
+    customers,
+    employees,
+    showSendModal,
+    setShowSendModal,
+    showFilters,
+    setShowFilters,
+    selectedNotification,
+    setSelectedNotification,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    limit,
+    changeLimit,
+    filters,
+    setFilters,
+    recipientNameByKey,
+    fetchNotifications,
+    handleDelete,
+    handleApplyFilters,
+    handleClearFilters,
+  } = useNotificationManagement({
+    showSuccess: success,
+    showError: error,
+    initialLimit: 50,
+  });
 
   const columns = useMemo(
     () => [
@@ -175,12 +104,12 @@ export default function NotificationManagement() {
               value === 'sent'
                 ? 'bg-[#8f5f23]/15 text-[#eecd7e]'
                 : value === 'failed'
-                ? 'bg-[#b48242]/15 text-[#b48242]'
-                : value === 'scheduled'
-                ? 'bg-[#1e406b]/15 text-[#eecd7e]'
-                : value === 'sending'
-                ? 'bg-[#c37b1e]/15 text-[#eecd7e]'
-                : 'bg-slate-700/60 text-slate-300'
+                  ? 'bg-[#b48242]/15 text-[#b48242]'
+                  : value === 'scheduled'
+                    ? 'bg-[#1e406b]/15 text-[#eecd7e]'
+                    : value === 'sending'
+                      ? 'bg-[#c37b1e]/15 text-[#eecd7e]'
+                      : 'bg-slate-700/60 text-slate-300'
             }`}
           >
             {notificationStatusMap[value] || value || '—'}
@@ -195,91 +124,6 @@ export default function NotificationManagement() {
     ],
     [recipientNameByKey]
   );
-
-  const loadLookupData = useCallback(async () => {
-    try {
-      const [customersResponse, employeesResponse] = await Promise.all([
-        notificationsAPI.getCustomers(),
-        notificationsAPI.getEmployees(),
-      ]);
-
-      setCustomers(normalizeListResponse(customersResponse));
-      setEmployees(normalizeListResponse(employeesResponse));
-    } catch {
-      setCustomers([]);
-      setEmployees([]);
-    }
-  }, []);
-
-  const fetchNotifications = useCallback(async () => {
-    setLoading(true);
-
-    try {
-      const params = buildNotificationParams(currentPage, appliedFilters);
-
-      const response = await notificationsAPI.getAll(params);
-      const nextItems = normalizeListResponse(response);
-      const pagination = response.data?.pagination;
-      const nextTotal = pagination?.total ?? response.data?.count ?? response.data?.total ?? nextItems.length;
-
-      setItems(nextItems);
-      setTotal(Number(nextTotal) || 0);
-    } catch (fetchError) {
-      setItems([]);
-      setTotal(0);
-      error(fetchError?.message || 'Không thể tải danh sách thông báo.');
-    } finally {
-      setLoading(false);
-    }
-  }, [appliedFilters, currentPage, error]);
-
-  useEffect(() => {
-    loadLookupData();
-  }, [loadLookupData]);
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
-
-  const handleDelete = useCallback(
-    async (id) => {
-      if (!window.confirm('Bạn có chắc chắn muốn xóa thông báo này không?')) {
-        return;
-      }
-
-      try {
-        await notificationsAPI.delete(id);
-        success('Đã xóa thông báo.');
-        fetchNotifications();
-      } catch (deleteError) {
-        error(deleteError?.message || 'Không thể xóa thông báo.');
-      }
-    },
-    [error, fetchNotifications, success]
-  );
-
-  const handleApplyFilters = () => {
-    setCurrentPage(1);
-    setAppliedFilters(filters);
-  };
-
-  const handleClearFilters = () => {
-    const emptyFilters = {
-      date_from: '',
-      date_to: '',
-      type: '',
-      status: '',
-      recipient_type: '',
-      recipient_id: '',
-      ref_type: '',
-      ref_id: '',
-      is_read: '',
-    };
-
-    setFilters(emptyFilters);
-    setAppliedFilters(emptyFilters);
-    setCurrentPage(1);
-  };
 
   if (loading && !items.length) {
     return (
@@ -407,10 +251,7 @@ export default function NotificationManagement() {
                 <label className="mb-1 block text-xs font-semibold text-slate-300">Số dòng</label>
                 <select
                   value={limit}
-                  onChange={(event) => {
-                    setLimit(Number(event.target.value));
-                    setOffset(0);
-                  }}
+                  onChange={(event) => changeLimit(event.target.value)}
                   className="app-input"
                 >
                   <option value={20}>20</option>
@@ -448,8 +289,8 @@ export default function NotificationManagement() {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={total}
-          limit={PAGE_SIZE}
-          onPageChange={(page) => setCurrentPage(page)}
+          limit={limit}
+          onPageChange={setCurrentPage}
           hideTitle={true}
           showTableHeaderActions={false}
         />

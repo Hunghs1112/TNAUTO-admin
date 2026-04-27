@@ -75,7 +75,7 @@ function Vehicles() {
         columns={vehiclesConfig.columns}
         fieldsForModal={vehicleFormFields}
         title={vehiclesConfig.title}
-        description="Quản lý xe đang được liên kết với khách hàng trong gara."
+        description="Theo dõi và quản lý thông tin xe."
         showPagination={true}
         limit={20}
         showSearch={true}
@@ -103,3 +103,5 @@ function Vehicles() {
 }
 
 export default memo(Vehicles);
+
+

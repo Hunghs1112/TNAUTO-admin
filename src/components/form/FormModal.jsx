@@ -175,11 +175,23 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
     onSave(payload);
   };
 
+  const isFieldRequired = (field) => {
+    if (isEdit) {
+      if (field.requiredOnCreate) {
+        return false;
+      }
+
+      return Boolean(field.required);
+    }
+
+    return Boolean(field.required || field.requiredOnCreate);
+  };
+
   const modalContent = (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 backdrop-blur-sm sm:flex sm:items-center sm:justify-center sm:p-4">
       <div className="app-panel my-4 flex max-h-[calc(100vh-1.5rem)] w-full max-w-2xl flex-col sm:my-0 sm:max-h-[90vh]">
         <div className="app-panel-header shrink-0">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">TNAUTO Admin</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">GaraOne Admin</p>
           <h3 className="mt-2 text-2xl font-bold text-white">
             {isEdit ? `Sửa ${title.toLowerCase()}` : `Thêm ${title.toLowerCase()}`}
           </h3>
@@ -232,7 +244,7 @@ export default function FormModal({ item, isEdit, onClose, onSave, title, fields
                       const nextValue = event?.target ? event.target.value : event?.value ?? event;
                       handleChange(field.name, nextValue);
                     }}
-                    required={field.required}
+                    required={isFieldRequired(field)}
                     placeholder={field.placeholder}
                     options={options}
                     min={field.min}

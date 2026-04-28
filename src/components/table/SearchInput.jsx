@@ -1,9 +1,18 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 
-const SearchInput = memo(({ onSearch, placeholder = 'Tìm kiếm...', className = '' }) => {
-  const [searchInput, setSearchInput] = useState('');
+const SearchInput = memo(({ onSearch, placeholder = 'Tìm kiếm...', className = '', value }) => {
+  const [searchInput, setSearchInput] = useState(value ?? '');
   const searchTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    setSearchInput(value ?? '');
+    return undefined;
+  }, [value]);
 
   useEffect(() => {
     return () => {
@@ -45,6 +54,14 @@ const SearchInput = memo(({ onSearch, placeholder = 'Tìm kiếm...', className 
         type="text"
         value={searchInput}
         onChange={(event) => handleSearchChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            if (searchTimeoutRef.current) {
+              clearTimeout(searchTimeoutRef.current);
+            }
+            onSearch?.(event.target.value);
+          }
+        }}
         placeholder={placeholder}
         className="app-input pl-9 pr-10 text-slate-100 placeholder:text-slate-500"
       />

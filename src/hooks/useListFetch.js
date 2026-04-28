@@ -91,6 +91,7 @@ export default function useListFetch({
 
         if (showPagination) {
           params.page = paginationRef.current.currentPage;
+          params.limit = limit;
         }
 
         if (paginationRef.current.searchTerm) {
@@ -143,7 +144,7 @@ export default function useListFetch({
 
   useEffect(() => {
     fetchData({ isInitial: !hasLoadedOnceRef.current });
-  }, [fetchData]);
+  }, [fetchData, pagination?.currentPage, pagination?.searchTerm, additionalParams, limit, showPagination]);
 
   return {
     allData,

@@ -297,7 +297,7 @@ export default function GenericTable({
                 <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
                   {showSearch ? (
                     <div className="relative w-full max-w-sm">
-                      <SearchInput onSearch={handleSearch} placeholder={searchPlaceholder} />
+                      <SearchInput onSearch={handleSearch} value={searchTerm} placeholder={searchPlaceholder} />
                       {searchTerm ? (
                         <div className="absolute -top-2 right-2 z-20 rounded-full border border-slate-700 bg-slate-900/95 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-lg">
                           {searchIndicatorLabel}
@@ -327,7 +327,7 @@ export default function GenericTable({
 
             {hideTitle && showSearch && !showTableHeaderActions ? (
               <div className="relative">
-                <SearchInput onSearch={handleSearch} placeholder={searchPlaceholder} />
+                <SearchInput onSearch={handleSearch} value={searchTerm} placeholder={searchPlaceholder} />
                 {searchTerm ? (
                   <div className="absolute -top-2 right-2 z-20 rounded-full border border-slate-700 bg-slate-900/95 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-lg">
                     {searchIndicatorLabel}

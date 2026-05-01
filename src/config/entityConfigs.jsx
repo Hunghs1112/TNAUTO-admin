@@ -124,7 +124,20 @@ export const garagesConfig = {
 export const garageManagersConfig = {
   columns: [
     createIdColumn(),
-    createTextField('garage_name', 'Gara'),
+    {
+      key: 'garage_name',
+      label: 'Gara',
+      render: (val, item) => {
+        const garage = item?.garage;
+        const garageLabel =
+          val ||
+          garage?.name ||
+          (garage?.code ? `${garage.code}${garage?.name ? ` - ${garage.name}` : ''}` : '') ||
+          (item?.garage_id ? `ID: ${item.garage_id}` : '-');
+
+        return <span className="font-medium">{garageLabel}</span>;
+      },
+    },
     createTextField('name', 'Tên quản lí'),
     createTextField('phone', 'Số điện thoại'),
     createTextField('email', 'Email'),
@@ -138,6 +151,7 @@ export const garageManagersConfig = {
       label: 'Gara',
       type: 'select',
       requiredOnCreate: true,
+      disabled: true,
       apiEndpoint: '/web/garages',
       valueKey: 'id',
       labelKey: 'name',
@@ -146,7 +160,6 @@ export const garageManagersConfig = {
     createTextFieldForModal('name', 'Tên quản lí', 'text', true),
     createTextFieldForModal('phone', 'Số điện thoại', 'text', true),
     createTextFieldForModal('email', 'Email', 'email'),
-    createTextFieldForModal('password', 'Mật khẩu', 'password', true),
     {
       name: 'status',
       label: 'Trạng thái',

@@ -15,6 +15,7 @@ import {
   Shield,
   Store,
   Tag,
+  UserCog,
   Users,
   X,
 } from 'lucide-react';
@@ -23,6 +24,7 @@ import ThemeToggle from '../ui/ThemeToggle';
 
 const menuItems = [
   { id: 'garages', label: 'Gara', icon: Building2, path: '/garages', superOnly: true },
+  { id: 'garage-managers', label: 'Tài khoản quản lí', icon: UserCog, path: '/garage-managers', superOnly: true },
   { id: 'customers', label: 'Khách hàng', icon: Users, path: '/customers' },
   { id: 'dealers', label: 'Đại lý', icon: Store, path: '/dealers' },
   { id: 'employees', label: 'Nhân viên', icon: Users, path: '/employees' },

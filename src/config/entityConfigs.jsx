@@ -121,6 +121,47 @@ export const garagesConfig = {
   apiEndpoint: '/web/garages',
 };
 
+export const garageManagersConfig = {
+  columns: [
+    createIdColumn(),
+    createTextField('garage_name', 'Gara'),
+    createTextField('name', 'Tên quản lí'),
+    createTextField('phone', 'Số điện thoại'),
+    createTextField('email', 'Email'),
+    createTextField('status', 'Trạng thái'),
+    createDateColumn('last_login_at', 'Đăng nhập gần nhất'),
+    createDateColumn('created_at', 'Ngày tạo'),
+  ],
+  fieldsForModal: [
+    {
+      name: 'garage_id',
+      label: 'Gara',
+      type: 'select',
+      requiredOnCreate: true,
+      apiEndpoint: '/web/garages',
+      valueKey: 'id',
+      labelKey: 'name',
+      labelFormat: (item) => `${item.code || 'Gara'} - ${item.name || ''}`.trim(),
+    },
+    createTextFieldForModal('name', 'Tên quản lí', 'text', true),
+    createTextFieldForModal('phone', 'Số điện thoại', 'text', true),
+    createTextFieldForModal('email', 'Email', 'email'),
+    createTextFieldForModal('password', 'Mật khẩu', 'password', true),
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      options: [
+        { value: 'active', label: 'Hoạt động' },
+        { value: 'inactive', label: 'Tạm khóa' },
+      ],
+      requiredOnCreate: true,
+    },
+  ],
+  title: 'Quản lý tài khoản quản lí',
+  apiEndpoint: '/web/garage-managers',
+};
+
 // ===== CUSTOMER MANAGEMENT (ADMIN ONLY) =====
 export const customersConfig = {
   columns: [

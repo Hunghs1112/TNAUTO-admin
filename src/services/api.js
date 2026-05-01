@@ -6,7 +6,7 @@ import { clearAuthSession, getAuthToken } from './authStorage';
 
 const API_BASE = import.meta.env.DEV
   ? '/api'
-  : (import.meta.env.VITE_API_BASE_URL || 'http://103.200.20.253:5000/api');
+  : (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5000/api');
 const API_ROOT = API_BASE.replace(/\/api\/?$/, '');
 
 function createApiClient(baseURL) {
@@ -321,6 +321,15 @@ export const garagesAPI = createCrudAPI(api, '/web/garages', {
   create: (data) => api.post('/web/garages', data),
   update: (id, data) => api.put(`/web/garages/${id}`, data),
   delete: (id) => api.delete(`/web/garages/${id}`),
+});
+
+export const garageManagersAPI = createCrudAPI(api, '/web/garage-managers', {
+  getAll: (params = {}) => api.get('/web/garage-managers', { params }),
+  getById: (id) => api.get(`/web/garage-managers/${id}`),
+  create: (data) => api.post('/web/garage-managers', data),
+  update: (id, data) => api.put(`/web/garage-managers/${id}`, data),
+  patch: (id, data) => api.patch(`/web/garage-managers/${id}`, data),
+  delete: (id) => api.delete(`/web/garage-managers/${id}`),
 });
 
 export const customersAPI = createCrudAPI(api, '/web/customers', {

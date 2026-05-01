@@ -13,6 +13,7 @@ import DealerWarranties from './pages/DealerWarranties';
 import Employees from './pages/Employees';
 import Garages from './pages/Garages';
 import GarageLogin from './pages/GarageLogin';
+import GarageManagers from './pages/GarageManagers';
 import Notifications from './pages/Notifications';
 import Offers from './pages/Offers';
 import Products from './pages/Products';
@@ -51,6 +52,14 @@ function AppRoutes() {
             element={
               <RequireSuperGarage>
                 <Garages />
+              </RequireSuperGarage>
+            }
+          />
+          <Route
+            path="/garage-managers"
+            element={
+              <RequireSuperGarage>
+                <GarageManagers />
               </RequireSuperGarage>
             }
           />

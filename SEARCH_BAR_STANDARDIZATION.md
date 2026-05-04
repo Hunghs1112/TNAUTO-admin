@@ -1,7 +1,9 @@
-# Tối ưu hóa Search Bar - Chuẩn hóa toàn bộ trang
+# Tối ưu hóa Search Bar - Chuẩn hóa toàn bộ trang (Client-Side Search)
 
 ## Tóm tắt
 Đã chuẩn hóa search bar cho tất cả các trang trong hệ thống với format thống nhất, bao gồm cả trang "Đơn dịch vụ" (ServiceOrders) trước đây không có search bar.
+
+**Lưu ý quan trọng**: Search hiện đang hoạt động ở **client-side** (tìm kiếm trên dữ liệu đã tải về), không gửi request lên server. Điều này đảm bảo search hoạt động ngay lập tức mà không cần backend hỗ trợ.
 
 ## Các trang đã được cập nhật
 
@@ -80,25 +82,48 @@ Tất cả các trang hiện đang sử dụng cấu trúc thống nhất:
 
 ## Tính năng Search Bar
 
-### Frontend
+### Cách hoạt động
+- **Client-side search**: Tìm kiếm trên dữ liệu đã tải về (không gửi request lên server)
 - **Component**: `SearchInput` (`src/components/table/SearchInput.jsx`)
 - **Debounce**: 150ms để tối ưu hiệu suất
 - **Clear button**: Nút xóa tìm kiếm khi có text
 - **Enter key**: Hỗ trợ tìm kiếm ngay khi nhấn Enter
-- **Search indicator**: Hiển thị số lượng kết quả tìm được
+- **Search indicator**: Hiển thị số lượng kết quả tìm được (ví dụ: "5 / 20")
+- **Tìm kiếm thông minh**: 
+  - Loại bỏ dấu tiếng Việt (ví dụ: "dich vu" sẽ tìm được "dịch vụ")
+  - Không phân biệt hoa thường
+  - Tìm kiếm trên tất cả các cột hiển thị
 
 ### Backend
-Không cần thay đổi backend vì:
-- Search được xử lý bởi `GenericTable` component
-- Hỗ trợ cả **client-side search** (mặc định) và **server-side search** (khi `serverSideSearch={true}`)
-- Với `showPagination={true}`, search tự động chuyển sang server-side mode
+**Không cần thay đổi backend** vì:
+- Search được xử lý hoàn toàn ở client-side
+- Dữ liệu được tải về theo pagination (nếu có)
+- Search chỉ tìm kiếm trong dữ liệu của trang hiện tại
+
+### Nếu muốn Server-Side Search (tùy chọn)
+Nếu sau này muốn backend xử lý search (tìm kiếm trên toàn bộ database):
+1. Backend cần hỗ trợ tham số `search` trong API endpoint
+2. Thay đổi trong `GenericCrudPage.jsx`:
+   ```jsx
+   onSearchChange={showPagination ? pagination.handleSearchChange : undefined}
+   serverSideSearch={showPagination}
+   ```
 
 ## Lợi ích
 
 1. **Trải nghiệm người dùng nhất quán**: Tất cả các trang đều có search bar với cùng giao diện và hành vi
-2. **Dễ sử dụng**: Placeholder rõ ràng giúp người dùng biết có thể tìm kiếm theo trường nào
-3. **Hiệu suất tốt**: Debounce và tối ưu hóa render
-4. **Không cần thay đổi backend**: Tất cả logic search đã được xử lý sẵn trong frontend
+2. **Tìm kiếm ngay lập tức**: Không cần chờ API response, search hiển thị kết quả ngay
+3. **Dễ sử dụng**: Placeholder rõ ràng giúp người dùng biết có thể tìm kiếm theo trường nào
+4. **Hiệu suất tốt**: Debounce và tối ưu hóa render, giảm tải cho server
+5. **Backend đơn giản hơn**: Backend chỉ cần xử lý pagination, không cần logic search phức tạp
+
+## 📋 Tài liệu cho Backend Team
+
+**Xem file `BACKEND_SEARCH_REMOVAL.md`** để biết chi tiết:
+- ✅ Backend **KHÔNG CẦN** xử lý tham số `search` nữa
+- ✅ Chỉ cần xử lý `page` và `limit` cho pagination
+- ✅ Ví dụ code và response format
+- ✅ Migration plan để loại bỏ code search cũ (nếu có)
 
 ## Kiểm tra
 

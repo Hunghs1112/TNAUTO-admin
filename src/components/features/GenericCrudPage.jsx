@@ -141,8 +141,8 @@ function GenericCrudPage({
         showTableHeaderActions={renderPageHeader ? false : showTableHeaderActions}
         disableCreate={disableCreate}
         categoryChangeEventName={categoryChangeEventName}
-        onSearchChange={undefined}
-        serverSideSearch={false}
+        onSearchChange={pagination.handleSearchChange}
+        serverSideSearch={showPagination}
       />
     </div>
   );

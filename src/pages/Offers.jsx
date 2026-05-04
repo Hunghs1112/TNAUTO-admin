@@ -32,6 +32,8 @@ function Offers() {
         title={offersConfig.title}
         showPagination={true}
         limit={12}
+        showSearch={true}
+        searchPlaceholder="Tìm theo tiêu đề, mô tả ưu đãi..."
         refreshTrigger={refreshKey}
         showActions={true}
         onView={handleViewOffer}

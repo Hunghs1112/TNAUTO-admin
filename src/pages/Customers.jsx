@@ -18,6 +18,8 @@ function Customers() {
         description="Theo dõi và quản lý thông tin khách hàng."
         showPagination={true}
         limit={20}
+        showSearch={true}
+        searchPlaceholder="Tìm theo tên, SĐT, email..."
         disableCreate={false}
         createButtonText="Thêm khách hàng"
         deleteConfig={{

@@ -117,6 +117,8 @@ function Warranties() {
         title={warrantiesConfig.title}
         showPagination={true}
         limit={20}
+        showSearch={true}
+        searchPlaceholder="Tìm theo mã bảo hành, khách hàng, đại lý..."
         options={{ transformData }}
         refreshTrigger={refreshTrigger}
         onView={(item) => {

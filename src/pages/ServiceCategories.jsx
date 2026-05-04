@@ -54,6 +54,8 @@ function ServiceCategories() {
       title={serviceCategoriesConfig.title}
       showPagination={true}
       limit={20}
+      showSearch={true}
+      searchPlaceholder="Tìm theo tên danh mục dịch vụ..."
       options={options}
       refreshTrigger={refreshTrigger}
     />

@@ -170,6 +170,10 @@ function DealerWarranties() {
       columns={dealerWarrantiesColumns}
       fieldsForModal={dealerWarrantiesFieldsForModal}
       title="Bảo hành đại lý"
+      showPagination={true}
+      limit={20}
+      showSearch={true}
+      searchPlaceholder="Tìm theo đại lý, sản phẩm, nhân viên..."
       options={{ transformData }}
     />
   );

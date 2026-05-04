@@ -33,6 +33,8 @@ function Services() {
         description="Theo dõi và quản lý danh mục dịch vụ."
         showPagination={true}
         limit={12}
+        showSearch={true}
+        searchPlaceholder="Tìm theo tên dịch vụ, mô tả..."
         refreshTrigger={refreshKey}
         showActions={true}
         onView={handleViewService}

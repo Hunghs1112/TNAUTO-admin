@@ -33,6 +33,8 @@ function Products() {
         description="Theo dõi và quản lý thông tin sản phẩm."
         showPagination={true}
         limit={12}
+        showSearch={true}
+        searchPlaceholder="Tìm theo tên sản phẩm, mô tả..."
         refreshTrigger={refreshKey}
         showActions={true}
         onView={handleViewProduct}

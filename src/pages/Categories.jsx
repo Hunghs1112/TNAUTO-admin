@@ -54,6 +54,8 @@ function Categories() {
       title={categoriesConfig.title}
       showPagination={true}
       limit={20}
+      showSearch={true}
+      searchPlaceholder="Tìm theo tên danh mục..."
       options={options}
       refreshTrigger={refreshTrigger}
     />

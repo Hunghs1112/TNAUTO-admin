@@ -14,6 +14,8 @@ function Employees() {
       description="Theo dõi và quản lý thông tin nhân viên."
       showPagination={true}
       limit={20}
+      showSearch={true}
+      searchPlaceholder="Tìm theo tên, SĐT, email, vai trò..."
     />
   );
 }

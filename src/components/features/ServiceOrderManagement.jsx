@@ -86,6 +86,8 @@ export default function ServiceOrderManagement({ tableActionsRef = null }) {
         refreshTrigger={refreshKey}
         hideTitle={true}
         showActions={true}
+        showSearch={true}
+        searchPlaceholder="Tìm theo ID, biển số xe, tên khách hàng, nhân viên..."
         onView={(item) => {
           setSelectedOrderId(item.id);
           setShowDetailModal(true);

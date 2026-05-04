@@ -94,9 +94,11 @@ export default function useListFetch({
           params.limit = limit;
         }
 
-        if (paginationRef.current.searchTerm) {
-          params.search = paginationRef.current.searchTerm;
-        }
+        // ❌ REMOVED: Backend no longer handles search parameter
+        // Search is now handled client-side for better UX
+        // if (paginationRef.current.searchTerm) {
+        //   params.search = paginationRef.current.searchTerm;
+        // }
 
         const response = await apiRef.current.getAll(params);
         const fetchedData = transformDataRef.current(extractListData(response)) || [];

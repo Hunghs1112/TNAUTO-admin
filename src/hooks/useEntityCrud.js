@@ -192,17 +192,19 @@ export default function useEntityCrud(api, options = {}) {
   }, [api, fetchData, startLoading, stopLoading]);
 
   // Search handler - optimized with proper response handling
+  // ❌ REMOVED: Backend no longer handles search parameter
+  // Search is now handled client-side for better UX
+  // This function now just fetches all data without search parameter
   const handleSearch = useCallback(async (searchTerm) => {
     setLoading(true);
     startLoading('Đang tìm kiếm...');
     setError(null);
     try {
+      // Always fetch all data without search parameter
+      // Frontend will handle search filtering client-side
       let res;
       if (api.getAllAdmin) {
-        const params = searchTerm ? { search: searchTerm } : {};
-        res = await api.getAllAdmin(params);
-      } else if (searchTerm) {
-        res = await api.getAll({ search: searchTerm });
+        res = await api.getAllAdmin();
       } else {
         res = await api.getAll();
       }

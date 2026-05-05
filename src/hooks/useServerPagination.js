@@ -27,15 +27,11 @@ export default function useServerPagination({
 
   const handleSearchChange = useCallback(
     (value) => {
-      if (!showPagination) {
-        return;
-      }
-
       const nextSearchTerm = String(value || '').trim();
       setSearchTerm(nextSearchTerm);
       setCurrentPage(1);
     },
-    [showPagination]
+    []
   );
 
   const resetPagination = useCallback(() => {

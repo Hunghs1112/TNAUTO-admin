@@ -142,7 +142,7 @@ function GenericCrudPage({
         disableCreate={disableCreate}
         categoryChangeEventName={categoryChangeEventName}
         onSearchChange={pagination.handleSearchChange}
-        serverSideSearch={showPagination}
+        serverSideSearch={true}
       />
     </div>
   );

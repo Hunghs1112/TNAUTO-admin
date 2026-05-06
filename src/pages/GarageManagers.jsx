@@ -10,8 +10,6 @@ function GarageManagers() {
       columns={garageManagersConfig.columns}
       fieldsForModal={garageManagersConfig.fieldsForModal}
       title={garageManagersConfig.title}
-      description="Quản lý tài khoản quản lí của từng gara, đảm bảo mỗi gara chỉ có một manager."
-      options={{}}
       showPagination={true}
       limit={20}
       showSearch={true}

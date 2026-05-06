@@ -234,21 +234,19 @@ function CustomerDetailModal({ isOpen, customer, onClose }) {
       setIsInitialLoading(true);
     }
     try {
-      const [customerRes, dlRes] = await Promise.all([
+      // Fetch customer, driver license và vehicles song song, tránh N+1
+      const [customerRes, dlRes, vehiclesResponse] = await Promise.all([
         customersAPI.getById(customerId).catch(() => null),
         customersAPI.getDriverLicense(customerId).catch(() => null),
+        customersAPI.getVehiclesForGarage(customerId).catch(() => null),
       ]);
 
       const nextCustomer = customerRes ? normalizeObjectResponse(customerRes) : customer;
       const nextDriverLicense = dlRes ? normalizeObjectResponse(dlRes) : null;
 
       let nextVehicles = extractEmbeddedVehicles(nextCustomer);
-      if (customerId) {
-        const vehiclesResponse = await customersAPI.getVehiclesForGarage(customerId).catch(() => null);
-
-        if (vehiclesResponse) {
-          nextVehicles = normalizeArrayResponse(vehiclesResponse);
-        }
+      if (vehiclesResponse) {
+        nextVehicles = normalizeArrayResponse(vehiclesResponse);
       }
 
       setCustomerDetail(nextCustomer);

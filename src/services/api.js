@@ -42,18 +42,24 @@ function extractListItems(response) {
 
 function extractPaginationMeta(response, fallbackPage = 1, fallbackLimit = 50, fallbackTotal = 0) {
   const raw = response?.data || {};
+  // Ưu tiên meta object mới, fallback về flat fields cũ và pagination object
+  const meta = raw.meta || {};
   const pagination = raw.pagination || {};
-  const totalItems = Number(raw.total ?? pagination.totalItems ?? fallbackTotal ?? 0) || 0;
-  const pageSize = Number(raw.limit ?? pagination.pageSize ?? fallbackLimit ?? 50) || fallbackLimit || 50;
+  const totalItems = Number(meta.total ?? raw.total ?? pagination.totalItems ?? fallbackTotal ?? 0) || 0;
+  const pageSize = Number(meta.limit ?? raw.limit ?? pagination.pageSize ?? fallbackLimit ?? 50) || fallbackLimit || 50;
   const totalPages =
-    Number(raw.totalPages ?? pagination.totalPages ?? Math.max(1, Math.ceil(totalItems / Math.max(pageSize, 1)))) || 1;
-  const currentPage = Number(raw.page ?? pagination.currentPage ?? fallbackPage ?? 1) || 1;
+    Number(meta.totalPages ?? raw.totalPages ?? pagination.totalPages ?? Math.max(1, Math.ceil(totalItems / Math.max(pageSize, 1)))) || 1;
+  const currentPage = Number(meta.page ?? raw.page ?? pagination.currentPage ?? fallbackPage ?? 1) || 1;
+  const hasNextPage = meta.hasNextPage ?? pagination.hasNextPage ?? currentPage < totalPages;
+  const hasPreviousPage = meta.hasPreviousPage ?? pagination.hasPreviousPage ?? currentPage > 1;
 
   return {
     totalItems,
     pageSize: Math.max(1, pageSize),
     totalPages: Math.max(1, totalPages),
     currentPage: Math.max(1, currentPage),
+    hasNextPage,
+    hasPreviousPage,
   };
 }
 
@@ -134,6 +140,17 @@ function buildPaginatedResponse(items, params = {}) {
       page: currentPage,
       limit: pageSize,
       totalPages,
+      // meta object chuẩn hóa theo backend mới
+      meta: {
+        total: totalItems,
+        count: pageItems.length,
+        page: currentPage,
+        limit: pageSize,
+        totalPages,
+        hasNextPage: paginate ? currentPage < totalPages : false,
+        hasPreviousPage: paginate ? currentPage > 1 : false,
+        isPaginated: paginate,
+      },
       pagination: {
         isPaginated: paginate,
         currentPage,
@@ -152,6 +169,40 @@ function invalidateServicesCache() {
     expiresAt: 0,
     items: null,
   };
+}
+
+/**
+ * Lấy thông báo lỗi thân thiện từ error object của API.
+ * Ưu tiên error_code để hiển thị thông báo phù hợp, fallback về message gốc.
+ *
+ * @param {Object} err - Error object từ API interceptor
+ * @param {string} [fallback] - Thông báo mặc định nếu không có message
+ * @returns {string} Thông báo lỗi tiếng Việt
+ */
+export function getApiErrorMessage(err, fallback = 'Có lỗi xảy ra') {
+  const errorCode = err?.error_code || err?.response?.data?.error_code;
+  const serverMessage = err?.message || err?.response?.data?.error;
+
+  switch (errorCode) {
+    case 'NOT_FOUND':
+      return serverMessage || 'Không tìm thấy dữ liệu';
+    case 'UNAUTHORIZED':
+      return serverMessage || 'Bạn chưa đăng nhập hoặc phiên đã hết hạn';
+    case 'FORBIDDEN':
+      return serverMessage || 'Bạn không có quyền thực hiện thao tác này';
+    case 'CONFLICT':
+      return serverMessage || 'Dữ liệu bị xung đột, vui lòng kiểm tra lại';
+    case 'VALIDATION_ERROR':
+      return serverMessage || 'Dữ liệu không hợp lệ, vui lòng kiểm tra lại';
+    case 'GARAGE_CONTEXT_REQUIRED':
+      return 'Vui lòng chọn gara trước khi thực hiện thao tác này';
+    case 'BAD_REQUEST':
+      return serverMessage || 'Yêu cầu không hợp lệ';
+    case 'INTERNAL_ERROR':
+      return serverMessage || 'Lỗi hệ thống, vui lòng thử lại sau';
+    default:
+      return serverMessage || fallback;
+  }
 }
 
 function sanitizeVehiclePayload(data = {}) {
@@ -287,13 +338,17 @@ async function fetchAllServices({ force = false } = {}) {
         error.message ||
         'Có lỗi xảy ra';
 
+      const errorCode = error.response?.data?.error_code || null;
+
       return Promise.reject({
         ...error,
         message,
+        error_code: errorCode,
         status: error.response?.status,
         code: error.code,
         isNetworkError: error.code === 'ERR_NETWORK' || error.message?.includes('Network Error'),
         isCorsError: error.response?.status === 0 || (error.code === 'ERR_NETWORK' && !error.response),
+        isGarageContextRequired: errorCode === 'GARAGE_CONTEXT_REQUIRED',
       });
     }
   );

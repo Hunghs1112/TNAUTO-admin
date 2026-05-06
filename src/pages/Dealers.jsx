@@ -10,8 +10,6 @@ function Dealers() {
       columns={dealersConfig.columns}
       fieldsForModal={dealersConfig.fieldsForModal}
       title={dealersConfig.title}
-      description="Theo dõi và quản lý thông tin đại lý."
-      options={{}}
       showPagination={true}
       limit={20}
       showSearch={true}

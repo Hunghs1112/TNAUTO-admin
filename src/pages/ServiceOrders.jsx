@@ -17,7 +17,6 @@ function ServiceOrders() {
     <div className="app-page">
       <PageHeader
         title="Đơn dịch vụ"
-        description="Theo dõi và quản lý các đơn dịch vụ."
         onRefresh={handleRefresh}
         onCreate={handleCreate}
         createButtonText="Tạo đơn mới"

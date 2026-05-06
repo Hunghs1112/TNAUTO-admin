@@ -10,7 +10,6 @@ function GenericCrudPage({
   columns,
   fieldsForModal,
   title,
-  description,
   options = {},
   customActions,
   showPagination = false,
@@ -103,7 +102,6 @@ function GenericCrudPage({
       {renderPageHeader ? (
         <PageHeader
           title={title}
-          description={description}
           badge={isInitialLoading ? 'Đang tải' : `${badgeCount} mục`}
           onRefresh={handleRefresh}
           onCreate={disableCreate ? undefined : handleCreate}

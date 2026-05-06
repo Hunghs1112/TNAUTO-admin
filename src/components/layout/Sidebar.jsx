@@ -121,7 +121,7 @@ function Sidebar() {
       >
         <div className="relative border-b border-slate-800/50 bg-slate-900/30 px-6 py-6">
           <ThemeToggle className="absolute right-6 top-6" />
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">TNAUTO Multi-Gara</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">GaraOne Multi-Gara</p>
           <h2 className="mt-3 text-xl font-bold text-white">Bảng điều khiển gara</h2>
           <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
             <span className="h-1.5 w-1.5 rounded-full bg-[#e0a02e]" />

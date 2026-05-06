@@ -30,7 +30,6 @@ function Products() {
         columns={productsConfig.columns}
         fieldsForModal={productsConfig.fieldsForModal}
         title={productsConfig.title}
-        description="Theo dõi và quản lý thông tin sản phẩm."
         showPagination={true}
         limit={12}
         showSearch={true}

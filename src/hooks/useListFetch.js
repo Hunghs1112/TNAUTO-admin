@@ -16,13 +16,15 @@ function extractListData(response) {
 
 function extractPaginationMeta(response, fallbackPage, fallbackLimit, fallbackTotal) {
   const raw = response?.data || {};
+  // Ưu tiên meta object mới, fallback về flat fields cũ và pagination object
+  const meta = raw.meta || {};
   const pagination = raw.pagination || {};
   const totalItems =
-    Number(raw.total ?? raw.count ?? pagination.totalItems ?? pagination.total ?? fallbackTotal ?? 0) || 0;
-  const pageSize = Number(raw.limit ?? pagination.pageSize ?? fallbackLimit ?? 10) || fallbackLimit || 10;
+    Number(meta.total ?? raw.total ?? raw.count ?? pagination.totalItems ?? pagination.total ?? fallbackTotal ?? 0) || 0;
+  const pageSize = Number(meta.limit ?? raw.limit ?? pagination.pageSize ?? fallbackLimit ?? 10) || fallbackLimit || 10;
   const totalPages =
-    Number(raw.totalPages ?? pagination.totalPages ?? Math.max(1, Math.ceil(totalItems / Math.max(pageSize, 1)))) || 1;
-  const currentPage = Number(raw.page ?? pagination.currentPage ?? fallbackPage ?? 1) || 1;
+    Number(meta.totalPages ?? raw.totalPages ?? pagination.totalPages ?? Math.max(1, Math.ceil(totalItems / Math.max(pageSize, 1)))) || 1;
+  const currentPage = Number(meta.page ?? raw.page ?? pagination.currentPage ?? fallbackPage ?? 1) || 1;
 
   return {
     totalItems,

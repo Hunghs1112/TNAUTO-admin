@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import useTableInteraction from '../../hooks/useTableInteraction';
 import { useToast } from '../../contexts/ToastContext';
+import { getApiErrorMessage } from '../../services/api';
 import FormModal from '../form/FormModal';
 import Modal from '../ui/Modal';
 import { TableSkeleton } from '../ui/SkeletonLoader';
@@ -213,7 +214,7 @@ export default function GenericTable({
         setIsEdit(false);
         refreshAfterSave();
       } catch (error) {
-        showError(error?.message || 'Không thể xóa dữ liệu. Vui lòng thử lại.');
+        showError(getApiErrorMessage(error, 'Không thể lưu dữ liệu. Vui lòng thử lại.'));
       }
     },
     [api, dispatchCategoryEvent, idKey, isEdit, refreshAfterSave, selectedItem, showError, showSuccess]
@@ -231,7 +232,7 @@ export default function GenericTable({
       showSuccess(deleteSuccessMessage);
       onRefresh?.();
     } catch (error) {
-      showError(error?.message || 'Không thể xóa dữ liệu. Vui lòng thử lại.');
+      showError(getApiErrorMessage(error, 'Không thể xóa dữ liệu. Vui lòng thử lại.'));
     }
   }, [api, confirmDeleteId, deleteSuccessMessage, onDelete, onRefresh, showError, showSuccess]);
 
@@ -250,7 +251,7 @@ export default function GenericTable({
       showSuccess(`Đã xóa ${selectedRows.size} mục.`);
       onRefresh?.();
     } catch (error) {
-      showError(error?.message || 'Không thể xóa hàng loạt. Vui lòng thử lại.');
+      showError(getApiErrorMessage(error, 'Không thể xóa hàng loạt. Vui lòng thử lại.'));
     }
   }, [api, onRefresh, selectedRows, showError, showSuccess]);
 

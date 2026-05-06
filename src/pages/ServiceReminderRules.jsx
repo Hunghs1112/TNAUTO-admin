@@ -54,17 +54,13 @@ function ServiceReminderRules() {
     <div className="app-page">
       <PageHeader
         title="Quy tắc nhắc dịch vụ"
-        description="Thiết lập và quản lý quy tắc nhắc dịch vụ."
         badge={`${filteredServices.length} dịch vụ`}
       />
 
       <div className="app-panel">
         <div className="app-panel-header">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-100">Danh sách cấu hình</h2>
-              <p className="mt-1 text-sm text-slate-300">Tìm nhanh dịch vụ rồi bật hoặc chỉnh sửa quy tắc nhắc tương ứng.</p>
-            </div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <h2 className="text-lg font-semibold text-slate-100">Danh sách cấu hình</h2>
             <div className="w-full lg:w-80">
               <input
                 value={searchText}

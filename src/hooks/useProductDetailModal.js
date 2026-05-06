@@ -1,8 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { productsAPI, categoriesAPI } from '../services/api';
 import { isValidImageUrl, normalizeImageUrl } from '../utils/format';
 import { productsConfig } from '../config/entityConfigs';
 import useDetailFetchGuard from './useDetailFetchGuard';
+
+// Cache categories ở module level — chỉ fetch 1 lần trong suốt session
+let categoriesCache = null;
+let categoriesFetchPromise = null;
+
+function getCategoriesCached() {
+  if (categoriesCache) return Promise.resolve(categoriesCache);
+  if (categoriesFetchPromise) return categoriesFetchPromise;
+  categoriesFetchPromise = categoriesAPI.getAll().then((res) => {
+    categoriesCache = res;
+    categoriesFetchPromise = null;
+    return res;
+  }).catch((err) => {
+    categoriesFetchPromise = null;
+    throw err;
+  });
+  return categoriesFetchPromise;
+}
 
 export default function useProductDetailModal({ isOpen, productId, onClose, onRefresh, showSuccess, showError, startLoading, stopLoading }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -12,6 +30,7 @@ export default function useProductDetailModal({ isOpen, productId, onClose, onRe
   const [formData, setFormData] = useState({});
   const [fieldOptions, setFieldOptions] = useState({});
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const optionsLoadedRef = useRef(false);
   const { shouldSkipFetch, beginFetch, completeFetch, failFetch, resetFetchGuard } = useDetailFetchGuard();
 
   useEffect(() => {
@@ -29,6 +48,9 @@ export default function useProductDetailModal({ isOpen, productId, onClose, onRe
 
   useEffect(() => {
     const loadDynamicOptions = async () => {
+      // Đã load rồi thì bỏ qua — dùng cache module-level cho categories
+      if (optionsLoadedRef.current) return;
+
       const fieldsWithApi = productsConfig.fieldsForModal.filter((f) => f.type === 'select' && f.apiEndpoint);
       if (fieldsWithApi.length === 0) return;
 
@@ -41,7 +63,7 @@ export default function useProductDetailModal({ isOpen, productId, onClose, onRe
             try {
               let response;
               if (field.apiEndpoint === '/categories') {
-                response = await categoriesAPI.getAll();
+                response = await getCategoriesCached();
               } else {
                 response = await productsAPI.getAll();
               }
@@ -69,6 +91,7 @@ export default function useProductDetailModal({ isOpen, productId, onClose, onRe
         );
 
         setFieldOptions(optionsData);
+        optionsLoadedRef.current = true;
       } catch (err) {
         console.error('Error loading dynamic options:', err);
       } finally {
@@ -99,11 +122,15 @@ export default function useProductDetailModal({ isOpen, productId, onClose, onRe
     beginFetch();
     startLoading('Đang tải chi tiết sản phẩm...');
     try {
-      const productRes = await productsAPI.getById(id);
+      // Fetch product details và images song song, tránh N+1
+      const [productRes, imagesRes] = await Promise.all([
+        productsAPI.getById(id),
+        productsAPI.getImages(id),
+      ]);
+
       const productData = productRes.data.data || productRes.data;
       setSelectedProduct(productData || null);
 
-      const imagesRes = await productsAPI.getImages(id);
       const imagesData = imagesRes.data.data || imagesRes.data;
       const validImages = Array.isArray(imagesData)
         ? imagesData

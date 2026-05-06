@@ -11,7 +11,6 @@ function Employees() {
       columns={employeesConfig.columns}
       fieldsForModal={employeesConfig.fieldsForModal}
       title={employeesConfig.title}
-      description="Theo dõi và quản lý thông tin nhân viên."
       showPagination={true}
       limit={20}
       showSearch={true}

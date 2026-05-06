@@ -27,14 +27,6 @@ function DealerCategoriesSection() {
 function DealerProductsSection({ refreshKey, onOpenProductDetail, onCloseProductDetail, onRefresh, selectedProductId, showDetailModal }) {
   return (
     <>
-      <div className="app-panel">
-        <div className="app-panel-body text-sm leading-6 text-[#dfe1e3]">
-          <div className="rounded-2xl border border-[#1e406b]/40 bg-[#1e406b]/12 px-4 py-3">
-            Tạo và chỉnh sửa sản phẩm đại lý tại đây. Bấm vào từng dòng để mở chi tiết, quản lý ảnh, đổi ảnh chính và cập nhật video.
-          </div>
-        </div>
-      </div>
-
       <GenericCrudPage
         api={dealerProductsAPI}
         columns={dealerProductsConfig.columns}
@@ -78,7 +70,6 @@ function DealerCatalog() {
     <div className="app-page">
       <PageHeader
         title="Danh mục sản phẩm đại lý"
-        description="Theo dõi và quản lý danh mục sản phẩm đại lý."
         badge="API riêng"
       >
         <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm">

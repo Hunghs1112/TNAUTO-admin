@@ -30,7 +30,6 @@ function Services() {
         columns={servicesConfig.columns}
         fieldsForModal={servicesConfig.fieldsForModal}
         title={servicesConfig.title}
-        description="Theo dõi và quản lý danh mục dịch vụ."
         showPagination={true}
         limit={12}
         showSearch={true}

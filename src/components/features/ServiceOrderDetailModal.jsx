@@ -80,11 +80,15 @@ export default function ServiceOrderDetailModal({
     startDetailLoading('Đang tải chi tiết đơn dịch vụ...');
 
     try {
-      const orderResponse = await serviceOrdersAPI.getById(id);
+      // Fetch order details và images song song, tránh N+1
+      const [orderResponse, imagesResponse] = await Promise.all([
+        serviceOrdersAPI.getById(id),
+        serviceOrderImagesAPI.getByOrder(id),
+      ]);
+
       const orderData = orderResponse.data.data || orderResponse.data;
       setSelectedOrder(orderData || null);
 
-      const imagesResponse = await serviceOrderImagesAPI.getByOrder(id);
       const imagesData = imagesResponse.data.data || imagesResponse.data;
       const validImages = Array.isArray(imagesData)
         ? imagesData

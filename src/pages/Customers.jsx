@@ -15,7 +15,6 @@ function Customers() {
         columns={customersConfig.columns}
         fieldsForModal={customersConfig.fieldsForModal}
         title={customersConfig.title}
-        description="Theo dõi và quản lý thông tin khách hàng."
         showPagination={true}
         limit={20}
         showSearch={true}

@@ -3,7 +3,6 @@ import { Plus, RefreshCw } from 'lucide-react';
 
 function PageHeader({
   title,
-  description,
   badge,
   onRefresh,
   onCreate,
@@ -14,13 +13,9 @@ function PageHeader({
     <section className="app-hero">
       <div className="app-hero-content">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-[#eecd7e]">GaraOne Admin</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-[1.75rem] font-bold tracking-tight text-white">{title}</h1>
-              {badge ? <span className="app-badge">{badge}</span> : null}
-            </div>
-            {description ? <p className="mt-1 text-sm text-slate-300">{description}</p> : null}
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-[1.75rem] font-bold tracking-tight text-white">{title}</h1>
+            {badge ? <span className="app-badge">{badge}</span> : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

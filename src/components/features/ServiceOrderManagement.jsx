@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { employeesAPI, serviceOrdersAPI } from '../../services/api';
 import { serviceOrdersConfig } from '../../config/entityConfigs';
 import { isValidImageUrl, normalizeImageUrl } from '../../utils/format';
@@ -6,23 +6,38 @@ import GenericCrudPage from './GenericCrudPage';
 import ServiceOrderDetailModal from './ServiceOrderDetailModal';
 import OptimizedImage from '../image/OptimizedImage';
 
+// Cache employees ở module level — chỉ fetch 1 lần, tránh re-fetch mỗi lần mount
+let employeesCache = null;
+let employeesFetchPromise = null;
+
+function getEmployeesCached() {
+  if (employeesCache) return Promise.resolve(employeesCache);
+  if (employeesFetchPromise) return employeesFetchPromise;
+  employeesFetchPromise = employeesAPI.getAll().then((res) => {
+    employeesCache = res.data.data || [];
+    employeesFetchPromise = null;
+    return employeesCache;
+  }).catch((err) => {
+    employeesFetchPromise = null;
+    throw err;
+  });
+  return employeesFetchPromise;
+}
+
 export default function ServiceOrderManagement({ tableActionsRef = null }) {
   const [employees, setEmployees] = useState([]);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const hasFetchedEmployeesRef = useRef(false);
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await employeesAPI.getAll();
-        setEmployees(response.data.data || []);
-      } catch {
-        setEmployees([]);
-      }
-    };
+    if (hasFetchedEmployeesRef.current) return;
+    hasFetchedEmployeesRef.current = true;
 
-    fetchEmployees();
+    getEmployeesCached()
+      .then((data) => setEmployees(data))
+      .catch(() => setEmployees([]));
   }, []);
 
   const enhancedColumns = [

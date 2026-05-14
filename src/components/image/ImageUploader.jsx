@@ -1,5 +1,5 @@
 // src/components/image/ImageUploader.jsx
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Upload, X, CheckCircle, AlertCircle, Link, FileImage, Plus } from 'lucide-react';
 
 /**
@@ -26,6 +26,7 @@ export default function ImageUploader({
   const [currentMode, setCurrentMode] = useState(uploadMode === 'both' ? 'file' : uploadMode);
   const [linkInput, setLinkInput] = useState('');
   const [linkInputs, setLinkInputs] = useState(['']);
+  const fileInputId = useId();
 
   // Validate image URL
   const isValidImageUrl = (url) => {
@@ -307,10 +308,10 @@ export default function ImageUploader({
               e.stopPropagation();
             }}
             className="hidden"
-            id="image-upload-input"
+            id={fileInputId}
           />
           <label
-            htmlFor="image-upload-input"
+            htmlFor={fileInputId}
             className="cursor-pointer flex flex-col items-center justify-center"
             onClick={(e) => {
               // Chỉ mở file picker khi click vào label

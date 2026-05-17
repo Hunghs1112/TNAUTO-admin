@@ -385,6 +385,7 @@ export const garageManagersAPI = createCrudAPI(api, '/web/garage-managers', {
   update: (id, data) => api.put(`/web/garage-managers/${id}`, data),
   patch: (id, data) => api.patch(`/web/garage-managers/${id}`, data),
   delete: (id) => api.delete(`/web/garage-managers/${id}`),
+  changePassword: (id, data) => api.post(`/web/garage-managers/${id}/change-password`, data),
 });
 
 export const customersAPI = createCrudAPI(api, '/web/customers', {

@@ -201,12 +201,7 @@ export default function ServiceOrderDetailModal({
       if (newStatus === 'completed') {
         const deliveryDate = selectedOrder.delivery_date
           ? formatYYYYMMDD(selectedOrder.delivery_date)
-          : null;
-
-        if (!deliveryDate) {
-          error('Thiếu ngày giao. Vui lòng cập nhật ngày giao trước khi hoàn thành đơn.');
-          return;
-        }
+          : formatYYYYMMDD(new Date());
 
         const response = await serviceOrdersAPI.complete(selectedOrder.id, {
           delivery_date: deliveryDate,
